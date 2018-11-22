@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fredastone.pandacore.pandacore.entity.AccountFinancialInformation;
+import com.fredastone.pandacore.pandacore.entity.FeesCollected;
+
+import com.fredastone.pandacore.pandacore.entity.Token;
 
 
 @Repository
@@ -26,7 +30,9 @@ public class OperationRepository implements IOperationalRepository{
 	@Autowired
 	NamedParameterJdbcTemplate jdbcTemplate;
 
-	private static String GET_ACCOUNT_FI_QUERY = "SELECT * FROM accounts.v_accountholderinfo where meter_number = :meterNumber";
+	private static final String GET_ACCOUNT_FI_QUERY = "SELECT * FROM accounts.v_accountholderinfo where meter_number = :meterNumber";
+	private static final String GET_TOKEN_QUERY ="SELECT * FROM payments.get_token(:amount :: numeric)";
+	private static final String CREATE_FEE_COLLECTED_QUERY = "INSERT INTO payments.fees_collected (id,amount,token,meterNumber) VALUES (:id,:amount,:token,:meter)";
 	
 	@Override
 	public List<AccountFinancialInformation> getAccountFinancialInformation(@NotNull String meterNumber) {
@@ -50,6 +56,7 @@ public class OperationRepository implements IOperationalRepository{
 		return null;
 	}
 
+	
 	
 	private static class AccountFinancialInformationMapper implements RowMapper<AccountFinancialInformation>{
 
@@ -78,6 +85,56 @@ public class OperationRepository implements IOperationalRepository{
 			return afi;
 		}
 		
+	}
+
+
+
+	@Override
+	public String getPaymentToken(float amount) {
+		
+
+		try {
+			Map<String,Float> args = new HashMap<String,Float>();
+			
+			args.put("amount", amount);
+			final String token  = 
+					jdbcTemplate.queryForObject(GET_TOKEN_QUERY,args, String.class);
+			return token;
+		}
+			
+		catch (DataAccessException dae) {
+			
+			  dae.printStackTrace();
+	
+			}
+		
+
+		return null;
+	}
+
+
+
+	@Override
+	public int createNewCollectedFee(FeesCollected feeCollected) {
+
+		try {
+			Map<String,Object> args = new HashMap<String,Object>();
+			
+			args.put("id", UUID.randomUUID().toString());
+			args.put("amount", feeCollected.getAmount());
+			args.put("token", feeCollected.getToken());
+			args.put("meter", feeCollected.getMeterNumber());
+			
+			return jdbcTemplate.update(CREATE_FEE_COLLECTED_QUERY,args);
+		
+		}
+			
+		catch (DataAccessException dae) {
+			
+			  dae.printStackTrace();
+	
+			}
+		return 0;
 	}
 	
 	

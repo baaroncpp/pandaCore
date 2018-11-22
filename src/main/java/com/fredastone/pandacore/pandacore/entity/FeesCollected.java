@@ -7,7 +7,23 @@ public class FeesCollected {
 	private String id;
 	private String deviceSerial;
 	private float amount;
+	private String token;
+	String meterNumber;
 	private Timestamp createdOn;
+	
+
+	public String getMeterNumber() {
+		return meterNumber;
+	}
+	public void setMeterNumber(String meterNumber) {
+		this.meterNumber = meterNumber;
+	}
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
+	}
 	public String getId() {
 		return id;
 	}

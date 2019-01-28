@@ -3,6 +3,7 @@ package com.fredastone.commons.logging.impl;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,11 +24,11 @@ public class DebugLog implements com.fredastone.commons.logging.DebugLog{
 	}
 	
 	@Override
-	public void info(String timestamp, String type, String msisdn, String transactionId, String traceUniqueId,
+	public void info(String type, String msisdn, String transactionId, String traceUniqueId,
 			String classFileName,String classFileLine,String stackTrace) {
 		if(logger.isDebugEnabled()) {
-			final DebugLogInfo debugLog = new 
-					DebugLogInfo(timestamp, type, msisdn, transactionId, traceUniqueId, 
+			final Message debugLog = new 
+					DebugLogInfo( type, msisdn, transactionId, traceUniqueId, 
 							classFileName, classFileLine, stackTrace);
 		
 			logger.log(Level.INFO, debugLog);
@@ -36,12 +37,12 @@ public class DebugLog implements com.fredastone.commons.logging.DebugLog{
 	}
 
 	@Override
-	public void warn(String timestamp, String type, String msisdn, String transactionId, String traceUniqueId,
+	public void warn(String type, String msisdn, String transactionId, String traceUniqueId,
 			String classFileName, String classFileLine, String stackTrace) {
 		
 		if(logger.isWarnEnabled()) {
-			final DebugLogInfo debugLog = new 
-					DebugLogInfo(timestamp, type, msisdn, transactionId, traceUniqueId, 
+			final Message debugLog = new 
+					DebugLogInfo( type, msisdn, transactionId, traceUniqueId, 
 							classFileName, classFileLine, stackTrace);
 			
 			logger.log(Level.WARN, debugLog);
@@ -50,12 +51,12 @@ public class DebugLog implements com.fredastone.commons.logging.DebugLog{
 	}
 	
 	@Override
-	public void error(String timestamp, String type, String msisdn, String transactionId, String traceUniqueId,
+	public void error(String type, String msisdn, String transactionId, String traceUniqueId,
 			String classFileName, String classFileLine, String stackTrace) {
 		
 		if(logger.isErrorEnabled()) {
-			final DebugLogInfo debugLog = new 
-					DebugLogInfo(timestamp, type, msisdn, transactionId, traceUniqueId, 
+			final Message debugLog = new 
+					DebugLogInfo( type, msisdn, transactionId, traceUniqueId, 
 							classFileName, classFileLine, stackTrace);
 			
 			logger.log(Level.ERROR, debugLog);
@@ -65,12 +66,12 @@ public class DebugLog implements com.fredastone.commons.logging.DebugLog{
 	}
 
 	@Override
-	public void debug(String timestamp, String type, String msisdn, String transactionId, String traceUniqueId,
+	public void debug(String type, String msisdn, String transactionId, String traceUniqueId,
 			String classFileName, String classFileLine, String stackTrace) {
 		
 		if(logger.isDebugEnabled()) {
-			final DebugLogInfo debugLog = new 
-					DebugLogInfo(timestamp, type, msisdn, transactionId, traceUniqueId, 
+			final Message debugLog = new 
+					DebugLogInfo(type, msisdn, transactionId, traceUniqueId, 
 							classFileName, classFileLine, stackTrace);
 			
 			logger.log(Level.ERROR, debugLog);

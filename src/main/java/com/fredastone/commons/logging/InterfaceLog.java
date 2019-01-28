@@ -8,6 +8,5 @@ public interface InterfaceLog {
 	void info(final InterfaceLogParamsMandatory mandatoryParam,InterfaceLogParamsOptional optionalParam);
 	void warn(final InterfaceLogParamsMandatory mandatoryParam,InterfaceLogParamsOptional optionalParam);
 	void error(final InterfaceLogParamsMandatory mandatoryParam,InterfaceLogParamsOptional optionalParam);
-	
 
 }

@@ -3,16 +3,18 @@ package com.fredastone.commons.logging.impl;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import com.fredastone.commons.logging.bean.RuntimeLogInfo;
 import com.fredastone.commons.logging.utils.LoggerNameProperties;
+
 
 @Component
 public class RuntimeLog implements com.fredastone.commons.logging.RuntimeLog{
 
-	
-	private final LoggerNameProperties loggerNames;
+private final LoggerNameProperties loggerNames;
 	private final Logger logger;
 	
 	@Autowired
@@ -22,9 +24,9 @@ public class RuntimeLog implements com.fredastone.commons.logging.RuntimeLog{
 	}
 	
 	@Override
-	public void info(String timestamp, String operation, String traceUniqeId, String message) {
+	public void info(String operation, String traceUniqeId, String message) {
 		
-		final RuntimeLogInfo log = new RuntimeLogInfo(timestamp, operation, traceUniqeId , message);
+		final Message log = new RuntimeLogInfo(operation, traceUniqeId , message);
 		if(logger.isInfoEnabled()) {
 			logger.log(Level.INFO,log);
 		}
@@ -32,12 +34,23 @@ public class RuntimeLog implements com.fredastone.commons.logging.RuntimeLog{
 	}
 
 	@Override
-	public void warn(String timestamp, String operation, String traceUniqeId, String message) {
+	public void warn(String operation, String traceUniqeId, String message) {
 		
-		final RuntimeLogInfo info = new RuntimeLogInfo(timestamp, operation, traceUniqeId, message);
+		final Message log = new RuntimeLogInfo(operation, traceUniqeId, message);
 		
 		if(logger.isWarnEnabled()) {
-			logger.log(Level.WARN,info);
+			logger.log(Level.WARN,log);
 		}
 	}
+	
+	@Override
+	public void error( String operation, String traceUniqeId, String message) {
+		
+		final Message log = new RuntimeLogInfo( operation, traceUniqeId, message);
+		
+		if(logger.isWarnEnabled()) {
+			logger.log(Level.ERROR,log);
+		}
+	}
+
 }

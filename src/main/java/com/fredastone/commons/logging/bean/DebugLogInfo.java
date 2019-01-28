@@ -10,7 +10,10 @@ import lombok.Setter;
 public class DebugLogInfo  extends AbstractLogInfo{
 	
 	
-	@Getter @Setter private String timeStamp;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7722526946826260940L;
 	@Getter @Setter private String type;
 	@Getter @Setter private String msisdn;
 	@Getter @Setter private String transactionId;
@@ -23,19 +26,45 @@ public class DebugLogInfo  extends AbstractLogInfo{
 	public String toString() {
 		final StringBuffer result = new StringBuffer();
 		
-		result.append(StringUtil.dealNull(type)).append(PIPE)
+		result.append(getLogTime()).append(PIPE)
+		.append(StringUtil.dealNull(type)).append(PIPE)
 		.append(StringUtil.dealNull(msisdn)).append(PIPE)
 		.append(StringUtil.dealNull(transactionId)).append(PIPE)
 		.append(StringUtil.dealNull(classFileName)).append(PIPE)
-		.append(StringUtil.dealNull(classFileLine)).append(PIPE)
-		.append(StringUtil.dealNull(timeStamp)).append(PIPE);
+		.append(StringUtil.dealNull(classFileLine)).append(PIPE);
 		
 		if( !stackTrace.isEmpty()) {
-			result.append('[').append(stackTrace).append(']');
+			result.append("Content=[").append(stackTrace).append(']');
 		}
+		result.append("\n");
 		
 		return result.toString();
 		
 	}
+
+	@Override
+	public String getFormat() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getFormattedMessage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object[] getParameters() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Throwable getThrowable() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

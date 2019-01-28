@@ -2,6 +2,7 @@ package com.fredastone.commons.logging.impl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,8 @@ public class InterfaceLog implements com.fredastone.commons.logging.InterfaceLog
 	@Override
 	public void info(InterfaceLogParamsMandatory mandatoryParam, InterfaceLogParamsOptional optionalParam) {
 		if(logger.isInfoEnabled()) {
-			final InterfaceLogInfo ili = new InterfaceLogInfo(mandatoryParam, optionalParam);
+			final Message ili = new InterfaceLogInfo(mandatoryParam, optionalParam);
+		
 			logger.info(ili);
 			
 		}
@@ -38,7 +40,7 @@ public class InterfaceLog implements com.fredastone.commons.logging.InterfaceLog
 	public void warn(InterfaceLogParamsMandatory mandatoryParam, InterfaceLogParamsOptional optionalParam) {
 		// TODO Auto-generated method stub
 		if(logger.isWarnEnabled()) {
-			final InterfaceLogInfo ili = new InterfaceLogInfo(mandatoryParam, optionalParam);
+			final Message  ili = new InterfaceLogInfo(mandatoryParam, optionalParam);
 			logger.warn(ili);
 		}
 		
@@ -48,7 +50,7 @@ public class InterfaceLog implements com.fredastone.commons.logging.InterfaceLog
 	public void error(InterfaceLogParamsMandatory mandatoryParam, InterfaceLogParamsOptional optionalParam) {
 		// TODO Auto-generated method stub
 		if(logger.isErrorEnabled()) {
-			final InterfaceLogInfo ili = new InterfaceLogInfo(mandatoryParam, optionalParam);
+			final Message  ili = new InterfaceLogInfo(mandatoryParam, optionalParam);
 			logger.error(ili);
 		}
 		

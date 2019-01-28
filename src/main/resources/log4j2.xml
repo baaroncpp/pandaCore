@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <Configuration status="debug" strict="true" name="LogConfiguration"
+                   packages="com.fredastone.commons.logging.layout">
+      <Properties>
+        <Property name="filename">/Users/boss/Dev_Musings/fredastone/panda_solar/logs/core/</Property>
+      </Properties>
+      <Filter type="ThresholdFilter" level="trace"/>
+     
+      <Appenders>
+        <Appender type="Console" name="STDOUT">
+          <Layout type="PatternLayout" pattern="%m MDC%X%n"/>
+          <Filters>
+            <Filter type="MarkerFilter" marker="FLOW" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Filter type="MarkerFilter" marker="EXCEPTION" onMatch="DENY" onMismatch="ACCEPT"/>
+          </Filters>
+        </Appender>
+
+        <Appender type="RollingFile" name="InterfaceLogAppender" fileName="${filename}/interface/interface.log" 
+                    filePattern="${filename}/interface/interface.%i.log.gz">
+          <Layout type="InterfaceLogLayout">
+            <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+          </Layout>
+          <SizeBasedTriggeringPolicy size="500" />
+        </Appender>
+
+        <Appender type="RollingFile" name="SecurityLogAppender" fileName="${filename}/security/security.log" 
+                    filePattern="${filename}/security/security.%i.log.gz">
+          <Layout type="SecurityLogLayout">
+            <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+          </Layout>
+          <SizeBasedTriggeringPolicy size="500" />
+        </Appender>
+
+      <Appender type="RollingFile" name="DebugLogAppender" fileName="${filename}/debug/debug.log" 
+                    filePattern="${filename}/debug/debug.%i.log.gz">
+          <Layout type="DebugLogLayout">
+            <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+          </Layout>
+          <SizeBasedTriggeringPolicy size="500" />
+        </Appender>
+       
+       <Appender type="RollingFile" name="RuntimeLogAppender" fileName="${filename}/runtime/runtime.log" 
+                    filePattern="${filename}/runtime/runtime.%i.log.gz">
+          <Layout type="RuntimeLogLayout">
+            <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+          </Layout>
+          <SizeBasedTriggeringPolicy size="500" />
+        </Appender>
+      </Appenders>
+
+      <Loggers>
+       
+        <Logger name="Interface_Log" level="debug" additivity="false">
+          <AppenderRef ref="InterfaceLogAppender"/>
+        </Logger>
+
+           
+        <Logger name="Debug_Log" level="debug" additivity="false">
+          <AppenderRef ref="DebugLogAppender"/>
+        </Logger>
+           
+        <Logger name="Runtime_Log" level="debug" additivity="false">
+          <AppenderRef ref="RuntimeLogAppender"/>
+        </Logger>
+           
+        <Logger name="Security_Log" level="debug" additivity="false">
+          <AppenderRef ref="SecurityLogAppender"/>
+        </Logger>
+
+     
+        <Root level="error">
+          <AppenderRef ref="STDOUT"/>
+        </Root>
+      </Loggers>
+     
+    </Configuration>

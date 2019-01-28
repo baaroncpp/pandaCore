@@ -2,6 +2,7 @@ package com.fredastone.commons.logging.impl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,7 @@ public class SecurityLog implements com.fredastone.commons.logging.SecurityLog{
 	public void info(String userName, String resultInfo, String staticInfo, String externalInfo) {
 		// TODO Auto-generated method stub
 		if(this.logger.isInfoEnabled()) {
-			final SecurityLogInfo info = new SecurityLogInfo(userName, resultInfo, staticInfo, externalInfo);
+			final Message info = new SecurityLogInfo(userName, resultInfo, staticInfo, externalInfo);
 			logger.info(info);
 		}
 		
@@ -34,8 +35,8 @@ public class SecurityLog implements com.fredastone.commons.logging.SecurityLog{
 	public void warn(String userName, String resultInfo, String staticInfo, String externalInfo) {
 		// TODO Auto-generated method stub
 		if(this.logger.isWarnEnabled()) {
-			final SecurityLogInfo info = new SecurityLogInfo(userName, resultInfo, staticInfo, externalInfo);
-			logger.info(info);
+			final Message info = new SecurityLogInfo(userName, resultInfo, staticInfo, externalInfo);
+			logger.warn(info);
 			
 		}
 		
@@ -45,8 +46,8 @@ public class SecurityLog implements com.fredastone.commons.logging.SecurityLog{
 	public void error(String userName, String resultInfo, String staticInfo, String externalInfo) {
 		// TODO Auto-generated method stub
 		if(this.logger.isErrorEnabled()) {
-			final SecurityLogInfo info = new SecurityLogInfo(userName, resultInfo, staticInfo, externalInfo);
-			logger.info(info);
+			final Message info = new SecurityLogInfo(userName, resultInfo, staticInfo, externalInfo);
+			logger.error(info);
 			
 		}
 		

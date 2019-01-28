@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import com.fredastone.pandacore.pandacore.entity.AccountFinancialInformation;
 import com.fredastone.pandacore.pandacore.entity.FeesCollected;
-import com.fredastone.pandacore.pandacore.entity.Token;
 import com.fredastone.pandacore.pandacore.entity.UserAccount;
 import com.fredastone.pandacore.pandacore.models.PaymentCompleted;
 import com.fredastone.pandacore.pandacore.models.PaymentCompletedResponse;

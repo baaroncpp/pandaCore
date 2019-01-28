@@ -7,6 +7,8 @@ import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.Node;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.AbstractStringLayout;
 
 import com.fredastone.commons.logging.bean.SecurityLogInfo;
@@ -15,8 +17,8 @@ import com.fredastone.commons.logging.bean.SecurityLogInfo;
 @Plugin(name = "SecurityLogLayout", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE, printObject = true)
 public class SecurityLogLayout  extends AbstractStringLayout{
 
-	protected SecurityLogLayout(Charset aCharset, byte[] header, byte[] footer) {
-		super(aCharset, header, footer);
+	protected SecurityLogLayout(Charset aCharset) {
+		super(aCharset);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -27,11 +29,13 @@ public class SecurityLogLayout  extends AbstractStringLayout{
 			LogManager.getRootLogger().error("Security Logger got bad logging event");
 			return null;
 		}
-		
-		
+	
 		return ((SecurityLogInfo)event.getMessage()).toString();
 	}
 
-	
-
+	 @PluginFactory
+	    public static SecurityLogLayout createLayout(
+	                                            @PluginAttribute(value = "charset", defaultString = "UTF-8") Charset charset) {
+	        return new SecurityLogLayout(charset);
+	    }	
 }

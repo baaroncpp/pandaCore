@@ -1,10 +1,10 @@
 package com.fredastone.pandacore.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Produces;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,27 +12,24 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fredastone.pandacore.repository.*;
-
 
 @RestController
-@RequestMapping("/devices")
+@RequestMapping("v1/devices")
 public class DevicesController {
 	
-//	@Autowired
-//	private IDeviceRespository deviceRepo;
-//	
-//	@RequestMapping(method = RequestMethod.GET)
-//	@Produces("application/json")
-//    public @ResponseBody
-//    ResponseEntity<List<Devices>> getDevices() {
-//
-//       List<Devices> devs = deviceRepo.getAllDevice();
-//        
-//       
-//        return new ResponseEntity<List<Devices>>(devs, HttpStatus.OK);
-//        
-//  }    
+	
+	@RequestMapping(method = RequestMethod.GET)
+	@Produces("application/json")
+    public @ResponseBody
+    ResponseEntity<List<String>> getDevices() {
+
+       List<String> devs = new ArrayList<String>();
+       devs.add("Test");
+        
+       
+        return new ResponseEntity<List<String>>(devs, HttpStatus.OK);
+        
+  }    
     
 	
 

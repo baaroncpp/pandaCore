@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.fredastone.pandacore.entity.User;
 
+
 /**
  * Created by stephan on 20.03.16.
  */

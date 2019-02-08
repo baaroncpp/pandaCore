@@ -9,8 +9,6 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-
-
 @SpringBootApplication
 @EnableTransactionManagement
 public class PandacoreApplication{// extends SpringBootServletInitializer {

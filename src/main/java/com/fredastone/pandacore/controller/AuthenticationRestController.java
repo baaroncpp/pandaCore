@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fredastone.pandacore.exception.AuthenticationException;
 import com.fredastone.security.JwtAuthenticationRequest;
 import com.fredastone.security.JwtTokenUtil;
 import com.fredastone.security.JwtUser;

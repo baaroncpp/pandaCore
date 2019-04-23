@@ -1,7 +1,6 @@
 package com.fredastone.security;
 
 import java.util.Collection;
-import java.util.Date;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,7 +15,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class JwtUser implements UserDetails {
 
-    private  Long id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private  Long id;
     private  String username;
 
 

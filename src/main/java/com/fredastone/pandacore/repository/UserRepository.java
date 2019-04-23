@@ -1,5 +1,26 @@
 package com.fredastone.pandacore.repository;
 
-public class UserRepository {
+import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
+
+import com.fredastone.pandacore.entity.User;
+
+
+/**
+ * 
+ */
+
+@Repository
+public interface UserRepository extends CrudRepository<User, String>,PagingAndSortingRepository<User, String> {
+    Optional<User> findById(String id);
+    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
+    
+    @Query("Select u from User u where u.usertype = 'customer' and u.id = :id")
+    Optional<User> findCustomerById(@Param("id") String id);
 }

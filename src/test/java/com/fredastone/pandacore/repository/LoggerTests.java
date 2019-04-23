@@ -13,9 +13,6 @@ import com.fredastone.commons.logging.SecurityLog;
 import com.fredastone.commons.logging.bean.InterfaceLogParamsMandatory;
 import com.fredastone.commons.logging.bean.InterfaceLogParamsOptional;
 
-
-
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class LoggerTests {

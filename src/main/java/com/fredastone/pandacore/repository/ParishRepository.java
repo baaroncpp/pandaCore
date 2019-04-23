@@ -1,5 +1,9 @@
 package com.fredastone.pandacore.repository;
 
-public class ParishRepository {
+import org.springframework.data.repository.CrudRepository;
+
+import com.fredastone.pandacore.entity.Parish;
+
+public interface ParishRepository extends CrudRepository<Parish, Integer>{
 
 }

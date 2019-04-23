@@ -20,7 +20,7 @@ import lombok.Data;
  */
 @Data
 @Entity
-@Table(name = "t_capex")
+@Table(name = "t_capex",schema="panda_core")
 public class Capex implements java.io.Serializable {
 
 	/**
@@ -39,7 +39,7 @@ public class Capex implements java.io.Serializable {
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "employeeid", nullable = false)
-	private Employees TEmployees;
+	private EmployeeMeta TEmployees;
 	
 	@Column(name = "amount", nullable = false, precision = 131089, scale = 0)
 	private BigDecimal amount;

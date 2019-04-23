@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fredastone.pandacore.entity.FinanceConfig;
+import com.fredastone.pandacore.entity.Config;
 
 @RestController
 @RequestMapping(path="v1/fconfig")
 public class FinancialYearController {
 	
     @RequestMapping(path="add",method = RequestMethod.POST)
-    public ResponseEntity<?> addConfig(@Valid @Required @RequestBody FinanceConfig config) {
+    public ResponseEntity<?> addConfig(@Valid @Required @RequestBody Config config) {
         return ResponseEntity.ok("Greetings from admin protected method!");
     }
     
@@ -32,7 +32,7 @@ public class FinancialYearController {
     }
     
     @RequestMapping(path="update",method = RequestMethod.PUT)
-    public ResponseEntity<?> updateConfig(@Valid @RequestBody FinanceConfig config) {
+    public ResponseEntity<?> updateConfig(@Valid @RequestBody Config config) {
         return ResponseEntity.ok("Greetings from admin protected method!");
     }
     

@@ -29,10 +29,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fredastone.pandacore.entity.RoleName;
-import com.fredastone.pandacore.entity.TRole;
+import com.fredastone.pandacore.constants.RoleName;
+import com.fredastone.pandacore.entity.Role;
 import com.fredastone.pandacore.entity.User;
-import com.fredastone.pandacore.entity.TUserRole;
+import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.security.JwtAuthenticationRequest;
 import com.fredastone.security.JwtTokenUtil;
 import com.fredastone.security.JwtUser;
@@ -40,8 +40,8 @@ import com.fredastone.security.JwtUserFactory;
 import com.fredastone.security.service.JwtUserDetailsService;
 
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@SpringBootTest
 public class AuthenticationRestControllerTest {
 
     private MockMvc mvc;
@@ -83,20 +83,20 @@ public class AuthenticationRestControllerTest {
     @WithMockUser(roles = "USER")
     public void successfulRefreshTokenWithUserRole() throws Exception {
 
-    	TRole authority = new TRole();
+    	Role authority = new Role();
         authority.setId((short)0);
-        authority.setName(RoleName.ROLE_USER);
+       // authority.setName(RoleName.ROLE_USER);
         
-        TUserRole tUserRoles = new TUserRole();
-        tUserRoles.setTRole(authority);
+        UserRole tUserRoles = new UserRole();
+        //tUserRoles.setTRole(authority);
         
-        List<TUserRole> authorities = Arrays.asList(tUserRoles);
+        List<UserRole> authorities = Arrays.asList(tUserRoles);
 
         User user = new User();
         user.setUsername("username");
-        user.setUserRoles(authorities);
-        user.setIsenabled(Boolean.TRUE);
-        user.setLastpasswordresetdate(new Date(System.currentTimeMillis() + 1000 * 1000));
+        //user.setUserRoles(authorities);
+        user.setIsactive(Boolean.TRUE);
+        user.setPasswordreseton(new Date(System.currentTimeMillis() + 1000 * 1000));
 
         JwtUser jwtUser = JwtUserFactory.create(user);
 
@@ -115,20 +115,21 @@ public class AuthenticationRestControllerTest {
     @WithMockUser(roles = "USER")
     public void successfulRefreshTokenWithAdminRole() throws Exception {
 
-       	TRole authority = new TRole();
+       	Role authority = new Role();
         authority.setId((short)0);
-        authority.setName(RoleName.ROLE_ADMIN);
+        authority.setName(RoleName.ROLE_MANAGER);
         
-        TUserRole tUserRoles = new TUserRole();
-        tUserRoles.setTRole(authority);
         
-        List<TUserRole> authorities = Arrays.asList(tUserRoles);
+        UserRole tUserRoles = new UserRole();
+        //tUserRoles.setTRole(authority);
+        
+        List<UserRole> authorities = Arrays.asList(tUserRoles);
 
         User mockUser = new User();
         mockUser.setUsername("admin");
-        mockUser.setUserRoles(authorities);
-        mockUser.setIsenabled(Boolean.TRUE);
-        mockUser.setLastpasswordresetdate(new Date(System.currentTimeMillis() + 1000 * 1000));
+       // mockUser.setUserRoles(authorities);
+        mockUser.setIsactive(Boolean.TRUE);
+        mockUser.setPasswordreseton(new Date(System.currentTimeMillis() + 1000 * 1000));
 
         JwtUser jwtUser = JwtUserFactory.create(mockUser);
 

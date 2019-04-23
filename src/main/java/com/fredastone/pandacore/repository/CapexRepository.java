@@ -1,5 +1,9 @@
 package com.fredastone.pandacore.repository;
 
-public class CapexRepository {
+import org.springframework.data.repository.CrudRepository;
+
+import com.fredastone.pandacore.entity.Capex;
+
+public interface CapexRepository extends CrudRepository<Capex, String> {
 
 }

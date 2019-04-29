@@ -6,19 +6,18 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotEmpty;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
+import com.fredastone.pandacore.constants.IdType;
 
 import lombok.Data;
 
@@ -34,199 +33,40 @@ public class CustomerMeta implements java.io.Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private String userid;
-	private User user;
-	private Village village;
-	private String secondaryphone;
-	private Serializable secondaryemail;
-	private Date dateofbirth;
-	private Short idtype;
-	private String idno;
-	private Short sex;
-	private Short title;
-	private String consentformpath;
-	private String idcopypath;
-	private String profilephotopath;
-	private String address;
-	private String homelat;
-	private String homelong;
-
-	public CustomerMeta() {
-	}
-
-	public CustomerMeta(User user) {
-		this.user = user;
-	}
-
-	public CustomerMeta(User user, Village village, String secondaryphone, Serializable secondaryemail,
-			Date dateofbirth, Short idtype, String idno, Short sex, Short title, String consentformpath,
-			String idcopypath, String profilephotopath, String address, String homelat, String homelong) {
-		this.user = user;
-		this.village = village;
-		this.secondaryphone = secondaryphone;
-		this.secondaryemail = secondaryemail;
-		this.dateofbirth = dateofbirth;
-		this.idtype = idtype;
-		this.idno = idno;
-		this.sex = sex;
-		this.title = title;
-		this.consentformpath = consentformpath;
-		this.idcopypath = idcopypath;
-		this.profilephotopath = profilephotopath;
-		this.address = address;
-		this.homelat = homelat;
-		this.homelong = homelong;
-	}
-
-	@GenericGenerator(name = "generator", strategy = "foreign", parameters = @Parameter(name = "property", value = "TUser"))
 	@Id
-	@GeneratedValue(generator = "generator")
-
-	@Column(name = "userid", unique = true, nullable = false, length = 36)
-	public String getUserid() {
-		return this.userid;
-	}
-
-	public void setUserid(String userid) {
-		this.userid = userid;
-	}
-
+	private String userid;
+	
 	@OneToOne(fetch = FetchType.LAZY)
 	@PrimaryKeyJoinColumn
-	public User getUser() {
-		return this.user;
-	}
+	private User user;
+	
+	private int villageid;
+	
+	private String secondaryphone;
+	private String secondaryemail;
+	
+	@Enumerated(EnumType.STRING)
+	private IdType idtype;
+	
+	@NotEmpty
+	private String idnumber;
+	
+	private String consentformpath;
+	
+	private String idcopypath;
+	private String profilephotopath;
+	
+	@NotEmpty
+	private String address;
+	
+	
+	private float homelat;
+	private float homelong;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="createdon",insertable=false,updatable=false)
+	private Date createdon;
 
-	public void setTUser(User user) {
-		this.user = user;
-	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "villageid")
-	public Village getVillage() {
-		return this.village;
-	}
-
-	public void setTVillage(Village village) {
-		this.village =village;
-	}
-
-	@Column(name = "secondaryphone", length = 36)
-	public String getSecondaryphone() {
-		return this.secondaryphone;
-	}
-
-	public void setSecondaryphone(String secondaryphone) {
-		this.secondaryphone = secondaryphone;
-	}
-
-	@Column(name = "secondaryemail")
-	public Serializable getSecondaryemail() {
-		return this.secondaryemail;
-	}
-
-	public void setSecondaryemail(Serializable secondaryemail) {
-		this.secondaryemail = secondaryemail;
-	}
-
-	@Temporal(TemporalType.DATE)
-	@Column(name = "dateofbirth", length = 13)
-	public Date getDateofbirth() {
-		return this.dateofbirth;
-	}
-
-	public void setDateofbirth(Date dateofbirth) {
-		this.dateofbirth = dateofbirth;
-	}
-
-	@Column(name = "idtype")
-	public Short getIdtype() {
-		return this.idtype;
-	}
-
-	public void setIdtype(Short idtype) {
-		this.idtype = idtype;
-	}
-
-	@Column(name = "idno", length = 50)
-	public String getIdno() {
-		return this.idno;
-	}
-
-	public void setIdno(String idno) {
-		this.idno = idno;
-	}
-
-	@Column(name = "sex")
-	public Short getSex() {
-		return this.sex;
-	}
-
-	public void setSex(Short sex) {
-		this.sex = sex;
-	}
-
-	@Column(name = "title")
-	public Short getTitle() {
-		return this.title;
-	}
-
-	public void setTitle(Short title) {
-		this.title = title;
-	}
-
-	@Column(name = "consentformpath")
-	public String getConsentformpath() {
-		return this.consentformpath;
-	}
-
-	public void setConsentformpath(String consentformpath) {
-		this.consentformpath = consentformpath;
-	}
-
-	@Column(name = "idcopypath")
-	public String getIdcopypath() {
-		return this.idcopypath;
-	}
-
-	public void setIdcopypath(String idcopypath) {
-		this.idcopypath = idcopypath;
-	}
-
-	@Column(name = "profilephotopath")
-	public String getProfilephotopath() {
-		return this.profilephotopath;
-	}
-
-	public void setProfilephotopath(String profilephotopath) {
-		this.profilephotopath = profilephotopath;
-	}
-
-	@Column(name = "address", length = 60)
-	public String getAddress() {
-		return this.address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	@Column(name = "homelat")
-	public String getHomelat() {
-		return this.homelat;
-	}
-
-	public void setHomelat(String homelat) {
-		this.homelat = homelat;
-	}
-
-	@Column(name = "homelong")
-	public String getHomelong() {
-		return this.homelong;
-	}
-
-	public void setHomelong(String homelong) {
-		this.homelong = homelong;
-	}
 
 }

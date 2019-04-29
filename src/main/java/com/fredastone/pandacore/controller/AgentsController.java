@@ -21,12 +21,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.constants.AgentUploadType;
+import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.models.AgentModel;
 import com.fredastone.pandacore.service.AgentService;
 
 
 @RestController
-@RequestMapping(path="v1/agent")
+@RequestMapping(path="v1/agentmeta")
 public class AgentsController {
 	
 	private AgentService agentService;
@@ -38,10 +39,10 @@ public class AgentsController {
 	}
 
     @RequestMapping(path="add",method = RequestMethod.POST)
-    public ResponseEntity<?> addAgent(@Valid @RequestBody AgentModel agent) {
+    public ResponseEntity<?> addAgentMeta(@Valid @RequestBody AgentMeta agent) {
     	
     	
-        return ResponseEntity.ok("Greetings from admin protected method!");
+        return ResponseEntity.ok(agentService.addAgentMeta(agent));
     }
     
     @RequestMapping(path="get/mobile/{mobileNumber}",method = RequestMethod.GET)

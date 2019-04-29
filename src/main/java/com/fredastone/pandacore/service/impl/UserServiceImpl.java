@@ -1,11 +1,18 @@
 package com.fredastone.pandacore.service.impl;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.repository.UserRepository;
@@ -15,6 +22,9 @@ import com.fredastone.pandacore.util.ServiceUtils;
 @Service
 public class UserServiceImpl implements UserService {
 
+	@Autowired
+	@Qualifier("passwordEncoderBean")
+	private BCryptPasswordEncoder passwordEncoder;
 	
 	private UserRepository userDao;
 	
@@ -28,6 +38,9 @@ public class UserServiceImpl implements UserService {
 	public User addUser(User user) {
 		// TODO Auto-generated method stub
 		user.setId(ServiceUtils.getUUID());
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		
+		System.out.println(user.getPassword());
 		userDao.save(user);
 		user.setPassword(null);
 		return user;
@@ -80,11 +93,6 @@ public class UserServiceImpl implements UserService {
 		return user.get();
 	}
 
-	@Override
-	public List<User> getUsers(int page, int size, String direction, boolean state) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public User changePassword(String userId, String oldPassword, String newPassword, String token) {
@@ -103,5 +111,41 @@ public class UserServiceImpl implements UserService {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public Page<User> getAllForApproval(int page, int size, Direction direction, String sortby,boolean approvalStatus) {
+		
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
+		Page<User> allsorted = userDao.findAllByisapproved(pageRequest, approvalStatus);
 	
+		return allsorted;
+	}
+
+	
+
+	@Override
+	public Page<User> getUsers(int page, int size, Direction direction, String sortby) {
+		
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
+		Page<User> allsorted = userDao.findAll(pageRequest);
+	
+		return allsorted;
+	}
+
+	@Override
+	public Page<User> getAllForActive(int page, int size, Direction direction, String sortby, boolean isactive) {
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
+		Page<User> allsorted = userDao.findAllByisactive(pageRequest, isactive);
+	
+		return allsorted;
+	}
+
+	@Override
+	public Page<User> getAllByType(int page, int size, Direction direction, String sortby, UserType type) {
+		
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
+		Page<User> allsorted = userDao.findAllByusertype(pageRequest, type.name().toLowerCase());
+	
+		return allsorted;
+	}
 }

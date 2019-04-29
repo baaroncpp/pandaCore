@@ -12,7 +12,7 @@ import com.fredastone.pandacore.entity.User;
 
 public interface CustomerService {
 	
-	CustomerMeta addAdditionalCustomerInfo(CustomerMeta customerMeta);
+	CustomerMeta addCustomerMeta(CustomerMeta customerMeta);
 	Optional<User> getCustomer(String id);
 	Optional<CustomerMeta> getCustomerMeta(String id);
 

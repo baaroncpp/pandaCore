@@ -2,14 +2,14 @@ package com.fredastone.pandacore.service;
 
 import java.util.List;
 
-import com.fredastone.pandacore.entity.Approval;
+import com.fredastone.pandacore.entity.ApprovalReview;
+import com.fredastone.pandacore.entity.User;
 
 public interface ApprovalService {
 	
-	List<Approval> getApprovalByApprover(String approverId);
-	List<Approval> getApprovalByCategory(String category);
-	Approval changeApprover(String previousApprover,String newApprover,String approvalId);
-	Approval approvalOperation(String approvalId);
+	ApprovalReview addApprovalReview(ApprovalReview approvalReview);
+	List<ApprovalReview> getAllApprovalReview(String id);
 	
+	User approveUser(String userId,String approverId);
 
 }

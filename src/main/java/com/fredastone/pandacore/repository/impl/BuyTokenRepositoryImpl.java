@@ -244,7 +244,6 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		
 	}
 	
-	
 	class TotalLeasePaymentsRowMapper implements RowMapper<TotalLeasePayments>{
 
 		@Override

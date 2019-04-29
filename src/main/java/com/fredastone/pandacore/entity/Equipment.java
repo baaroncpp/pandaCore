@@ -63,6 +63,7 @@ public class Equipment implements java.io.Serializable {
 	@Column(name = "serial", nullable = false,unique = true)
 	private String serial;
 	
+	
 	@Column(name = "quantity", nullable = false, precision = 131089, scale = 0)
 	private BigDecimal quantity;
 	

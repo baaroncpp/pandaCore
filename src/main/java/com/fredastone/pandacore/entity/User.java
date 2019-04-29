@@ -10,6 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,18 +40,22 @@ public class User implements java.io.Serializable {
 	@JsonProperty(access = Access.READ_ONLY)
 	private String id;
 	
+	@NotEmpty
 	@Column(name = "username", nullable = false, length = 30)
 	private String username;
 	
-	@Column(name = "password", nullable = false, length = 30)
+	
 	private String password;
 	
-	@Column(name = "isactive", nullable = false)
+	@Column(name = "isactive",insertable=false,updatable=true, nullable = false)
 	private boolean isactive;
+	
+	@Column(name = "isapproved",insertable=false,updatable=true, nullable = false)
+	private boolean isapproved;
 	
 	@JsonIgnore
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "passwordreseton", length = 29)
+	@Column(name = "passwordreseton",insertable=false,updatable=true, length = 29)
 	private Date passwordreseton;
 	
 	@Basic(optional=false)
@@ -56,23 +63,29 @@ public class User implements java.io.Serializable {
 	@Column(name = "createdon",insertable=false,updatable=false, nullable = false, length = 29)
 	private Date createdon;
 	
+	@NotEmpty(message="Usertype cannot be empty")
+	@Size(max=30)
 	@Column(name = "usertype", nullable = false, length = 30)
 	private String usertype;
 	
-
+	@NotEmpty
+	@Size(max=20)
 	@Column(name = "firstname", nullable = false, length = 20)
 	private String firstname;
 	
-
+	@Size(max=20,message="Middlename cannot be more than 20 in length")
 	@Column(name = "middlename", length = 20)
 	private String middlename;
 	
-
+	@NotNull
+	@Size(max=20)
 	@Column(name = "lastname", nullable = false, length = 20)
 	private String lastname;
 	
 
-	@Column(name = "email", nullable = false, length = 20)
+	@Size(max=50)
+	@NotEmpty
+	@Column(name = "email", nullable = false, length = 50)
 	private String email;
 
 
@@ -92,21 +105,24 @@ public class User implements java.io.Serializable {
 	@JsonIgnore
 	private Date lastlogon;
 	
+	@Temporal(TemporalType.DATE)
+	@Column(name = "updatedon",insertable=false,updatable=false,nullable=true, length = 13)
+	private Date updatedon;
+		
 	
-//
-//	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
-//	@JsonIgnore
-//	private AgentMeta agentMeta;
-//	
-//	
-//	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
-//	private EmployeeMeta employeeMeta;
-//	
-//
-//	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
-//	private CustomerMeta customerMeta;
-
-
-
+	@JsonIgnore
+	@NotEmpty
+	@Size(max=60)
+	@Column(name = "password", nullable = false, length = 60)
+	public String getPassword() {
+		return this.password;
+	}
+	
+	@JsonProperty
+	public void setPassword(String password)
+	{
+		this.password = password;
+	}
+	
 	
 }

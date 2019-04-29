@@ -1,7 +1,7 @@
 package com.fredastone.pandacore.constants;
 
-public enum UserType {
+public enum AgentType {
 	
-	AGENT,CUSTOMER,EMPLOYEE
+	DIRECT,INDIRECT
 
 }

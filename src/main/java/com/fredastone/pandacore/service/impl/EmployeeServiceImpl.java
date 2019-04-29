@@ -2,6 +2,8 @@ package com.fredastone.pandacore.service.impl;
 
 import java.util.Optional;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -12,12 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.constants.UserType;
+import com.fredastone.pandacore.entity.Config;
 import com.fredastone.pandacore.entity.EmployeeMeta;
+import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
-import com.fredastone.pandacore.repository.ApproverRepository;
 import com.fredastone.pandacore.repository.ConfigRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
-import com.fredastone.pandacore.repository.VEmployeeApprovalRepository;
+import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.EmployeeService;
 import com.fredastone.pandacore.service.StorageService;
 import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
@@ -35,32 +39,33 @@ public class EmployeeServiceImpl implements EmployeeService{
 	private String roleSeparator;
 	
 	
+	@Value("${employeeapprover}")
+	private String employeeApprover;
+	
 	@Value("${employeephotosfolder}")
 	private String employeePhotoFolder;
 	
 	private StorageService storageService;
 	
 	private final EmployeeRepository employeeDao;
-	private final ApproverRepository approvalsDao;
-	
+	private final UserRepository userDao;
 	private final ConfigRepository configDao;
-	private final VEmployeeApprovalRepository vapprovalsDao;
+
 	
 
 
 	
 	@Autowired
-	 public EmployeeServiceImpl(EmployeeRepository employeeDao,ApproverRepository approvalDao,
-			 ConfigRepository configDao,VEmployeeApprovalRepository vapprovalDao,StorageService storageService) {
+	 public EmployeeServiceImpl(EmployeeRepository employeeDao,StorageService storageService,UserRepository userDao,ConfigRepository configDao) {
 		// TODO Auto-generated constructor stub
 		this.employeeDao = employeeDao;
-		this.approvalsDao = approvalDao;
-		this.configDao = configDao;
-		this.vapprovalsDao = vapprovalDao;
 		this.storageService = storageService;
+		this.userDao = userDao;
+		this.configDao = configDao;
 	}
 
 
+	
 
 	@Override
 	public Optional<EmployeeMeta> findEmployeeById(String id) {
@@ -123,6 +128,33 @@ public class EmployeeServiceImpl implements EmployeeService{
         final Resource file = storageService.loadAsResource(String.format("%s/%s",employeeId,pd.get().getProfilepath()));
         
         return file;
+	}
+
+
+
+
+	@Transactional
+	@Override
+	public EmployeeMeta addEmployee(EmployeeMeta employeemeta) {
+
+		Optional<User> user = userDao.findById(employeemeta.getUserid());
+		
+		if(!user.isPresent() || !user.get().getUsertype().equals(UserType.EMPLOYEE.name())) {
+			throw new RuntimeException("User not found or user does not match type employee");
+		}
+		
+		
+		final EmployeeMeta newMeta = employeeDao.save(employeemeta);
+		
+		final Optional<Config> approverConfig = configDao.findByName(employeeApprover);
+		if(approverConfig.isPresent()) {
+			Optional<User> approver = userDao.findById(approverConfig.get().getValue());
+			if(approver.isPresent()) {
+				
+				//TODO: Throw approval mail to queue to be sent to right administrator, might need to iterate emails if more than one can approve
+			}
+		}
+		return newMeta;
 	}
 	
 }

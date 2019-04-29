@@ -10,8 +10,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.constants.AgentUploadType;
+import com.fredastone.pandacore.constants.UserType;
 //import com.fredastone.pandacore.entity.Agent;
 import com.fredastone.pandacore.entity.AgentMeta;
+import com.fredastone.pandacore.entity.Config;
+import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
@@ -35,6 +38,9 @@ public class AgentServiceImpl implements AgentService{
 	
 	@Value("${agentapprovalrolesseparator}")
 	private String roleSeparator;
+	
+	@Value("${agentapprover}")
+	private String agentApprover;
 	
 	
 	@Value("${agentUploadFolder}")
@@ -129,6 +135,29 @@ public class AgentServiceImpl implements AgentService{
 
 		}
 
+	}
+
+
+	@Override
+	public AgentMeta addAgentMeta(AgentMeta agentMeta) {
+		Optional<User> user = userDao.findById(agentMeta.getUserid());
+		
+		if(!user.isPresent() || !user.get().getUsertype().equals(UserType.AGENT.name())) {
+			throw new RuntimeException("User not found or user does not match type employee");
+		}
+		
+		
+		final AgentMeta newMeta = agentMetaDao.save(agentMeta);
+		
+		final Optional<Config> approverConfig = configDao.findByName(agentApprover);
+		if(approverConfig.isPresent()) {
+			Optional<User> approver = userDao.findById(approverConfig.get().getValue());
+			if(approver.isPresent()) {
+				
+				//TODO: Throw approval mail to queue to be sent to right administrator, might need to iterate emails if more than one can approve
+			}
+		}
+		return newMeta;
 	}
 
 }

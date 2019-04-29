@@ -11,6 +11,7 @@ import com.fredastone.pandacore.entity.EmployeeMeta;
 
 public interface EmployeeService {
 	
+	EmployeeMeta addEmployee(EmployeeMeta employeemeta);
 	public Page<EmployeeMeta> findAllEmployees(int page,int size);
 	public Optional<EmployeeMeta> findEmployeeById(String id);
 	public Optional<EmployeeMeta> findEmployeeByName(String name);

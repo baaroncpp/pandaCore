@@ -5,17 +5,22 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
+import com.fredastone.pandacore.constants.AgentType;
+import com.fredastone.pandacore.constants.IdType;
 
 import lombok.Data;
 
@@ -31,144 +36,70 @@ public class AgentMeta implements java.io.Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 6438370408233233490L;
-	private String userid;
-	private User user;
-	private String profilepath;
-	private String contractdocpath;
-	private int villageid;
-	private String address;
-	private Date createon;
-	private float agentcommissionrate;
-	private boolean isdeactivated;
-	private Date deactivatedon;
-	private boolean isactive;
-	private Date activatedon;
-	private String shoplong;
+	
 
-
-	@GenericGenerator(name = "generator", strategy = "foreign", parameters = @Parameter(name = "property", value = "user"))
 	@Id
-	@GeneratedValue(generator = "generator")
-
 	@Column(name = "userid", unique = true, nullable = false, length = 36)
-	public String getUserid() {
-		return this.userid;
-	}
-
-	public void setUserid(String userid) {
-		this.userid = userid;
-	}
-
+	private String userid;
+	
+	
 	@OneToOne(fetch = FetchType.LAZY)
 	@PrimaryKeyJoinColumn
-	public User getUser() {
-		return this.user;
-	}
-
-	public void setTUser(User user) {
-		this.user = user;
-	}
-
-	@Column(name = "profilepath")
-	public String getProfilepath() {
-		return this.profilepath;
-	}
-
-	public void setProfilepath(String profilepath) {
-		this.profilepath = profilepath;
-	}
-
-	@Column(name = "contractdocpath")
-	public String getContractdocpath() {
-		return this.contractdocpath;
-	}
-
-	public void setContractdocpath(String contractdocpath) {
-		this.contractdocpath = contractdocpath;
-	}
-
-	@Column(name = "villageid", nullable = false)
-	public int getVillageid() {
-		return this.villageid;
-	}
-
-	public void setVillageid(int villageid) {
-		this.villageid = villageid;
-	}
-
-	@Column(name = "address")
-	public String getAddress() {
-		return this.address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
+	private User user;
+	
+	
+	private String profilepath;
+	private String contractdocpath;
+	
+	@Min(1)
+	private int villageid;
+	private String address;
+	
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "createon", insertable=false,updatable=false, nullable = false, length = 29)
-	public Date getCreateon() {
-		return this.createon;
-	}
-
-	public void setCreateon(Date createon) {
-		this.createon = createon;
-	}
-
-	@Column(name = "agentcommissionrate", nullable = false, precision = 131089, scale = 0)
-	public float getAgentcommissionrate() {
-		return this.agentcommissionrate;
-	}
-
-	public void setAgentcommissionrate(float agentcommissionrate) {
-		this.agentcommissionrate = agentcommissionrate;
-	}
-
-	@Column(name = "isdeactivated", nullable = false)
-	public boolean isIsdeactivated() {
-		return this.isdeactivated;
-	}
-
-	public void setIsdeactivated(boolean isdeactivated) {
-		this.isdeactivated = isdeactivated;
-	}
-
+	@Column(name = "createdon", insertable=false,updatable=false, nullable = false, length = 29)
+	private Date createdon;
+	
+	@Min(0)
+	@Max(100)
+	private float agentcommissionrate;
+	
+	@Column(name="isdeactivated",insertable=false,updatable=true)
+	private boolean isdeactivated;
+	
 	@Temporal(TemporalType.DATE)
 	@Column(name = "deactivatedon", length = 13)
-	public Date getDeactivatedon() {
-		return this.deactivatedon;
-	}
-
-	public void setDeactivatedon(Date deactivatedon) {
-		this.deactivatedon = deactivatedon;
-	}
-
-	@Column(name = "isactive", nullable = false)
-	public boolean isIsactive() {
-		return this.isactive;
-	}
-
-	public void setIsactive(boolean isactive) {
-		this.isactive = isactive;
-	}
-
+	private Date deactivatedon;
+	
+	@Column(name="isactive",insertable=false,updatable=true)
+	private boolean isactive;
+	
 	@Temporal(TemporalType.DATE)
 	@Column(name = "activatedon", length = 13)
-	public Date getActivatedon() {
-		return this.activatedon;
-	}
-
-	public void setActivatedon(Date activatedon) {
-		this.activatedon = activatedon;
-	}
-
-	@Column(name = "shoplong")
-	public String getShoplong() {
-		return this.shoplong;
-	}
-
-	public void setShoplong(String shoplong) {
-		this.shoplong = shoplong;
-	}
+	private Date activatedon;
+	
+	private float shoplong;
+	private float shoplat;
+	
+	@NotEmpty
+	private String companyname;
+	
+	@NotEmpty
+	private String postaladdress;
+	
+	@NotEmpty
+	private String tinnumber;
+	private String coipath;
+	
+	@Enumerated(EnumType.STRING)
+	private AgentType agenttype;
+	
+	
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	private IdType idtype;
+	
+	@NotEmpty
+	private String idnumber;
 
 }

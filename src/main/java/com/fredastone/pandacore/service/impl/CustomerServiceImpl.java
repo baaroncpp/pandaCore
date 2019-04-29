@@ -3,14 +3,15 @@ package com.fredastone.pandacore.service.impl;
 import java.util.Optional;
 
 import org.apache.commons.io.FilenameUtils;
-import org.jvnet.hk2.annotations.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.constants.CustomerUploadType;
+import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
@@ -22,7 +23,7 @@ import com.fredastone.pandacore.service.StorageService;
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
-	@Value("${customerUploadFolder}")
+	@Value("${customerUploadfolder}")
 	private String customerUploadFolder;
 
 	private CustomerMetaRepository customerMetaDao;
@@ -41,20 +42,17 @@ public class CustomerServiceImpl implements CustomerService {
 
 
 	@Override
-	public CustomerMeta addAdditionalCustomerInfo(CustomerMeta customerMeta) {
-		// TODO Auto-generated method stub
+	public CustomerMeta addCustomerMeta(CustomerMeta customerMeta) {
 		
-		Optional<User> cust = userDao.findCustomerById(customerMeta.getUserid());
+		final Optional<User> user = userDao.findById(customerMeta.getUserid());
 		
-		if (!cust.isPresent()) {
-			throw new ItemNotFoundException(customerMeta.getUserid());
+		if(!user.isPresent() || !user.get().getUsertype().equals(UserType.CUSTOMER.name())) {
+			throw new RuntimeException("User not found or user does not match type employee");
 		}
-
-		customerMeta.setUser(cust.get());
-		customerMeta.setUserid(null);
-		customerMetaDao.save(customerMeta);
-
-		return customerMeta;
+		
+		
+		return customerMetaDao.save(customerMeta);
+		
 	}
 
 	@Override

@@ -1,7 +1,5 @@
 package com.fredastone.pandacore.controller;
 
-import java.util.Optional;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -27,7 +25,7 @@ import com.fredastone.pandacore.service.EmployeeService;
 
 
 @RestController
-@RequestMapping("v1/employee")
+@RequestMapping("v1/employeemeta")
 public class EmployeeController {
 	
 	@Autowired
@@ -38,11 +36,9 @@ public class EmployeeController {
 	 * Adding an employee triggers an approval stage that may involve collecting documents from employee and adding them to payroll
 	 */
 	@RequestMapping(path="add",method = RequestMethod.POST)
-    public ResponseEntity<EmployeeMeta> addNewEmployee(@Valid @NotNull @RequestBody EmployeeMeta employee) {
+    public ResponseEntity<EmployeeMeta> addEmployeeMeta(@Valid @NotNull @RequestBody EmployeeMeta employee) {
 		
-	//	final EmployeeMeta e = employeeService.createEmployee(employee);
-		
-        return null;
+        return ResponseEntity.ok(employeeService.addEmployee(employee));
     }
 	
     @RequestMapping(path="approve/{id}",method = RequestMethod.PUT)

@@ -2,10 +2,13 @@ package com.fredastone.pandacore.controller;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.service.ApprovalService;
+import com.fredastone.security.JwtTokenUtil;
 
 import lombok.Getter;
 
@@ -23,6 +27,13 @@ import lombok.Getter;
 public class ApprovalsController {
 	
 	private ApprovalService approvalService;
+	
+	@Value("${jwt.header}")
+	private String tokenHeader;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+    
 
 	@Autowired
 	public ApprovalsController(ApprovalService approvalService) {
@@ -30,7 +41,8 @@ public class ApprovalsController {
 		this.approvalService = approvalService;
 	}
 	
-	
+
+	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE,ROLE_SUPPORT"})
 	@RequestMapping(path = "add/approvalreview", method = RequestMethod.POST)
 	public ResponseEntity<?> addApprovalReview(@RequestBody ApprovalReview approvalReview){
 		
@@ -40,6 +52,8 @@ public class ApprovalsController {
 		
 	}
 	
+
+	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE,ROLE_SUPPORT"})
 	@RequestMapping(path = "get/approvalreview/{id}", method = RequestMethod.GET)
 	public ResponseEntity<?> getApprovalReview(@Valid @PathVariable("id") String approvalId){
 			
@@ -49,10 +63,10 @@ public class ApprovalsController {
 	
 	
 	@RequestMapping(path = "user/approve/{id}", method = RequestMethod.PUT)
-	public ResponseEntity<?> approveUser(@Valid @PathVariable("id") String approvalId){
+	public ResponseEntity<?> approveUser(@Valid @PathVariable("id") String approvalId,HttpServletRequest request){
 			
-		
-		return ResponseEntity.ok(approvalService.approveUser(approvalId, "fc179a74c902420bba3d16dfef1522af"));
+	    final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		return ResponseEntity.ok(approvalService.approveUser(approvalId, userid));
 				
 	}
 

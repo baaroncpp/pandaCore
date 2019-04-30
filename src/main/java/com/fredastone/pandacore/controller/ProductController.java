@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,18 +32,23 @@ public class ProductController {
 		this.productService = productService;
 	}
 
+
+	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
 	@RequestMapping(path = "add", method = RequestMethod.POST)
 	public ResponseEntity<?> addProductt(@RequestBody Product product) {
 
 		return ResponseEntity.ok(productService.addProduct(product));
 	}
 
+
+	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
 	@RequestMapping(path = "update", method = RequestMethod.PUT)
 	public ResponseEntity<?> updateProduct(@RequestBody Product product) {
 
 		return ResponseEntity.ok(productService.updateProduct(product));
 	}
 
+	
 	@RequestMapping(path = "get", method = RequestMethod.GET)
 	public ResponseEntity<?> getAllProducts() {
 		return ResponseEntity.ok(productService.getAllProducts());
@@ -59,6 +65,8 @@ public class ProductController {
 		return ResponseEntity.ok(productService.getProductByName(name));
 	}
 
+
+	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
 	@PostMapping(value = "/thumbnail/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
 			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {

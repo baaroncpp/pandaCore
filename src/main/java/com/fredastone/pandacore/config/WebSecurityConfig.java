@@ -74,11 +74,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 
             .authorizeRequests()
-            .antMatchers("/").permitAll();
+//            .antMatchers("/").permitAll();
 
-//            .antMatchers("/auth/**").permitAll()
-//            .antMatchers("/swagger*").permitAll()
-//            .anyRequest().authenticated();
+            .antMatchers("/auth/**").permitAll()
+            .antMatchers("/swagger*").permitAll()
+            .anyRequest().authenticated();
 
        httpSecurity
             .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);

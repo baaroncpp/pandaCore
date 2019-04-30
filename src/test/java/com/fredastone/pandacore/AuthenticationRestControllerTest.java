@@ -30,6 +30,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fredastone.pandacore.constants.RoleName;
+import com.fredastone.pandacore.entity.LoginUser;
 import com.fredastone.pandacore.entity.Role;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.UserRole;
@@ -92,7 +93,7 @@ public class AuthenticationRestControllerTest {
         
         List<UserRole> authorities = Arrays.asList(tUserRoles);
 
-        User user = new User();
+        LoginUser user = new LoginUser();
         user.setUsername("username");
         //user.setUserRoles(authorities);
         user.setIsactive(Boolean.TRUE);
@@ -125,7 +126,7 @@ public class AuthenticationRestControllerTest {
         
         List<UserRole> authorities = Arrays.asList(tUserRoles);
 
-        User mockUser = new User();
+        LoginUser mockUser = new LoginUser();
         mockUser.setUsername("admin");
        // mockUser.setUserRoles(authorities);
         mockUser.setIsactive(Boolean.TRUE);

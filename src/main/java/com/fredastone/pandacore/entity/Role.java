@@ -46,5 +46,9 @@ public class Role implements java.io.Serializable {
 	public Role(short id) {
 		this.id = id;
 	}
+	
+	public Role(RoleName rolename) {
+		this.name = rolename;
+	}
 
 }

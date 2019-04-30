@@ -6,6 +6,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,92 +28,92 @@ import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.File
 @RestController
 @RequestMapping("v1/equipment")
 public class EquipmentController {
-	
+
 	private EquipmentService equipmentService;
 	private StorageService storageService;
-	
+
 	@Value("${equipmentphotosfolder}")
 	private String photosFolder;
-	
+
 	@Autowired
-	public EquipmentController(EquipmentService equipmentService,StorageService storageService) {
+	public EquipmentController(EquipmentService equipmentService, StorageService storageService) {
 		// TODO Auto-generated constructor stub
 		this.equipmentService = equipmentService;
 		this.storageService = storageService;
 	}
-	
-   @RequestMapping(path="add",method = RequestMethod.POST)
-    public ResponseEntity<?> addNewEquipment(@RequestBody EquipmentModel equipment) {
-	   
-	   	Equipment e = equipmentService.addNewEquipment(equipment);
-	   	
-	   	return  ResponseEntity.ok(e);
-    }
-   
-   @RequestMapping(path="update",method = RequestMethod.PUT)
-   public ResponseEntity<?> updateEquipment(@RequestBody Equipment equipment) {
-	   
-	   	Equipment e = equipmentService.updateEquipment(equipment);
-	   	
-	   	return  ResponseEntity.ok(e);
-   }
 
-    @RequestMapping(path="get",params = { "page","size" },method = RequestMethod.GET)
-    public Page<?> getAllEquipment(@RequestParam("page") int page,@RequestParam("size") int size) {
-        
-    	return equipmentService.getAllEquipment(size, page);
-    }
+	@Secured({ "ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE" })
+	@RequestMapping(path = "add", method = RequestMethod.POST)
+	public ResponseEntity<?> addNewEquipment(@RequestBody EquipmentModel equipment) {
 
-    @RequestMapping(path="get/serial/{serial}",method = RequestMethod.GET)
-    public ResponseEntity<?> getEquipmentBySerial(@PathVariable("serial") String serial) {
+		Equipment e = equipmentService.addNewEquipment(equipment);
 
-    	return ResponseEntity.ok(equipmentService.findEquipmentBySerial(serial));
-    }
-    
-    @RequestMapping(path="get/id/{id}",method = RequestMethod.GET)
-    public ResponseEntity<?> getEquipmentById(@PathVariable("id") String id) {
-        
-    	return ResponseEntity.ok(equipmentService.findEquipmentById(id));
-    }
-    
-    //TODO Add a date on the photo to separate have atrace of old and new photos
-    @PostMapping(value="/photo/{id}")
-    public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-            RedirectAttributes redirectAttributes,@PathVariable("id") String id) {
+		return ResponseEntity.ok(e);
+	}
 
-    	Equipment eq = equipmentService.findEquipmentById(id);
-    	
-    	if(eq == null)
-    	{
-    		return ResponseEntity.notFound().build();
-    	}
-        
-    	storageService.store(file,String.format("%s/%s.%s",photosFolder,id,FilenameUtils.getExtension(file.getOriginalFilename())));
-    	
-    	eq.setEquipmentPhoto(String.format("%s.%s",id,FilenameUtils.getExtension(file.getOriginalFilename())));
-    	
-    	equipmentService.updateEquipment(eq);
+	@Secured({ "ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE" })
+	@RequestMapping(path = "update", method = RequestMethod.PUT)
+	public ResponseEntity<?> updateEquipment(@RequestBody Equipment equipment) {
 
-        return ResponseEntity.ok().build();
-        
-    }
-    
-    @GetMapping("/photo/{id}")
-    @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable("id") String id) {
+		Equipment e = equipmentService.updateEquipment(equipment);
 
+		return ResponseEntity.ok(e);
+	}
 
-    	Equipment eq = equipmentService.findEquipmentById(id);
-    	
-    	if(eq == null)
-    	{
-    		return ResponseEntity.notFound().build();
-    	}
-        Resource file = storageService.loadAsResource(String.format("%s/%s",photosFolder,eq.getEquipmentPhoto()));
-        
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }
+	@RequestMapping(path = "get", params = { "page", "size" }, method = RequestMethod.GET)
+	public Page<?> getAllEquipment(@RequestParam("page") int page, @RequestParam("size") int size) {
 
+		return equipmentService.getAllEquipment(size, page);
+	}
+
+	@RequestMapping(path = "get/serial/{serial}", method = RequestMethod.GET)
+	public ResponseEntity<?> getEquipmentBySerial(@PathVariable("serial") String serial) {
+
+		return ResponseEntity.ok(equipmentService.findEquipmentBySerial(serial));
+	}
+
+	@RequestMapping(path = "get/id/{id}", method = RequestMethod.GET)
+	public ResponseEntity<?> getEquipmentById(@PathVariable("id") String id) {
+
+		return ResponseEntity.ok(equipmentService.findEquipmentById(id));
+	}
+
+	@Secured({ "ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE" })
+	@PostMapping(value = "/photo/{id}")
+	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
+			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {
+
+		Equipment eq = equipmentService.findEquipmentById(id);
+
+		if (eq == null) {
+			return ResponseEntity.notFound().build();
+		}
+
+		storageService.store(file,
+				String.format("%s/%s.%s", photosFolder, id, FilenameUtils.getExtension(file.getOriginalFilename())));
+
+		eq.setEquipmentPhoto(String.format("%s.%s", id, FilenameUtils.getExtension(file.getOriginalFilename())));
+
+		equipmentService.updateEquipment(eq);
+
+		return ResponseEntity.ok().build();
+
+	}
+
+	@GetMapping("/photo/{id}")
+	@ResponseBody
+	public ResponseEntity<Resource> serveFile(@PathVariable("id") String id) {
+
+		Equipment eq = equipmentService.findEquipmentById(id);
+
+		if (eq == null) {
+			return ResponseEntity.notFound().build();
+		}
+		Resource file = storageService.loadAsResource(String.format("%s/%s", photosFolder, eq.getEquipmentPhoto()));
+
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+				.body(file);
+	}
 
 }

@@ -1,6 +1,5 @@
 package com.fredastone.pandacore.controller;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -11,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,6 @@ import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.service.UserService;
 import com.fredastone.security.JwtTokenUtil;
-import com.fredastone.security.JwtUser;
 
 @RestController
 @RequestMapping("v1/user")
@@ -52,16 +52,17 @@ public class UserController {
     private static final String ALL_EMPLOYEES = "employee";
     private static final String ALL_AGENTS = "agent";
     
-    
-    @RequestMapping(value = "user", method = RequestMethod.GET)
+    /*@RequestMapping(value = "user", method = RequestMethod.GET)
     public JwtUser getAuthenticatedUser(HttpServletRequest request) {
         String token = request.getHeader(tokenHeader).substring(7);
         String username = jwtTokenUtil.getUsernameFromToken(token);
         JwtUser user = (JwtUser) userDetailsService.loadUserByUsername(username);
         return user;
     }
+    */
     
     
+    @Secured({"ROLE_HR,ROLE_AGENT,ROLE_SUPPORT"})
     @RequestMapping(path="add",method = RequestMethod.POST)
     public ResponseEntity<?> addUser(@Valid @NotNull @RequestBody User user) {
     	
@@ -69,6 +70,8 @@ public class UserController {
         return new ResponseEntity<User>(u, HttpStatus.OK);
     }
     
+    
+    @PreAuthorize("hasRole(ROLE_HR) and hasRole(ROLE_MANAGER)")
     @RequestMapping(path="update/{id}",method = RequestMethod.PUT)
     public ResponseEntity<?> updateUser(@Valid @PathVariable("id")String id,@Valid @NotNull @RequestBody User user) {
     	User u = userService.updateUser(user);
@@ -83,6 +86,8 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
     
+    
+    @Secured({"ROLE_HR,ROLE_MANAGER,ROLE_ADMIN,ROLE_SENIOR_MANAGER,ROLE_FINANCE,ROLE_MARKETING,ROLE_SUPPORT"})
     @RequestMapping(path="get/all/{type}",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllUsers(
     		@PathVariable("type")

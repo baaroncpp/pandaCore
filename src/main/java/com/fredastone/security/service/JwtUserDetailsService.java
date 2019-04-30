@@ -1,31 +1,31 @@
 package com.fredastone.security.service;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.fredastone.pandacore.entity.User;
-import com.fredastone.pandacore.repository.UserRepository;
+import com.fredastone.pandacore.entity.LoginUser;
+import com.fredastone.pandacore.repository.UserRepositoryCustom;
 import com.fredastone.security.JwtUserFactory;
 
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepositoryCustom userRepository;
+    
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> user = userRepository.findById(username);
+        final LoginUser user = userRepository.getLoginUser(username);  
 
-        if (!user.isPresent()) {
+        if (user == null) {
             throw new UsernameNotFoundException(String.format("No user found with username '%s'.", username));
         } else {
-            return JwtUserFactory.create(user.get());
+        	
+            return JwtUserFactory.create(user);
         }
     }
 }

@@ -90,11 +90,14 @@ public class ApprovalServiceImpl implements ApprovalService {
 			agentMeta.get().setIsactive(Boolean.TRUE);
 			agentMeta.get().setIsdeactivated(Boolean.FALSE);
 			
+			final ApprovalReview review = ApprovalReview.builder().approvalid(user.get().getId()).id(ServiceUtils.getUUID()).review("Approved").build();
+			this.addApprovalReview(review);
+			
 			agentDao.save(agentMeta.get());
 		}
 		
 		
-		Approver approver = Approver.builder().id(ServiceUtils.getUUID()).userid(approverId).itemapproved("user").itemid(user.get().getId()).build();
+		final Approver approver = Approver.builder().id(ServiceUtils.getUUID()).userid(approverId).itemapproved("user").itemid(user.get().getId()).build();
 		
 		approverDao.save(approver);
 		

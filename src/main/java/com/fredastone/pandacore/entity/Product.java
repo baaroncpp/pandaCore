@@ -55,8 +55,8 @@ public class Product extends BaseArrayEntity implements java.io.Serializable {
 	@Column(name="isactive",nullable=false)
 	private Boolean isActive;
 	
-	@Column(name="isleasable",nullable=false)
-	private Boolean isLeasable;
+	@Column(name="isleasable",nullable=true)
+	private Boolean isleasable;
 	
 	@Column(name="usestoken",nullable=false)
 	private Boolean usestoken;

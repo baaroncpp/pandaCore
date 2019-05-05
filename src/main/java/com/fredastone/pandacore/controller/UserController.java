@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.controller;
 
+import java.util.Optional;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -85,6 +87,17 @@ public class UserController {
     	User user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
+    
+    @RequestMapping(path="get/username/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getUserByUsername(@Valid @PathVariable("id")String  id) {
+    	
+    	Optional<User> user = userService.getUserByUsername(id);
+    	if(!user.isPresent())
+    		return ResponseEntity.noContent().build();
+    	
+        return ResponseEntity.ok(user.get());
+    }
+    
     
     
     @Secured({"ROLE_HR,ROLE_MANAGER,ROLE_ADMIN,ROLE_SENIOR_MANAGER,ROLE_FINANCE,ROLE_MARKETING,ROLE_SUPPORT"})

@@ -40,7 +40,6 @@ public class UserServiceImpl implements UserService {
 		user.setId(ServiceUtils.getUUID());
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		
-		System.out.println(user.getPassword());
 		userDao.save(user);
 		user.setPassword(null);
 		return user;
@@ -147,5 +146,10 @@ public class UserServiceImpl implements UserService {
 		Page<User> allsorted = userDao.findAllByusertype(pageRequest, type.name().toLowerCase());
 	
 		return allsorted;
+	}
+
+	@Override
+	public Optional<User> getUserByUsername(String username) {
+		return userDao.findLoginUser(username);
 	}
 }

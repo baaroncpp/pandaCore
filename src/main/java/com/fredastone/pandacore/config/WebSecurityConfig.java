@@ -16,102 +16,83 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.session.SessionManagementFilter;
 
+import com.fredastone.pandacore.filter.CorsFilter;
 import com.fredastone.security.JwtAuthenticationEntryPoint;
 import com.fredastone.security.JwtAuthorizationTokenFilter;
 import com.fredastone.security.service.JwtUserDetailsService;
-
-
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    private JwtAuthenticationEntryPoint  unauthorizedHandler;
+	@Autowired
+	private JwtAuthenticationEntryPoint unauthorizedHandler;
 
-    @Autowired
-    private JwtUserDetailsService jwtUserDetailsService;
+	@Autowired
+	private JwtUserDetailsService jwtUserDetailsService;
 
-    // Custom JWT based security filter
-    @Autowired
-    JwtAuthorizationTokenFilter authenticationTokenFilter;
+	// Custom JWT based security filter
+	@Autowired
+	JwtAuthorizationTokenFilter authenticationTokenFilter;
 
-    @Value("${jwt.header}")
-    private String tokenHeader;
+	@Value("${jwt.header}")
+	private String tokenHeader;
 
-    @Value("${jwt.route.authentication.path}")
-    private String authenticationPath;
+	@Value("${jwt.route.authentication.path}")
+	private String authenticationPath;
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-            .userDetailsService(jwtUserDetailsService)
-            .passwordEncoder(passwordEncoderBean());
-    }
+	@Autowired
+	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoderBean());
+	}
 
-    @Bean
-    public PasswordEncoder passwordEncoderBean() {
-        return new BCryptPasswordEncoder();
-    }
+	@Bean
+	public PasswordEncoder passwordEncoderBean() {
+		return new BCryptPasswordEncoder();
+	}
 
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
+	@Bean
+	@Override
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
+	}
 
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-            // we don't need CSRF because our token is invulnerable
-            .csrf().disable()
+	@Bean
+	CorsFilter corsFilter() {
+		CorsFilter filter = new CorsFilter();
+		return filter;
+	}
 
-            .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
+	@Override
+	protected void configure(HttpSecurity httpSecurity) throws Exception {
+		httpSecurity
+				// we don't need CSRF because our token is invulnerable
+				.addFilterBefore(corsFilter(), SessionManagementFilter.class)
+				.csrf().disable()
+				.exceptionHandling()
+				.authenticationEntryPoint(unauthorizedHandler).and().sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
+				// .antMatchers("/").permitAll();
 
-            // don't create session
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+				.antMatchers("/token/**").permitAll().antMatchers("/swagger*").permitAll().anyRequest().authenticated();
 
-            .authorizeRequests()
-//            .antMatchers("/").permitAll();
+		httpSecurity.addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class).headers()
+				.frameOptions().sameOrigin() // required to set for H2 else H2 Console will be blank.
+				.cacheControl();
 
-            .antMatchers("/auth/**").permitAll()
-            .antMatchers("/swagger*").permitAll()
-            .anyRequest().authenticated();
+	}
 
-       httpSecurity
-            .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+	@Override
+	public void configure(WebSecurity web) throws Exception {
+		// AuthenticationTokenFilter will ignore the below paths
+		web.ignoring().antMatchers(HttpMethod.POST, authenticationPath)
 
-        // disable page caching
-        httpSecurity
-            .headers()
-            .frameOptions().sameOrigin()  // required to set for H2 else H2 Console will be blank.
-            .cacheControl();
-    }
+				// allow anonymous resource requests
+				.and().ignoring()
+				.antMatchers(HttpMethod.GET, "/", "/*.html", "/favicon.ico", "/**/*.html", "/**/*.css", "/**/*.js");
 
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        // AuthenticationTokenFilter will ignore the below paths
-        web
-            .ignoring()
-            .antMatchers(
-                HttpMethod.POST,
-                authenticationPath
-            )
-
-            // allow anonymous resource requests
-            .and()
-            .ignoring()
-            .antMatchers(
-                HttpMethod.GET,
-                "/",
-                "/*.html",
-                "/favicon.ico",
-                "/**/*.html",
-                "/**/*.css",
-                "/**/*.js"
-            );
-
-    }
+	}
 }

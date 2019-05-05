@@ -1,7 +1,6 @@
 package com.fredastone.pandacore.entity;
 // Generated Feb 7, 2019 1:36:16 AM by Hibernate Tools 4.3.5.Final
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -58,6 +57,8 @@ public class CustomerMeta implements java.io.Serializable {
 	
 	@NotEmpty
 	private String address;
+	
+	private String housephotopath;
 	
 	
 	private float homelat;

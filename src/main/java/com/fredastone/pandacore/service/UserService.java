@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.service;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -12,6 +14,7 @@ public interface UserService {
 	User updateUser(User user);
 	User getUserByEmail(String email);
 	User getUserById(String id);
+	Optional<User> getUserByUsername(String username);
 	
 	Page<User> getUsers(int page, int size, Direction direction, String sortby);
 	Page<User> getAllForApproval(int page, int size, Direction direction, String sortby,boolean approvalStatus);

@@ -1,15 +1,11 @@
 package com.fredastone.pandacore.entity;
 // Generated Feb 7, 2019 1:36:16 AM by Hibernate Tools 4.3.5.Final
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -22,7 +18,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "t_installation")
+@Table(name = "t_installation",schema="panda_core")
 public class Installation implements java.io.Serializable {
 
 	/**
@@ -30,24 +26,18 @@ public class Installation implements java.io.Serializable {
 	 */
 	private static final long serialVersionUID = -7014692064098319088L;
 	private String id;
-	private EmployeeMeta employeeMetaBySaleagentid;
-	private EmployeeMeta employeeMetaByCustomerid;
-	private Serializable coordinates;
-	private Date createdon;
+	private String customerid;
+	private String employeeid;
+	private float homelong;
+	private float homelat;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "starttime", nullable = false, length = 29)
+	private Date starttime;
 	private Date endtime;
-
-	public Installation() {
-	}
-
-	public Installation(String id, EmployeeMeta employeeMetaBySaleagentid, EmployeeMeta employeeMetaByCustomerid,
-			Serializable coordinates, Date createdon, Date endtime) {
-		this.id = id;
-		this.employeeMetaBySaleagentid = employeeMetaBySaleagentid;
-		this.employeeMetaByCustomerid = employeeMetaByCustomerid;
-		this.coordinates = coordinates;
-		this.createdon = createdon;
-		this.endtime = endtime;
-	}
+	
+	private Date createdon;
+	
 
 	@Id
 
@@ -60,37 +50,9 @@ public class Installation implements java.io.Serializable {
 		this.id = id;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "saleagentid", nullable = false)
-	public EmployeeMeta getEmployeeMetaBySaleagentid() {
-		return this.employeeMetaBySaleagentid;
-	}
-
-	public void setEmployeeMetaBySaleagentid(EmployeeMeta employeeMetaBySaleagentid) {
-		this.employeeMetaBySaleagentid = employeeMetaBySaleagentid;
-	}
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "customerid", nullable = false)
-	public EmployeeMeta getEmployeeMetaByCustomerid() {
-		return this.employeeMetaByCustomerid;
-	}
-
-	public void setEmployeeMetaByCustomerid(EmployeeMeta employeeMetaByCustomerid) {
-		this.employeeMetaByCustomerid = employeeMetaByCustomerid;
-	}
-
-	@Column(name = "coordinates", nullable = false)
-	public Serializable getCoordinates() {
-		return this.coordinates;
-	}
-
-	public void setCoordinates(Serializable coordinates) {
-		this.coordinates = coordinates;
-	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "createdon", nullable = false, length = 29)
+	@Column(name = "createdon",insertable=false, nullable = false, length = 29)
 	public Date getCreatedon() {
 		return this.createdon;
 	}

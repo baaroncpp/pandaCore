@@ -44,6 +44,9 @@ public class FileSystemStorageService implements StorageService {
 	
 	@Value("${agentUploadFolder}")
 	private String agentUploadFolder;
+		
+	@Value("${homePhotosFolder}")
+	private String homePhotosUploadFolder;
 	
     @Override
     public void store(MultipartFile file,String filename) {
@@ -124,6 +127,7 @@ public class FileSystemStorageService implements StorageService {
             Files.createDirectories(Paths.get(fileuploadfolder, employeePhotosFolder));
             Files.createDirectories(Paths.get(fileuploadfolder, customerUploadFolder));
             Files.createDirectories(Paths.get(fileuploadfolder, agentUploadFolder));
+            Files.createDirectories(Paths.get(fileuploadfolder, homePhotosUploadFolder));
         }
         catch (IOException e) {
             throw new StorageException("Could not initialize storage", e);

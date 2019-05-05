@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -26,6 +28,8 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 	
 	
 	private static final String GET_USER_QUERY = "Select * from panda_core.v_login_user WHERE username = :loginuser or email = :loginuser";
+	
+	@Transactional
 	@Override
 	public LoginUser getLoginUser(String username) {
 		Map<String,String> args = new HashMap<>();
@@ -48,6 +52,8 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 			
 			role.add(new Role(RoleName.valueOf(user.getRolename())));
 			user.setRoles(role);
+			
+			
 			
 			return user;
  		}

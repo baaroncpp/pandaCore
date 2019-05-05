@@ -91,7 +91,8 @@ public class JwtTokenUtil implements Serializable {
     }
 
     private String doGenerateToken(Map<String, Object> claims, String subject) {
-        final Date createdDate = clock.now();
+        
+    	final Date createdDate = clock.now();
         final Date expirationDate = calculateExpirationDate(createdDate);
 
         return Jwts.builder()

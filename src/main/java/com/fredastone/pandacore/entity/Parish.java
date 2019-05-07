@@ -20,7 +20,7 @@ import lombok.Data;
  */
 @Data
 @Entity
-@Table(name = "t_parishes",schema="panda_core")
+@Table(name = "t_parish",schema="panda_core")
 public class Parish implements java.io.Serializable {
 
 	

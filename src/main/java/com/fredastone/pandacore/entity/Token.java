@@ -23,7 +23,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "t_tokens",schema="panda_core")
+@Table(name = "t_token",schema="panda_core")
 public class Token implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;

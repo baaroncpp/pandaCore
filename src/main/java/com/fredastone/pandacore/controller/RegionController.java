@@ -49,7 +49,7 @@ public class RegionController {
 	@Autowired 
 	private ParishRepository parishRepository;
 
-    @RequestMapping(path="add/district",params= {"region","name"},method = RequestMethod.POST)
+    @RequestMapping(path="district/add",params= {"region","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<District> addNewDistrict(
     		@Valid @NotNull
@@ -70,7 +70,7 @@ public class RegionController {
         return ResponseEntity.ok(d);
     }
     
-    @RequestMapping(path="add/county",params= {"district","name"},method = RequestMethod.POST)
+    @RequestMapping(path="county/add",params= {"district","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<?> addNewCounty(
     		@Valid @NotNull
@@ -90,7 +90,7 @@ public class RegionController {
     }
     
     
-    @RequestMapping(path="add/subcounty",params= {"county","name"},method = RequestMethod.POST)
+    @RequestMapping(path="subcounty/add",params= {"county","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<?> addNewSubCounty(
     		@Valid @NotNull
@@ -109,7 +109,7 @@ public class RegionController {
         return ResponseEntity.ok(d);
     }
     
-    @RequestMapping(path="add/parish",params= {"subcounty","name"},method = RequestMethod.POST)
+    @RequestMapping(path="parish/add",params= {"subcounty","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<?> addNewParish(
     		@Valid @NotNull
@@ -128,7 +128,7 @@ public class RegionController {
     }
     
     
-    @RequestMapping(path="add/village",params= {"parish","name"},method = RequestMethod.POST)
+    @RequestMapping(path="village/add",params= {"parish","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<?> addNewVillage(
     		@Valid @NotNull
@@ -148,7 +148,7 @@ public class RegionController {
     }
     
     
-    @RequestMapping(path="add/district/review",params= {"id","action"},method = RequestMethod.PUT)
+    @RequestMapping(path="district/add/review",params= {"id","action"},method = RequestMethod.PUT)
     public ResponseEntity<?> addDistrictForReview(
     		@Valid @NotNull
     		 @RequestParam("id") int id,@Valid @NotNull @RequestParam("action") String action
@@ -176,7 +176,7 @@ public class RegionController {
     }
     
 	
-    @RequestMapping(path="get/regions",method = RequestMethod.GET)
+    @RequestMapping(path="get",method = RequestMethod.GET)
     public ResponseEntity<?> getAllREgions() {
         return ResponseEntity.ok(regionRepository.findAll());
     }

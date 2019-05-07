@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,14 @@ import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.TotalLeasePayments;
+import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.AgentNotFoundException;
 import com.fredastone.pandacore.exception.LeaseOfferNotFoundException;
 import com.fredastone.pandacore.exception.ProductNotFoundException;
 import com.fredastone.pandacore.exception.SaleNotFoundException;
 import com.fredastone.pandacore.models.LeaseSale;
+import com.fredastone.pandacore.models.Notification;
+import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
@@ -32,6 +36,7 @@ import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.SaleRollbackRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.repository.TotalLeasePaymentsRepository;
+import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.pandacore.util.ServiceUtils;
 import com.fredastone.pandasolar.token.CommandNames;
@@ -40,10 +45,43 @@ import com.fredastone.pandasolar.token.TokenOperation;
 @Transactional
 @Service
 public class SaleServiceImpl implements SaleService {
+	
+	@Value("${notification.exchange.name}")
+	private String notificationExchange;
 
+	@Value("${notification.queue.email.name}")
+	private String emailQueue;
+
+	@Value("${notification.queue.sms.name}")
+	private String smsQueue;
+
+	@Value("${notification.routing.sms.key}")
+	private String smsRoutingKey;
+
+
+	@Value("${notification.routing.email.key}")
+	private String emailRoutingKey;
+	
+	@Value("${notification.message.newdirecttoken}")
+	private String directSaleTokenMsg;
+	
+	@Value("${notification.message.newtoken.send}")
+	private String isSendDirectTokenMsg;
+	
+	@Value("${notification.message.newtokensubject}")
+	private String directSaleTokenMsgSubj;
+	
+	@Value("${notification.message.leasetokennewmessage}")
+	private String leaseTokenNewMsg;
+	
+	@Value("${notification.message.leasetokensubject}")
+	private String leaseTokenNewSubj;
 	
 	@Value("${leasefirsttokendays}")
 	private int leaseFirstTokenDays;
+
+	@Autowired
+	private RabbitTemplate rabbitTemplate;
 	
 	
 	private SaleRollbackRepository rollbackDao;
@@ -54,6 +92,7 @@ public class SaleServiceImpl implements SaleService {
 	private LeaseRepository leaseDao;
 	private TokenRepository saleTokenDao;
 	private TotalLeasePaymentsRepository totalLeaseRepayDao;
+	private UserRepository userDao;
 	
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
@@ -61,7 +100,7 @@ public class SaleServiceImpl implements SaleService {
 	@Autowired
 	public SaleServiceImpl(SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
 			ProductsRepository productDao,LeaseOfferRepository leaseOfferDao,LeaseRepository leaseDao,
-			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao) {
+			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -71,6 +110,7 @@ public class SaleServiceImpl implements SaleService {
 		this.leaseDao = leaseDao;
 		this.saleTokenDao = saleTokenDao;
 		this.totalLeaseRepayDao = totalLeaseRepayDao;
+		this.userDao = userDao;
 		
 	}
 	
@@ -219,7 +259,7 @@ public class SaleServiceImpl implements SaleService {
 			throw new SaleNotFoundException(saleId);
 		}
 		
-		
+		final Optional<User> user = userDao.findById(sale.get().getCustomerid());
 		//Sale is availabe and in pending state
 		sale.get().setSalestatus((short) ServiceConstants.ACCEPTED_APPROVAL);
 		sale.get().setCompletedon(new Date());
@@ -237,7 +277,29 @@ public class SaleServiceImpl implements SaleService {
 			saleToken.setType(TokenTypes.OPEN);
 			saleTokenDao.save(saleToken);
 			
-			return  saleDao.save(sale.get());
+			final Sale s =  saleDao.save(sale.get());
+			
+			
+			// Notify the user
+			
+			if(isSendDirectTokenMsg.equals("true")) {
+				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(user.get()
+						.getPrimaryphone()).content(String.format(directSaleTokenMsg, token)).build();
+	
+				rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+				
+			//Move this to private m
+			if(user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
+				notificaton.setType(NotificationType.EMAIL);
+				notificaton.setSubject(directSaleTokenMsgSubj);
+				notificaton.setAddress(user.get().getEmail());
+				
+					rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notificaton.toString());
+				}
+				
+			}
+			
+			return s;
 			
 		}
 		
@@ -271,7 +333,24 @@ public class SaleServiceImpl implements SaleService {
 		leaseDao.save(lease.get());
 		totalLeaseRepayDao.save(totalLeasePayments);
 			
-		return saleDao.save(sale.get());
+		final Sale s = saleDao.save(sale.get());
+		
+		//Notify the user
+		final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(user.get()
+				.getPrimaryphone()).content(String.format(leaseTokenNewMsg, user.get().getFirstname(),user.get().getLastname())).build();
+
+		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+		
+		//Move this to private method
+		if(user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
+			notificaton.setType(NotificationType.EMAIL);
+			notificaton.setSubject(directSaleTokenMsgSubj);
+			notificaton.setAddress(user.get().getEmail());
+			
+				rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notificaton.toString());
+		}
+		
+		return s;
 	}
 
 }

@@ -8,6 +8,11 @@ import java.util.Optional;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -351,6 +356,15 @@ public class SaleServiceImpl implements SaleService {
 		}
 		
 		return s;
+	}
+
+	@Override
+	public Page<Sale> getAllSales(int page, int size, String sortby, Direction sortOrder) {
+	
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
+		Page<Sale> allsorted = saleDao.findAll(pageRequest);
+	
+		return allsorted;
 	}
 
 }

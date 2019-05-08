@@ -1,7 +1,12 @@
 package com.fredastone.pandacore.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fredastone.pandacore.entity.Sale;
+import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.service.SaleService;
 
 @RestController
@@ -39,6 +45,20 @@ public class SalesController {
 		
 		return ResponseEntity.ok(saleService.recoredNewLeaseSale(leaseId,agentid,customerid,cord_lat,cord_long,deviceserial));
 		
+    }
+	
+    @Secured({"ROLE_HR,ROLE_MANAGER,ROLE_ADMIN,ROLE_SENIOR_MANAGER,ROLE_FINANCE,ROLE_MARKETING,ROLE_SUPPORT"})
+    @RequestMapping(path="get",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllUsers(
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") int size) {
+    	
+    	return ResponseEntity.ok(saleService.getAllSales(page, size, sortby, sortorder));
     }
 	
 	@RequestMapping(path="complete/{id}",method = RequestMethod.POST)

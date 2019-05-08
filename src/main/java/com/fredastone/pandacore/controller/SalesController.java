@@ -49,7 +49,6 @@ public class SalesController {
 		
     }
 	
-    @Secured({"ROLE_HR,ROLE_MANAGER,ROLE_ADMIN,ROLE_SENIOR_MANAGER,ROLE_FINANCE,ROLE_MARKETING,ROLE_SUPPORT"})
     @RequestMapping(path="get",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllUsers(
     		@Valid @RequestParam("sortorder") 

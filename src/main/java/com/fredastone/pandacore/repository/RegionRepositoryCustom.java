@@ -2,20 +2,15 @@ package com.fredastone.pandacore.repository;
 
 import java.util.List;
 
-import com.fredastone.pandacore.entity.District;
-import com.fredastone.pandacore.entity.Parish;
-import com.fredastone.pandacore.entity.Subcounty;
-import com.fredastone.pandacore.models.CountyModel;
-import com.fredastone.pandacore.models.DistrictModel;
-import com.fredastone.pandacore.models.VillageModel;
+import com.fredastone.pandacore.models.RegionModel;
 
 public interface RegionRepositoryCustom {
 
-	List<District> getDistricts();
-	List<DistrictModel> getDistrictAndCounties(int districtId);
-	List<CountyModel> getCountyAndSubCounties(int countyId);
-	List<Subcounty> getSubCounty(int countid);
-	List<Parish> getParish(int subcountyid);
-	List<VillageModel> getVillages(int parishid);
+	List<RegionModel> getDistricts();
+	List<RegionModel> getDistrictAndCounties(int districtId);
+	List<RegionModel> getCountyAndSubCounties(int countyId);
+	List<RegionModel> getSubCounty(int countid);
+	List<RegionModel> getParish(int subcountyid);
+	List<RegionModel> getVillages(int parishid);
 }
 

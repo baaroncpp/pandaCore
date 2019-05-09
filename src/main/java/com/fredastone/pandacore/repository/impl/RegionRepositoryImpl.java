@@ -10,13 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-import com.fredastone.pandacore.entity.District;
-import com.fredastone.pandacore.entity.Parish;
-import com.fredastone.pandacore.entity.Subcounty;
-import com.fredastone.pandacore.models.CountyModel;
-import com.fredastone.pandacore.models.DistrictModel;
-import com.fredastone.pandacore.models.VillageModel;
-
+import com.fredastone.pandacore.models.RegionModel;
 import com.fredastone.pandacore.repository.RegionRepositoryCustom;
 
 public class RegionRepositoryImpl implements RegionRepositoryCustom {
@@ -35,124 +29,63 @@ public class RegionRepositoryImpl implements RegionRepositoryCustom {
 	private static String SELECT_VILLAGE =" SELECT k.id,k.name from panda_core.t_village k where k.parishid = :parishid";
 
 	@Override
-	public List<District> getDistricts() {
+	public List<RegionModel> getDistricts() {
 	
-		return jdbcTemplate.query(SELECT_DISTRICT, new DistrictMapper());
+		return jdbcTemplate.query(SELECT_DISTRICT, new RegionDataMapper());
 	}
 
 	@Override
-	public List<DistrictModel> getDistrictAndCounties(int districtId) {
+	public List<RegionModel> getDistrictAndCounties(int districtId) {
 		
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		map.put("districtid", districtId);
 		
-		return jdbcTemplate.query(SELECT_COUNTIES,map, new DistrictCountyMapper());
+		return jdbcTemplate.query(SELECT_COUNTIES,map, new RegionDataMapper());
 		
 	}
 
 	@Override
-	public List<CountyModel> getCountyAndSubCounties(int countyId) {
+	public List<RegionModel> getCountyAndSubCounties(int countyId) {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		map.put("countyid", countyId);
 		
-		return jdbcTemplate.query(SELECT_COUNTIES,map, new CountySubCountyMapper());
+		return jdbcTemplate.query(SELECT_COUNTIES,map, new RegionDataMapper());
 	}
 
 	@Override
-	public List<VillageModel> getVillages(int parishid) {
+	public List<RegionModel> getVillages(int parishid) {
 		// TODO Auto-generated method stub
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		map.put("parishid", parishid);
 		
-		return jdbcTemplate.query(SELECT_VILLAGE,map, new VillageMapper());
+		return jdbcTemplate.query(SELECT_VILLAGE,map, new RegionDataMapper());
 	}
 	
 	@Override
-	public List<Subcounty> getSubCounty(int countid) {
+	public List<RegionModel> getSubCounty(int countid) {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		map.put("countyid", countid);
 		
-		return jdbcTemplate.query(SELECT_SUBCOUNTIES,map, new SubCountyMapper());
+		return jdbcTemplate.query(SELECT_SUBCOUNTIES,map, new RegionDataMapper());
 	}
 	
 	@Override
-	public List<Parish> getParish(int subcountyid) {
+	public List<RegionModel> getParish(int subcountyid) {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		map.put("subcountyid", subcountyid);
 		
-		return jdbcTemplate.query(SELECT_PARISH,map, new ParishMapper());
+		return jdbcTemplate.query(SELECT_PARISH,map, new RegionDataMapper());
 	}
 	
 	
-	private class DistrictMapper implements RowMapper<District>{
+
+
+	private class RegionDataMapper implements RowMapper<RegionModel>{
 
 		@Override
-		public District mapRow(ResultSet rs, int arg1) throws SQLException {
-			// TODO Auto-generated method stub
-			District d  = new District();
-			d.setId(rs.getInt("id"));
-			d.setName(rs.getString("name"));
-			d.setReview(rs.getBoolean("inreview"));
-			return d;
-		}
-		
-	}
-	
-	private class DistrictCountyMapper implements RowMapper<DistrictModel>{
-
-		@Override
-		public DistrictModel mapRow(ResultSet rs, int arg1) throws SQLException {
-			return DistrictModel.builder()
-			.countyid(rs.getInt("id"))
-			.countyname(rs.getString("name"))
-			.build();
-
-		}
-		
-	}
-	
-	private class CountySubCountyMapper implements RowMapper<CountyModel>{
-
-		@Override
-		public CountyModel mapRow(ResultSet rs, int arg1) throws SQLException {
+		public RegionModel mapRow(ResultSet rs, int arg1) throws SQLException {
 			
-			return CountyModel.builder().countid(rs.getInt("county_id"))
-			.countyname(rs.getString("countyname"))
-			.subcountid(rs.getInt("id"))
-			.subcountyname(rs.getString("name"))
-			.build();
-		}
-		
-	}
-	
-	private class SubCountyMapper implements RowMapper<Subcounty>{
-
-		@Override
-		public Subcounty mapRow(ResultSet rs, int arg1) throws SQLException {
-			
-			return Subcounty.builder().id(rs.getInt("id"))
-					.name(rs.getString("name")).build();
-		}
-		
-	}
-
-	private class VillageMapper implements RowMapper<VillageModel>{
-
-		@Override
-		public VillageModel mapRow(ResultSet rs, int arg1) throws SQLException {
-			
-			return VillageModel.builder().id(rs.getInt("id"))
-					.name(rs.getString("name")).build();
-		}
-		
-	}
-
-	private class ParishMapper implements RowMapper<Parish>{
-
-		@Override
-		public Parish mapRow(ResultSet rs, int arg1) throws SQLException {
-			
-			return Parish.builder().id(rs.getInt("id"))
+			return RegionModel.builder().id(rs.getInt("id"))
 					.name(rs.getString("name")).build();
 		}
 		

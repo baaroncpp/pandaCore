@@ -5,9 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class VillageModel {
-	
+public class RegionModel {
 	private int id;
 	private String name;
-
 }

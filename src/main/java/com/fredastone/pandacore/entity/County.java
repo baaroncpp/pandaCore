@@ -1,15 +1,10 @@
 package com.fredastone.pandacore.entity;
 // Generated Feb 7, 2019 1:36:16 AM by Hibernate Tools 4.3.5.Final
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -41,8 +36,8 @@ public class County implements java.io.Serializable {
 	@Column(name = "name", length = 50)
 	private String name;
 	
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "countyid")
-	private Set<Subcounty> subcounties = new HashSet<Subcounty>(0);
+//	@OneToMany(fetch = FetchType.LAZY, mappedBy = "countyid")
+//	private Set<Subcounty> subcounties = new HashSet<Subcounty>(0);
 
 	
 }

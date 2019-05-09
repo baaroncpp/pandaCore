@@ -7,5 +7,6 @@ import com.fredastone.pandacore.entity.Region;
 
 @Repository
 public interface RegionRepository extends CrudRepository<Region, Integer>{
+	
 
 }

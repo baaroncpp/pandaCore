@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ import com.fredastone.pandacore.repository.CountyRepository;
 import com.fredastone.pandacore.repository.DistrictRepository;
 import com.fredastone.pandacore.repository.ParishRepository;
 import com.fredastone.pandacore.repository.RegionRepository;
+import com.fredastone.pandacore.repository.RegionRepositoryCustom;
 import com.fredastone.pandacore.repository.SubCountyRepository;
 import com.fredastone.pandacore.repository.VillageRepository;
 
@@ -30,6 +32,9 @@ public class RegionController {
 
 	private static final String APPROVE_ACTION = "approve";
 	private static final String REJECT_ACTION = "reject";
+	
+	@Autowired
+	private RegionRepositoryCustom regionRepositoryCu;
 	
 	@Autowired
 	private DistrictRepository districtRepository;
@@ -99,10 +104,9 @@ public class RegionController {
     		@NotNull
     		@RequestParam("name") String name) {
     	
-    	Subcounty d = new Subcounty();
+    	Subcounty d = Subcounty.builder().name(name).countyid(county).build();
     	
-    	d.setName(name);
-    	d.setCountyid(county);
+    
     	
     	d = subCountyRepository.save(d);
     	
@@ -118,10 +122,8 @@ public class RegionController {
     		@NotNull
     		@RequestParam("name") String name) {
     
-    	Parish p = new Parish();
-    	p.setName(name);
-    	p.setSubcountyid(subcounty);
-    	
+    	Parish p = Parish.builder().name(name).subcountyid(subcounty).build();
+    
     	p = parishRepository.save(p);
 	
         return ResponseEntity.ok(p);
@@ -176,10 +178,31 @@ public class RegionController {
     }
     
 	
-    @RequestMapping(path="get",method = RequestMethod.GET)
-    public ResponseEntity<?> getAllREgions() {
-        return ResponseEntity.ok(regionRepository.findAll());
+    @RequestMapping(path="get/district",method = RequestMethod.GET)
+    public ResponseEntity<?> getAllDistricts() {
+        return ResponseEntity.ok(regionRepositoryCu.getDistricts());
     }
     
+	
+    @RequestMapping(path="get/county/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getCountyByDistrictId(@PathVariable("id") int districtId) {
+        return ResponseEntity.ok(regionRepositoryCu.getDistrictAndCounties(districtId));
+    }
     
+    @RequestMapping(path="get/subcounty/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getSubCountyByCountyId(@PathVariable("id") int countyid) {
+        return ResponseEntity.ok(regionRepositoryCu.getSubCounty(countyid));
+    }
+    
+    @RequestMapping(path="get/parish/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getParishBySubCountyId(@PathVariable("id") int subcountid) {
+        return ResponseEntity.ok(regionRepositoryCu.getParish(subcountid));
+    }
+    
+    @RequestMapping(path="get/village/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getVillageByParishId(@PathVariable("id") int parishid) {
+        return ResponseEntity.ok(regionRepositoryCu.getVillages(parishid));
+    }
+    
+	
 }

@@ -35,6 +35,4 @@ public class Village implements java.io.Serializable {
 	@Column(name = "name", length = 50)
 	private String name;
 	
-
-
 }

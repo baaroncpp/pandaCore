@@ -1,14 +1,10 @@
 package com.fredastone.pandacore.entity;
 // Generated Feb 7, 2019 1:36:16 AM by Hibernate Tools 4.3.5.Final
 
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -43,8 +39,8 @@ public class District implements java.io.Serializable {
 	@Column(name = "inreview",  nullable = false)
 	private boolean review;
 	
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "districtid")
-	private List<County> counties;
+//	@OneToMany(fetch = FetchType.LAZY, mappedBy = "districtid")
+//	private List<County> counties;
 
 
 }

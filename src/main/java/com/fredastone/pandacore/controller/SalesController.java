@@ -58,7 +58,39 @@ public class SalesController {
     	
     	return ResponseEntity.ok(saleService.getAllSales(page, size, sortby, sortorder));
     }
+    
+    @RequestMapping(path="get/unverified",params = {"agentid","page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllUnverifiedSales(
+    		@Valid @RequestParam("agentid")
+    		String agentid,
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") int size) {
+    	
+    	return ResponseEntity.ok(saleService.getUnverifiedleaseSale(agentid, page, size, sortby, sortorder));
+    }
 	
+    
+    @RequestMapping(path="get/verified",params = {"agentid","page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllVerifiedSales(
+    		@Valid @RequestParam("agentid")
+    		String agentid,
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") int size) {
+    	
+    	return ResponseEntity.ok(saleService.getVerifiedLeaseSale(agentid, page, size, sortby, sortorder));
+    }
+	
+    
 	@RequestMapping(path="complete/{id}",method = RequestMethod.POST)
     public ResponseEntity<?> completeNewSale(@PathVariable("id") String sale) {
        return ResponseEntity.ok(saleService.completeSale(sale));

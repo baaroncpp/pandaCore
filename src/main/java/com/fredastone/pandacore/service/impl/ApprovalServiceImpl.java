@@ -11,12 +11,14 @@ import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.User;
+import com.fredastone.pandacore.entity.VSaleApprovalReview;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ApprovalReviewRepository;
 import com.fredastone.pandacore.repository.ApproverRepository;
 import com.fredastone.pandacore.repository.ConfigRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
 import com.fredastone.pandacore.repository.UserRepository;
+import com.fredastone.pandacore.repository.VSaleApprovalReviewRepository;
 import com.fredastone.pandacore.service.ApprovalService;
 import com.fredastone.pandacore.util.ServiceUtils;
 
@@ -28,6 +30,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 	private UserRepository userDao;
 	private EmployeeRepository employeeDao;
 	private AgentMetaRepository agentDao;
+	private VSaleApprovalReviewRepository saleReviewRepo;
 	private ConfigRepository configDao;
 	
 	private static final String CUSTOMER_USER_TYPE = "customer";
@@ -41,7 +44,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 			EmployeeRepository employeeDao,
 			AgentMetaRepository agentDao,
 			ConfigRepository configDao,
-			ApproverRepository approverDao) {
+			ApproverRepository approverDao,
+			VSaleApprovalReviewRepository saleReviewRepo) {
 		
 		this.approvalReviewDao = approvalReviewDao;
 		this.userDao = userDao;
@@ -49,6 +53,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		this.agentDao = agentDao;
 		this.configDao = configDao;
 		this.approverDao = approverDao;
+		this.saleReviewRepo = saleReviewRepo;
 		
 	}
 	
@@ -90,12 +95,16 @@ public class ApprovalServiceImpl implements ApprovalService {
 			agentMeta.get().setIsactive(Boolean.TRUE);
 			agentMeta.get().setIsdeactivated(Boolean.FALSE);
 			
-			final ApprovalReview review = ApprovalReview.builder().approvalid(user.get().getId()).id(ServiceUtils.getUUID()).review("Approved").build();
+			final ApprovalReview review = ApprovalReview.builder()
+					.itemid(user.get().getId())
+					.reviewtype(2)
+					.review("Approved").build();
+					
+			
 			this.addApprovalReview(review);
 			
 			agentDao.save(agentMeta.get());
 		}
-		
 		
 		final Approver approver = Approver.builder().id(ServiceUtils.getUUID()).userid(approverId).itemapproved("user").itemid(user.get().getId()).build();
 		
@@ -121,6 +130,12 @@ public class ApprovalServiceImpl implements ApprovalService {
 		
 		return approvalReviewDao.findAllByapprovalid(id);
 
+	}
+
+
+	@Override
+	public List<VSaleApprovalReview> getSaleApprovalReviewByAgent(String agentid, String itemid) {
+		return saleReviewRepo.getAllSaleApprovalReview(agentid, itemid);
 	}
 
 

@@ -29,10 +29,14 @@ public class ApprovalReview {
 	String id;
 	
 	@NotEmpty
-	private String approvalid;
+	private String itemid;
+	
+	private int reviewtype;
 	
 	@NotEmpty
 	private String review;
+	
+	
 	
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="createdon",updatable=false,insertable=false)

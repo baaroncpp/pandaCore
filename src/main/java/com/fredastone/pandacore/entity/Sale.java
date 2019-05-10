@@ -36,7 +36,7 @@ public class Sale implements java.io.Serializable {
 	private String agentid;
 	private float long_;
 	private float lat;
-	
+	private boolean isreviewed;
 	private short salestatus;
 	private Date createdon;
 	

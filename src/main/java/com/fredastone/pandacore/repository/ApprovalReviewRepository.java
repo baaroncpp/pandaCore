@@ -13,7 +13,7 @@ import com.fredastone.pandacore.entity.ApprovalReview;
 @Repository
 public interface ApprovalReviewRepository extends CrudRepository<ApprovalReview, String>{
 	
-	@Query(value="Select u from ApprovalReview u where u.approvalid = :approvalid order by u.createdon desc")
+	@Query(value="Select u from ApprovalReview u where u.itemid = :approvalid order by u.createdon desc")
 	List<ApprovalReview> findAllByapprovalid(@Param("approvalid")String approvalid);
 
 }

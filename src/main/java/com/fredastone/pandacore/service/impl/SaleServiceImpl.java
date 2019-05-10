@@ -367,4 +367,20 @@ public class SaleServiceImpl implements SaleService {
 		return allsorted;
 	}
 
+	@Override
+	public Page<Sale> getVerifiedLeaseSale(String agentId, int page, int count, String sortBy, Direction sortOrder) {
+		
+		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(sortOrder,sortBy));
+		Page<Sale> allsorted = saleDao.findAllVerified(agentId, "Lease", pageRequest);
+		return allsorted;
+	}
+
+	@Override
+	public Page<Sale> getUnverifiedleaseSale(String agentId, int page, int count, String sortBy, Direction orderBy) {
+		
+		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderBy,sortBy));
+		Page<Sale> allsorted = saleDao.findAllUnverified(agentId, "Lease", pageRequest);
+		return allsorted;
+	}
+
 }

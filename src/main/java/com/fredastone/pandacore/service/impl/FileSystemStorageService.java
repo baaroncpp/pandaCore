@@ -39,7 +39,7 @@ public class FileSystemStorageService implements StorageService {
 	@Value("${employeephotosfolder}")
 	private String employeePhotosFolder;
 	
-	@Value("${customerUploadfolder")
+	@Value("${customerUploadfolder}")
 	private String customerUploadFolder;
 	
 	@Value("${agentUploadFolder}")

@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
+import com.fredastone.pandacore.entity.VSaleApprovalReview;
 import com.fredastone.pandacore.service.ApprovalService;
 import com.fredastone.security.JwtTokenUtil;
 
@@ -87,8 +89,21 @@ public class ApprovalsController {
 
 	}
 	
+	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE,ROLE_SUPPORT,ROLE_AGENT"})
+	@RequestMapping(path = "get/approvalreview/sale",params= {"agentid","saleid"}, method = RequestMethod.POST)
+	public ResponseEntity<?> getApprovalReviewForSale(@RequestParam("agentid") String agentId, @RequestParam("saleid") String saleId){
+		
+		List<VSaleApprovalReview > result = approvalService.getSaleApprovalReviewByAgent(agentId, saleId);
+		
+		if(result == null || result.isEmpty())
+			return ResponseEntity.noContent().build();
+		
+		return ResponseEntity.ok(result);
+		
+		
+	}
 	
-	 class Approvers{
+	class Approvers{
 		 
 		@Getter
 		private final String totalapprovers;

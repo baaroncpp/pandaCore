@@ -21,7 +21,7 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table(name = "t_lease_payments")
+@Table(name = "t_lease_payment",schema="panda_core")
 public class LeasePayment implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -63,7 +63,7 @@ public class LeasePayment implements java.io.Serializable {
 	private String channelmessage;
 	
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "createdon", nullable = false, length = 29)
+	@Column(name = "createdon",insertable=false, nullable = false, length = 29)
 	private Date createdon;
 
 

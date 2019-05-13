@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
 import com.fredastone.pandacore.models.BuyToken;
 import com.fredastone.pandacore.service.TokenService;
@@ -34,7 +35,13 @@ public class TokensController {
 	@RequestMapping(path = "buy", method = RequestMethod.POST)
 	public ResponseEntity<?> buyToken(@RequestBody BuyToken request) {
 
-		return ResponseEntity.ok("Greetings from admin protected method!");
+		final Token token = tokenService.buyToken(request);
+		
+		if(token == null) {
+			ResponseEntity.status(500).build();
+		}
+		
+		return ResponseEntity.ok(token);
 	}
 
 	@RequestMapping(path = "financialinfo/{deviceserial}", method = RequestMethod.GET)

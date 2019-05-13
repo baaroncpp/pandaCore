@@ -63,16 +63,20 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 	private static final short PAYMENT_PENDING_STATUS = 1;
 	
 	private static  final String TOTAL_PAYMENTS_SELECT_QUERY = "Select * from panda_core.t_total_lease_payments WHERE leaseid = :leaseid FOR UPDATE";
+	
 	private static final String TOTAL_PAYMENTS_UPDATE_QUERY = "UPDATE panda_core.t_total_lease_payments SET "
-			+ "lastpaidamount = :lastpaidamount,totalamountpaid = :totalamountpaid,totalamountowed = :totalamountowed,residueamount = :residueamount:"
+			+ "lastpaidamount = :lastpaidamount,totalamountpaid = :totalamountpaid,totalamountowed = :totalamountowed,residueamount = :residueamount,"
 			+ "times = :times WHERE leaseid = :leaseid";
 	
 	private final static  String LEASE_SELECT_QUERY = "SELECT id, iscompleted,isactivate FROM panda_core.t_lease WHERE id = :leaseid AND isactive = TRUE FOR UPDATE";
+	
 	private final static String LEASE_UPDATE_QUERY = "UPDATE panda_core.t_lease SET iscompleted = TRUE,paymentcompletedon = now() WHERE id = :leaseid";
 
 	
 	public BuyTokenRepositoryImpl() {
+		
 		tokenOperation = new TokenOperation();
+		
 	}
 	
 	@Transactional
@@ -98,7 +102,9 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		
 		//Check that amount meets daily minimum allowed amount
 		if(totalAmount < financialInfo.get().getDailypayment())
+		{
 			throw new LowTransactionValueException("The amount is less than the daily allowed minimum limit");
+		}
 		
 		//Check if this is last payment
 		//Last payment could be divided and 
@@ -110,6 +116,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		
 		if(isFinalPayment)
 		{
+			
 			final LeasePayment lp = getCompletedLeasePayment(paymentRequest,financialInfo.get());
 			
 			leasePaymentDao.save(lp);
@@ -126,9 +133,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			return recordToken(TokenTypes.OPEN, clearPaymentToken, 0, ttlpayments.getTimes(),lp.getId() );
 			
 			//Need to place token on message queue here
-			
-					
-				
+							
 		}
 		
 		final float residueAmount = totalAmount%financialInfo.get().getDailypayment();
@@ -153,14 +158,16 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		
 		final String paymentToken = getPaymentToken(financialInfo.get().getDeviceserial(), times, totalDays);
 
-		return recordToken(TokenTypes.OPEN, paymentToken,totalDays, times,lp.getId() );
+		return recordToken(TokenTypes.PAY, paymentToken,totalDays, times,lp.getId() );
 	
 		
 	}
 
 	
 	private int updateTotalPayments(String leaseid,float lastpaidamount,float amountpaid,float amountowed,float residueamount,int times) {
+		
 		Map<String,Object> map = new HashMap<>();
+		
 		map.put("leaseid", leaseid);
 		map.put("lastpaidamount", lastpaidamount);
 		map.put("totalamountpaid", amountpaid);
@@ -187,6 +194,10 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		t.setTimes(times);
 		t.setType(tokenType);
 		
+		//TODO Place message on queue here
+		
+		
+		
 		return tokenRespository.save(t);
 		
 	}
@@ -195,6 +206,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 	private LeasePayment getCompletedLeasePayment(BuyToken bt,VCustomerFinanceInfo ci) {
 		
 		LeasePayment payment = new LeasePayment();
+		
 		payment.setAmount(bt.getAmount());
 		payment.setChannelmessage(bt.getChannelmessage());
 		payment.setChannelstatuscode(bt.getChannelstatuscode());
@@ -208,6 +220,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		payment.setPayeename(bt.getPayeename());
 		
 		return payment;
+		
 	}
 	
 	private String completeLeaseAndUnlockDevice(float lastPaidAmount,float totalpaid,float extraPayment,int times,String leaseid,String deviceSerial) {
@@ -229,18 +242,20 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		
 		if(extraPayment > 0)
 		{
+			
 			LeasePaymentExtra  lpe = new LeasePaymentExtra();
+			
 			lpe.setAmount(extraPayment);
 			lpe.setIsrefunded(Boolean.FALSE);
 			lpe.setId(ServiceUtils.getUUID());
 			lpe.setLeaseid(leaseid);
 			
 			leasePaymentExtra.save(lpe);
+			
 		}
 		
 		//Generate token for completed Payment
 		return tokenOperation.generateGeneralPurposeToken(deviceSerial, CommandNames.CLEAR_LOAN, 1);
-		
 		
 	}
 	
@@ -248,16 +263,18 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 
 		@Override
 		public TotalLeasePayments mapRow(ResultSet rs, int arg1) throws SQLException {
+			
 			TotalLeasePayments tlp = new TotalLeasePayments();
+			
 			tlp.setId(rs.getString("id"));
 			tlp.setLastpaidamount(rs.getFloat("lastpaidamount"));
 			tlp.setLeaseid(rs.getString("leaseid"));
 			tlp.setNextpaymentdate(rs.getDate("nextpaymentdate"));
 			tlp.setTimes(rs.getInt("times"));
 			tlp.setResidueamount(rs.getFloat("residueamount"));
-			tlp.setTotalamountowed(rs.getFloat("totalowed"));
-			tlp.setTotalamountpaid(rs.getFloat("totalpaid"));
-			
+			tlp.setTotalamountowed(rs.getFloat("totalamountowed"));
+			tlp.setTotalamountpaid(rs.getFloat("totalamountpaid"));
+						
 			return tlp;
 			
 		}

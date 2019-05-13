@@ -16,7 +16,7 @@ public class BuyToken {
 	private PaymentChannel channel;
 	private float amount;
 	private String payeename;
-	private int paymentchannel;
+
 	private int paymentstatus;
 	private String transactionId;
 	private String channeltransactionid;

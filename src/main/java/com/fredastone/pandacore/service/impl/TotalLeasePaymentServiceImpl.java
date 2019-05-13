@@ -36,8 +36,5 @@ public class TotalLeasePaymentServiceImpl implements TotalLeasePaymentService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
-	
 
 }

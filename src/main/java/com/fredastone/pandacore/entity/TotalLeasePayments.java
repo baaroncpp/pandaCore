@@ -37,7 +37,7 @@ public class TotalLeasePayments implements java.io.Serializable {
 	private Date createdon;
 	
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="createdon",updatable=true,insertable=true,nullable=false)
+	@Column(name="nextpaymentdate",updatable=true,insertable=true,nullable=false)
 	private Date nextpaymentdate;
 
 	@Temporal(TemporalType.TIMESTAMP)

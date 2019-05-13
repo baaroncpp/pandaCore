@@ -8,7 +8,9 @@ import java.util.Optional;
 
 import javax.transaction.Transactional;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -23,6 +25,8 @@ import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
 import com.fredastone.pandacore.exception.LowTransactionValueException;
 import com.fredastone.pandacore.exception.PaymentDetailsNotFoundException;
 import com.fredastone.pandacore.models.BuyToken;
+import com.fredastone.pandacore.models.Notification;
+import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.repository.BuyTokenRepository;
 import com.fredastone.pandacore.repository.CustomerFinanceInfoRepository;
 import com.fredastone.pandacore.repository.LeasePaymentExtraRepository;
@@ -34,6 +38,29 @@ import com.fredastone.pandasolar.token.TokenOperation;
 
 @Repository
 public class BuyTokenRepositoryImpl implements BuyTokenRepository {
+
+	@Value("${notification.exchange.name}")
+	private String notificationExchange;
+//
+//	@Value("${notification.queue.email.name}")
+//	private String emailQueue;
+
+	@Value("${notification.queue.sms.name}")
+	private String smsQueue;
+
+	@Value("${notification.routing.sms.key}")
+	private String smsRoutingKey;
+	
+	@Value("${notification.smsnotification}")
+	private String smsMessage;
+
+//	@Value("${notification.routing.email.key}")
+//	private String emailRoutingKey;
+//	
+	
+	@Autowired
+	private RabbitTemplate rabbitTemplate;
+
 
 	
 	@Autowired
@@ -157,6 +184,18 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		//Place token on message queue for sending to customer
 		
 		final String paymentToken = getPaymentToken(financialInfo.get().getDeviceserial(), times, totalDays);
+		
+
+		//TODO Place message on queue here
+		
+		final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
+				.content(
+						String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+								financialInfo.get().getLastname(),
+								paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken)
+						).build();
+		
+		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
 
 		return recordToken(TokenTypes.PAY, paymentToken,totalDays, times,lp.getId() );
 	
@@ -193,9 +232,6 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		t.setLeasepaymentid(paymentid);
 		t.setTimes(times);
 		t.setType(tokenType);
-		
-		//TODO Place message on queue here
-		
 		
 		
 		return tokenRespository.save(t);

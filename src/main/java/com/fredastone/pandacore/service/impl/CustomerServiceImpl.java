@@ -150,9 +150,10 @@ public class CustomerServiceImpl implements CustomerService {
 
 
 	@Override
-	public Optional<CustomerMeta> getCustomerMeta(String id) {
+	public CustomerMeta getCustomerMeta(String id) {
 		// TODO Auto-generated method stub
-		return customerMetaDao.findById(id);
+		Optional<CustomerMeta> cm =  customerMetaDao.findById(id);
+		return cm.isPresent() == true ? cm.get() : null;
 	}
 
 }

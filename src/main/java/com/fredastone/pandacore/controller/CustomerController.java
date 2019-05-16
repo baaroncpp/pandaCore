@@ -37,9 +37,19 @@ public class CustomerController {
 	}
 	
 	@RequestMapping(path="add",method = RequestMethod.POST)
-    public ResponseEntity<?> addEmployeeMeta(@Valid @NotNull @RequestBody CustomerMeta customerMeta) {
+    public ResponseEntity<?> addCustomerMeta(@Valid @NotNull @RequestBody CustomerMeta customerMeta) {
 		
         return ResponseEntity.ok(customerService.addCustomerMeta(customerMeta));
+    }
+	
+	@RequestMapping(path="get/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getCustomerMeta(@PathVariable("id") String id) {
+		
+		CustomerMeta cm = customerService.getCustomerMeta(id);
+		if(cm == null) {
+			return ResponseEntity.noContent().build();
+		}
+        return ResponseEntity.ok(cm);
     }
 	
     @PostMapping(value = "/uploads/{id}")

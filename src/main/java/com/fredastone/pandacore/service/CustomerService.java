@@ -14,7 +14,7 @@ public interface CustomerService {
 	
 	CustomerMeta addCustomerMeta(CustomerMeta customerMeta);
 	Optional<User> getCustomer(String id);
-	Optional<CustomerMeta> getCustomerMeta(String id);
+	CustomerMeta getCustomerMeta(String id);
 
 	//Page<User> getAllActiveCustomers(boolean status,int size,int page);
 	

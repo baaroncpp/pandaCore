@@ -31,6 +31,7 @@ public class ApprovalReview {
 	@NotEmpty
 	private String itemid;
 	
+	//1 --sale 2-- users
 	private int reviewtype;
 	
 	@NotEmpty

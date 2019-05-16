@@ -1,12 +1,10 @@
 package com.fredastone.pandacore.service;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 
-import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Sale;
+import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.models.LeaseSale;
 
 public interface SaleService {
@@ -19,5 +17,9 @@ public interface SaleService {
 	Page<Sale> getVerifiedLeaseSale(String agentId,int page,int count,String sortBy,Direction sortOrder);
 	Page<Sale> getUnverifiedleaseSale(String agentId,int page,int count,String sortBy,Direction orderBy);
 	
+	Page<VLeaseSaleDetails> getAllLeaseSaleByReviewStatus(boolean reviewStatus,int page,int count,String sortby,Direction orderby);
+	VLeaseSaleDetails getLeaseSaleDetail(String saleid);
+	Page<VLeaseSaleDetails> getAllLeaseSaleDetail(int page,int count,String sortby,Direction orderby);
+		
 	Page<Sale> getAllSales(int page,int count, String sortby,Direction sortOrder);
 }

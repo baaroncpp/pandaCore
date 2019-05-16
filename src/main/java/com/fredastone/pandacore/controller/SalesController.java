@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fredastone.pandacore.entity.Sale;
+import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.service.SaleService;
 
 @CrossOrigin("${crossoriginurl}")
@@ -57,6 +58,45 @@ public class SalesController {
     		@RequestParam("size") int size) {
     	
     	return ResponseEntity.ok(saleService.getAllSales(page, size, sortby, sortorder));
+    }
+    
+    @RequestMapping(path="get/lease/detail",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllLeaseSaleDetail(
+    		@RequestParam(required=false,defaultValue="DESC",name="sortorder") 
+    		Direction sortorder,
+    		@RequestParam(required=false,name="sortby",defaultValue="createdon") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam(required=false,name="size",defaultValue="50") int size) {
+    	
+    	return ResponseEntity.ok(saleService.getAllLeaseSaleDetail(page, size, sortby, sortorder));
+    }
+    
+    @RequestMapping(path="get/lease/detail",params = {"reviewstatus","page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllLeaseSaleByReviewStatus(
+    		@Valid @RequestParam(name="reviewstatus",defaultValue="false") boolean reviewstatus,
+    		@Valid @RequestParam(defaultValue="DESC",name="sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam(name="sortby",defaultValue="createdon") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam(name="size",defaultValue="10") int size)  {
+    	
+    	return ResponseEntity.ok(saleService.getAllLeaseSaleByReviewStatus(reviewstatus,page, size, sortby, sortorder));
+    }
+    
+   
+    
+    
+    @RequestMapping(path="get/lease/detail/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getLeaseSaleDetail(@PathVariable("id") String saleid) {
+    	
+    	final VLeaseSaleDetails lsd = saleService.getLeaseSaleDetail(saleid);
+    	if(lsd == null)
+    		return ResponseEntity.noContent().build();
+    	return ResponseEntity.ok(lsd);
     }
     
     @RequestMapping(path="get/unverified",params = {"agentid","page","size","sortby","sortorder" },method = RequestMethod.GET)

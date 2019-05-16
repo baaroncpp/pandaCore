@@ -26,6 +26,7 @@ import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.TotalLeasePayments;
 import com.fredastone.pandacore.entity.User;
+import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.exception.AgentNotFoundException;
 import com.fredastone.pandacore.exception.LeaseOfferNotFoundException;
 import com.fredastone.pandacore.exception.ProductNotFoundException;
@@ -36,6 +37,7 @@ import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
+import com.fredastone.pandacore.repository.LeaseSaleDetailRepository;
 import com.fredastone.pandacore.repository.ProductsRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.SaleRollbackRepository;
@@ -98,6 +100,7 @@ public class SaleServiceImpl implements SaleService {
 	private TokenRepository saleTokenDao;
 	private TotalLeasePaymentsRepository totalLeaseRepayDao;
 	private UserRepository userDao;
+	private LeaseSaleDetailRepository lsdDao;
 	
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
@@ -105,7 +108,8 @@ public class SaleServiceImpl implements SaleService {
 	@Autowired
 	public SaleServiceImpl(SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
 			ProductsRepository productDao,LeaseOfferRepository leaseOfferDao,LeaseRepository leaseDao,
-			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao) {
+			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao,
+			LeaseSaleDetailRepository lsdDao) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -116,7 +120,7 @@ public class SaleServiceImpl implements SaleService {
 		this.saleTokenDao = saleTokenDao;
 		this.totalLeaseRepayDao = totalLeaseRepayDao;
 		this.userDao = userDao;
-		
+		this.lsdDao = lsdDao;
 	}
 	
 	@Transactional
@@ -381,6 +385,29 @@ public class SaleServiceImpl implements SaleService {
 		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderBy,sortBy));
 		Page<Sale> allsorted = saleDao.findAllUnverified(agentId, "Lease", pageRequest);
 		return allsorted;
+	}
+
+	@Override
+	public Page<VLeaseSaleDetails> getAllLeaseSaleByReviewStatus(boolean reviewStatus, int page, int count,
+			String sortby, Direction orderby) {
+		
+		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
+		Page<VLeaseSaleDetails> reviewsales = lsdDao.findByisreviewed(reviewStatus, pageRequest);
+		return reviewsales;
+	}
+
+	@Override
+	public VLeaseSaleDetails getLeaseSaleDetail(String saleid) {
+		Optional<VLeaseSaleDetails> d = lsdDao.findById(saleid);
+		return d.isPresent() == false ? null : d.get();
+	}
+
+	@Override
+	public Page<VLeaseSaleDetails> getAllLeaseSaleDetail(int page, int count, String sortby, Direction orderby) {
+
+		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
+		Page<VLeaseSaleDetails> reviewsales = lsdDao.findAll(pageRequest);
+		return reviewsales;
 	}
 
 }

@@ -22,4 +22,5 @@ public interface SaleService {
 	Page<VLeaseSaleDetails> getAllLeaseSaleDetail(int page,int count,String sortby,Direction orderby);
 		
 	Page<Sale> getAllSales(int page,int count, String sortby,Direction sortOrder);
+	Page<Sale> getAllSalesByAgentId(String agentId,int page,int count,String sortBy,Direction orderBy);
 }

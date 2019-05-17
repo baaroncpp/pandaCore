@@ -23,6 +23,7 @@ public class VSaleApprovalReviewRepoImpl implements VSaleApprovalReviewRepositor
 	
 	private static String GET_QUERY = "Select sr.* from panda_core.v_sale_approval_review sr WHERE sr.agentid = :agentid order by sr.itemid = :itemid order by sr.createdon DESC";
 	
+	
 	@Override
 	public List<VSaleApprovalReview> getAllSaleApprovalReview(String agentid, String itemid) {
 		Map<String, String> map = new HashMap<>();

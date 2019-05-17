@@ -3,6 +3,9 @@ package com.fredastone.pandacore.controller;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
+import com.fredastone.pandacore.repository.VerificationRepository;
 import com.fredastone.pandacore.service.SaleService;
 
 @CrossOrigin("${crossoriginurl}")
@@ -23,11 +27,13 @@ import com.fredastone.pandacore.service.SaleService;
 public class SalesController {
 
 	private SaleService saleService;
+	private VerificationRepository verificationRepo;
 	
 	@Autowired
-	public SalesController(SaleService saleService) {
+	public SalesController(SaleService saleService,VerificationRepository verificationRepo) {
 		// TODO Auto-generated constructor stubx
 		this.saleService = saleService;
+		this.verificationRepo = verificationRepo;
 	}
 	
 	@RequestMapping(path="add/direct",method = RequestMethod.POST)
@@ -59,6 +65,22 @@ public class SalesController {
     	
     	return ResponseEntity.ok(saleService.getAllSales(page, size, sortby, sortorder));
     }
+    
+    
+    @RequestMapping(path="get/agent/{agentid}",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getallbyagent(
+    		@PathVariable("agentid") String agentid,
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") int size) {
+    	
+    	return ResponseEntity.ok(saleService.getAllSalesByAgentId(agentid,page, size, sortby, sortorder));
+    }
+    
     
     @RequestMapping(path="get/lease/detail",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllLeaseSaleDetail(
@@ -130,6 +152,42 @@ public class SalesController {
     	return ResponseEntity.ok(saleService.getVerifiedLeaseSale(agentid, page, size, sortby, sortorder));
     }
 	
+    
+    @RequestMapping(path="get/unverified/withcustomer",params = {"agentid","page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllUnverifie(
+    		@Valid @RequestParam("agentid")
+    		String agentid,
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") int size) {
+    	
+ 
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(sortorder,sortby));
+    	return ResponseEntity.ok(verificationRepo.findAllUnverified(agentid, pageRequest));
+    	
+    }
+    
+    @RequestMapping(path="get/verified/withcustomer",params = {"agentid","page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> verifiedwithcustomer(
+    		@Valid @RequestParam("agentid")
+    		String agentid,
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") int size) {
+    	
+
+		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(sortorder,sortby));
+    	return ResponseEntity.ok(verificationRepo.findAllVerified(agentid, pageRequest));
+    }
+    
     
 	@RequestMapping(path="complete/{id}",method = RequestMethod.POST)
     public ResponseEntity<?> completeNewSale(@PathVariable("id") String sale) {

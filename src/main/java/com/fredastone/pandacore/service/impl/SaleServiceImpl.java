@@ -312,6 +312,9 @@ public class SaleServiceImpl implements SaleService {
 			
 		}
 		
+		if(sale.get().isIsreviewed() == Boolean.FALSE) {
+			throw new RuntimeException("Transaction has not been reviewed");
+		}
 		//Process Leased tickets
 		final Optional<Lease> lease = leaseDao.findById(sale.get().getId());
 		
@@ -408,6 +411,13 @@ public class SaleServiceImpl implements SaleService {
 		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
 		Page<VLeaseSaleDetails> reviewsales = lsdDao.findAll(pageRequest);
 		return reviewsales;
+	}
+
+	@Override
+	public Page<Sale> getAllSalesByAgentId(String agentid, int page, int count, String sortby, Direction orderby) {
+		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
+		Page<Sale> sales = saleDao.findAllSaleByAgentId(agentid,pageRequest);
+		return sales;
 	}
 
 }

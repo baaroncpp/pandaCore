@@ -79,7 +79,7 @@ public class EquipmentController {
 	}
 
 	@Secured({ "ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE" })
-	@PostMapping(value = "/photo/{id}")
+	@PostMapping(value = "/media/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
 			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {
 
@@ -100,7 +100,7 @@ public class EquipmentController {
 
 	}
 
-	@GetMapping("/photo/{id}")
+	@GetMapping("/media/{id}")
 	@ResponseBody
 	public ResponseEntity<Resource> serveFile(@PathVariable("id") String id) {
 

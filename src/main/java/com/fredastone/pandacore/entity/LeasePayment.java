@@ -50,7 +50,7 @@ public class LeasePayment implements java.io.Serializable {
 	@Column(name = "status", nullable = false)
 	private short paymentstatus;
 	
-	@Column(name = "transactionid", nullable = false, length = 20)
+	@Column(name = "transactionid", nullable = false, length = 36)
 	private String transactionid;
 	
 	@Column(name = "channeltransactionid", length = 36)

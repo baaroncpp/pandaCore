@@ -17,6 +17,9 @@ import com.fredastone.pandacore.repository.ConfigRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
 import com.fredastone.pandacore.repository.VEmployeeApprovalRepository;
 import com.fredastone.pandacore.service.impl.EmployeeServiceImpl;
+import com.fredastone.pandasolar.token.CommandNames;
+import com.fredastone.pandasolar.token.TokenOperation;
+
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
@@ -83,6 +86,9 @@ public class EmployeeServiceTest {
 //		EmployeeMeta resp = this.employeeService.createEmployee(ep);
 //		Assert.assertNotNull(resp);
 //		Assert.assertEquals(resp, ep);
+		
+		TokenOperation op = new TokenOperation();
+		System.out.println(op.generateGeneralPurposeToken("140096004018003", CommandNames.RESET, 1));
 		
 	}
 	

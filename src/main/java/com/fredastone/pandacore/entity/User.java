@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -125,5 +126,22 @@ public class User implements java.io.Serializable {
 		this.password = password;
 	}
 	
+	@Transient
+	private String profilepath;
+	
+	@Transient
+	private String coipath;
+	
+	@Transient
+	private String idcopypath;
+	
+	@Transient
+	private String contractpath;
+	
+	@Transient
+	private String consentformpath;
+	
+	@Transient
+	private String housephotopath;
 	
 }

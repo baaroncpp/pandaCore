@@ -108,7 +108,7 @@ public class AzureOperations implements IAzureOperations{
 
 	private String getImagePath(String prefix,String imageName) {
 		
-		return prefix="_"+imageName+IMAGE_SUFFIX;
+		return prefix+"_"+imageName+IMAGE_SUFFIX;
 	}
 	
 	private String getPdfPath(String prefix,String pdfName) {

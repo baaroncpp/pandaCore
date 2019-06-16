@@ -23,9 +23,6 @@ import io.jsonwebtoken.impl.DefaultClock;
 @Component
 public class JwtTokenUtil implements Serializable {
 
-	@Value("${pandacore.token.whitelist}")
-	private String whitelistIP;
-	
     static final String CLAIM_KEY_USERNAME = "sub";
     static final String CLAIM_KEY_CREATED = "iat";
     static final String CLAIM_SCOPES="scopes";
@@ -82,7 +79,7 @@ public class JwtTokenUtil implements Serializable {
 
     private Boolean ignoreTokenExpiration(String token) {
         // here you specify tokens, for that the expiration is ignored
-    	return token.equals(whitelistIP);
+    	return Boolean.FALSE;
  
     }
 

@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.service;
 
+import java.net.MalformedURLException;
+import java.security.InvalidKeyException;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -10,7 +12,7 @@ import com.fredastone.pandacore.entity.User;
 
 public interface UserService {
 
-	User addUser(User user);
+	User addUser(User user) throws InvalidKeyException, MalformedURLException;
 	User updateUser(User user);
 	User getUserByEmail(String email);
 	User getUserById(String id);

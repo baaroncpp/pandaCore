@@ -1,6 +1,10 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.net.MalformedURLException;
+import java.security.InvalidKeyException;
 import java.util.Optional;
+
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,14 +38,16 @@ public class UserServiceImpl implements UserService {
 	private IAzureOperations azureOperations;
 	
 	@Autowired
-	public UserServiceImpl(UserRepository userDao) {
+	public UserServiceImpl(UserRepository userDao,IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.userDao = userDao;
+		this.azureOperations = azureOperations;
 		
 	}
 	
+	@Transactional
 	@Override
-	public User addUser(User user) {
+	public User addUser(User user) throws InvalidKeyException, MalformedURLException {
 		// TODO Auto-generated method stub
 		user.setId(ServiceUtils.getUUID());
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -49,13 +55,28 @@ public class UserServiceImpl implements UserService {
 		userDao.save(user);
 		user.setPassword(null);
 		
+		final String profilePath = azureOperations.uploadProfile(user.getId());
+		final String idCopyPath = azureOperations.uploadIdCopy(user.getId());
+		
+		user.setProfilepath(profilePath);
+		user.setIdcopypath(idCopyPath);
+		
 		switch(user.getUsertype()) {
 		case "AGENT":
 			//Upload fileds required
+			final String contractPath = azureOperations.uploadAgentContract(user.getId());
+			final String coiPath = azureOperations.uploadAgentCertIncorp(user.getId());
+			
+			user.setContractpath(contractPath);
+			user.setCoipath(coiPath);
 			break;
 		case "CUSTOMER":
-			break;
-		case "EMPLOYEE":
+			
+			final String consentFormPath = azureOperations.uploadCustConsent(user.getId());
+			final String housePhotoPath = azureOperations.uploadHousePhotoPath(user.getId());
+			
+			user.setConsentformpath(consentFormPath);
+			user.setHousephotopath(housePhotoPath);
 			break;
 		default:
 			break;

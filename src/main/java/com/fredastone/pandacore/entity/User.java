@@ -108,6 +108,7 @@ public class User implements java.io.Serializable {
 	@Temporal(TemporalType.DATE)
 	@Column(name = "updatedon",insertable=false,updatable=false,nullable=true, length = 13)
 	private Date updatedon;
+	
 		
 	
 	@JsonIgnore

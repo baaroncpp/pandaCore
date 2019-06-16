@@ -64,6 +64,8 @@ public class UserController {
     */
     
     
+    
+    
     @Secured({"ROLE_HR,ROLE_AGENT,ROLE_SUPPORT"})
     @RequestMapping(path="add",method = RequestMethod.POST)
     public ResponseEntity<?> addUser(@Valid @NotNull @RequestBody User user) {

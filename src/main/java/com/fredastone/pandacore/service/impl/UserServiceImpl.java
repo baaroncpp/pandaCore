@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.fredastone.pandacore.azure.AzureOperations;
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
@@ -25,13 +28,16 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	@Qualifier("passwordEncoderBean")
 	private BCryptPasswordEncoder passwordEncoder;
+
 	
 	private UserRepository userDao;
+	private IAzureOperations azureOperations;
 	
 	@Autowired
 	public UserServiceImpl(UserRepository userDao) {
 		// TODO Auto-generated constructor stub
 		this.userDao = userDao;
+		
 	}
 	
 	@Override
@@ -42,6 +48,20 @@ public class UserServiceImpl implements UserService {
 		
 		userDao.save(user);
 		user.setPassword(null);
+		
+		switch(user.getUsertype()) {
+		case "AGENT":
+			//Upload fileds required
+			break;
+		case "CUSTOMER":
+			break;
+		case "EMPLOYEE":
+			break;
+		default:
+			break;
+			
+		}
+		
 		return user;
 	}
 

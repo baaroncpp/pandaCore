@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.CustomerUploadType;
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.CustomerMeta;
@@ -28,16 +29,18 @@ public class CustomerServiceImpl implements CustomerService {
 
 	private CustomerMetaRepository customerMetaDao;
 	private UserRepository userDao;
+	private IAzureOperations azureOperations;
 
 	private StorageService storageService;
 
 	@Autowired
 	public CustomerServiceImpl( CustomerMetaRepository customerMetaDao,UserRepository userDao,
-			StorageService storageService) {
+			StorageService storageService,IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.customerMetaDao = customerMetaDao;
 		this.storageService = storageService;
 		this.userDao = userDao;
+		this.azureOperations = azureOperations;
 	}
 
 
@@ -113,6 +116,41 @@ public class CustomerServiceImpl implements CustomerService {
 
 	}
 
+//	@Override
+//	public Resource getUploadedMetaInfo(String customerId, CustomerUploadType uploadType) {
+//
+//		Optional<CustomerMeta> pd = customerMetaDao.findById(customerId);
+//
+//		if (!pd.isPresent())
+//			throw new ItemNotFoundException(customerId);
+//
+//		switch (uploadType) {
+//		case PROFILE:
+//			if (pd.get().getProfilephotopath().isEmpty())
+//				throw new ItemNotFoundException(customerId);
+//
+//			return storageService.loadAsResource(
+//					String.format("%s/%s", customerUploadFolder, pd.get().getProfilephotopath()));
+//		case ID_COPY:
+//			if (pd.get().getIdcopypath().isEmpty())
+//				throw new ItemNotFoundException(customerId);
+//
+//			return storageService.loadAsResource(
+//					String.format("%s/%s", customerUploadFolder, pd.get().getIdcopypath()));
+//
+//		case CONSENT_FORM:
+//			if (pd.get().getConsentformpath().isEmpty())
+//				throw new ItemNotFoundException(customerId);
+//
+//			return storageService.loadAsResource(
+//					String.format("%s/%s", customerUploadFolder, pd.get().getConsentformpath()));
+//		default:
+//			return null;
+//
+//		}
+//
+//	}
+
 	@Override
 	public Resource getUploadedMetaInfo(String customerId, CustomerUploadType uploadType) {
 
@@ -148,12 +186,22 @@ public class CustomerServiceImpl implements CustomerService {
 
 	}
 
-
 	@Override
 	public CustomerMeta getCustomerMeta(String id) {
 		// TODO Auto-generated method stub
 		Optional<CustomerMeta> cm =  customerMetaDao.findById(id);
-		return cm.isPresent() == true ? cm.get() : null;
+		
+		if(cm.isPresent()) {
+			CustomerMeta meta = cm.get();
+			meta.getUser().setHousephotopath(azureOperations.getHousePhotoPath(id));
+			meta.getUser().setProfilepath(azureOperations.getProfile(id));
+			meta.getUser().setConsentformpath(azureOperations.getCustConsent(id));
+			meta.getUser().setIdcopypath(azureOperations.getIdCopy(id));
+			
+			return meta;
+			
+		}
+		return null;
 	}
 
 }

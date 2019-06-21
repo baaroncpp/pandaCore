@@ -11,6 +11,7 @@ public interface AgentService {
 	
 
 	AgentMeta addAgentMeta(AgentMeta agentMeta);
+	AgentMeta getAgentById(String agentId);
 	
 	
 	public void uploadMetaInfo(MultipartFile file, RedirectAttributes redirectAttributes, String agentId,

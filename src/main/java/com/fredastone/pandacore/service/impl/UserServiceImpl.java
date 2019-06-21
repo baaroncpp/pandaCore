@@ -52,6 +52,12 @@ public class UserServiceImpl implements UserService {
 		user.setId(ServiceUtils.getUUID());
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		
+		if(user.getPrimaryphone() != null && !user.getPrimaryphone().isEmpty())
+		{
+			user.setPrimaryphone(ServiceUtils.reformatUGPhoneNumbers(user.getPrimaryphone()));
+		}
+		
+		
 		userDao.save(user);
 		user.setPassword(null);
 		

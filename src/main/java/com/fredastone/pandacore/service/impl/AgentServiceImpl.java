@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.AgentUploadType;
 import com.fredastone.pandacore.constants.UserType;
 //import com.fredastone.pandacore.entity.Agent;
@@ -48,18 +49,18 @@ public class AgentServiceImpl implements AgentService{
 
 	
 	private UserRepository userDao;
-	private UserRoleRepository userRoleDao;
+	private IAzureOperations azureOperations;
 	private ConfigRepository configDao;
 	private AgentMetaRepository agentMetaDao;
 	private StorageService storageService;
 	
 	@Autowired
 	public AgentServiceImpl(UserRepository userDao,UserRoleRepository userRoleDao,ConfigRepository configDao,
-			AgentMetaRepository agentMetaDao,
+			AgentMetaRepository agentMetaDao,IAzureOperations azureOperations,
 			StorageService storageService) {
 		// TODO Auto-generated constructor stub
 		this.userDao = userDao;
-		this.userRoleDao = userRoleDao;
+		this.azureOperations = azureOperations;
 		this.configDao = configDao;
 		this.agentMetaDao = agentMetaDao;
 		this.storageService = storageService;
@@ -158,6 +159,23 @@ public class AgentServiceImpl implements AgentService{
 			}
 		}
 		return newMeta;
+	}
+
+
+	@Override
+	public AgentMeta getAgentById(String agentId) {
+		Optional<AgentMeta> agent = agentMetaDao.findById(agentId);
+		
+		if(agent.isPresent())
+		{
+			AgentMeta m = agent.get();
+			m.getUser().setCoipath(azureOperations.getAgentCertIncorp(agentId));
+			m.getUser().setProfilepath(azureOperations.getProfile(agentId));
+			m.getUser().setIdcopypath(azureOperations.getIdCopy(agentId));
+			
+			return m;
+		}
+		return null;
 	}
 
 }

@@ -13,7 +13,7 @@ public interface EmployeeService {
 	
 	EmployeeMeta addEmployee(EmployeeMeta employeemeta);
 	public Page<EmployeeMeta> findAllEmployees(int page,int size);
-	public Optional<EmployeeMeta> findEmployeeById(String id);
+	public EmployeeMeta findEmployeeById(String id);
 	public Optional<EmployeeMeta> findEmployeeByName(String name);
 	public Optional<EmployeeMeta> findEmployeeByMobile(String mobile);
 	public Optional<EmployeeMeta> findEmployeeByEmail(String email);

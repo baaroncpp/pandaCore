@@ -52,24 +52,24 @@ public class CustomerController {
         return ResponseEntity.ok(cm);
     }
 	
-    @PostMapping(value = "/uploads/{id}")
-	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-			RedirectAttributes redirectAttributes, @PathVariable("id") String id,@RequestParam("uploadType") CustomerUploadType uploadType) {
+//    @PostMapping(value = "/uploads/{id}")
+//	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
+//			RedirectAttributes redirectAttributes, @PathVariable("id") String id,@RequestParam("uploadType") CustomerUploadType uploadType) {
+//
+//		customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType);
+//
+//		return ResponseEntity.ok().build();
+//
+//	}
 
-		customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType);
-
-		return ResponseEntity.ok().build();
-
-	}
-
-	@GetMapping("/media/{id}")
-	@ResponseBody
-	public ResponseEntity<Resource> serveFile(@PathVariable("id") String id,@RequestParam("uploadtype") CustomerUploadType uploadType) {
-
-		final Resource file = customerService.getUploadedMetaInfo(id,uploadType);
-
-		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-				.body(file);
-	}
+//	@GetMapping("/media/{id}")
+//	@ResponseBody
+//	public ResponseEntity<Resource> serveFile(@PathVariable("id") String id,@RequestParam("uploadtype") CustomerUploadType uploadType) {
+//
+//		final Resource file = customerService.getUploadedMetaInfo(id,uploadType);
+//
+//		return ResponseEntity.ok()
+//				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+//				.body(file);
+//	}
 }

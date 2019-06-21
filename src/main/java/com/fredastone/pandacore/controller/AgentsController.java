@@ -45,33 +45,36 @@ public class AgentsController {
         return ResponseEntity.ok(agentService.addAgentMeta(agent));
     }
     
-    @RequestMapping(path="get/mobile/{mobileNumber}",method = RequestMethod.GET)
-    public ResponseEntity<?> getAgentByMobileNumber(@Valid @PathParam("mobileNumber")String  mobileNumber) {
-    	
-        return ResponseEntity.ok("Greetings from admin protected method!");
-    }
-    
-    @RequestMapping(path="get/id/{id}",method = RequestMethod.GET)
-    public ResponseEntity<?> getAgentById(@Valid @PathParam("mobileNumber")String  id) {
-    	
-        return ResponseEntity.ok("Greetings from admin protected method!");
-    }
-    
-    @RequestMapping(path="get/email/{email}",method = RequestMethod.GET)
-    public ResponseEntity<?> getAgentByEmail(@Valid @PathParam("mobileNumber")String  mobileNumber) {
-        return ResponseEntity.ok("Greetings from admin protected method!");
-    }
-    
     @RequestMapping(path="get",params = { "active", "direction", "page","size" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllAgentsByActive(@RequestParam("active")boolean isEnabled,
     		@RequestParam("direction") String direction,@RequestParam("page") int page,@RequestParam("size") int size) {
         return ResponseEntity.ok("Greetings from admin protected method!");
     }
     
-    @RequestMapping(path="get/terminated",params = {"direction", "page","size" },method = RequestMethod.GET)
-    public ResponseEntity<?> getAllTerminatedAGents(@RequestParam("direction") String direction,@RequestParam("page") int page,@RequestParam("size") int size) {
+    @RequestMapping(path="get/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getAgentById(@Valid @PathVariable("id")String  id) {
+    	AgentMeta m = agentService.getAgentById(id);
+    	if(m == null) {
+			return ResponseEntity.noContent().build();
+			
+		}
+        return ResponseEntity.ok(m);
+    }
+    
+    @RequestMapping(path="get/mobile/{mobileNumber}",method = RequestMethod.GET)
+    public ResponseEntity<?> getAgentByMobileNumber(@Valid @PathParam("mobileNumber")String  mobileNumber) {
+    	
         return ResponseEntity.ok("Greetings from admin protected method!");
     }
+    
+   
+    
+    @RequestMapping(path="get/email/{email}",method = RequestMethod.GET)
+    public ResponseEntity<?> getAgentByEmail(@Valid @PathParam("mobileNumber")String  mobileNumber) {
+        return ResponseEntity.ok("Greetings from admin protected method!");
+    }
+    
+  
     
     @RequestMapping(path="update/{id}",method = RequestMethod.PUT)
     public ResponseEntity<?> updateAgentDetails(@PathParam("id") String id,@RequestBody AgentModel agent) {
@@ -94,6 +97,9 @@ public class AgentsController {
     }
     
     
+    
+    //--- This is going to be deprecated
+   /* 
     @PostMapping(value = "/uploads/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
 			RedirectAttributes redirectAttributes, @PathVariable("id") String id,@RequestParam("uploadType") AgentUploadType uploadType) {
@@ -114,4 +120,6 @@ public class AgentsController {
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
 				.body(file);
 	}
+	*/
 }
+

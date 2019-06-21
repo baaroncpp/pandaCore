@@ -88,7 +88,7 @@ public class EmployeeServiceTest {
 //		Assert.assertEquals(resp, ep);
 		
 		TokenOperation op = new TokenOperation();
-		System.out.println(op.generateGeneralPurposeToken("140096004018003", CommandNames.RESET, 1));
+		System.out.println(op.generateGeneralPurposeToken("168005009023004", CommandNames.DEMOLISH, 1));
 		
 	}
 	

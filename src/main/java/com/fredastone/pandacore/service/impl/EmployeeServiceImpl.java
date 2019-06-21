@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.Config;
 import com.fredastone.pandacore.entity.EmployeeMeta;
@@ -50,26 +51,35 @@ public class EmployeeServiceImpl implements EmployeeService{
 	private final EmployeeRepository employeeDao;
 	private final UserRepository userDao;
 	private final ConfigRepository configDao;
-
-	
-
-
+	private final IAzureOperations azureOperations;
 	
 	@Autowired
-	 public EmployeeServiceImpl(EmployeeRepository employeeDao,StorageService storageService,UserRepository userDao,ConfigRepository configDao) {
+	 public EmployeeServiceImpl(EmployeeRepository employeeDao,StorageService storageService,UserRepository userDao,ConfigRepository configDao
+			 ,IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.employeeDao = employeeDao;
 		this.storageService = storageService;
 		this.userDao = userDao;
 		this.configDao = configDao;
+		this.azureOperations = azureOperations;
 	}
 
 
 	
 
 	@Override
-	public Optional<EmployeeMeta> findEmployeeById(String id) {
+	public EmployeeMeta findEmployeeById(String id) {
 		// TODO Auto-generated method stub
+		Optional<EmployeeMeta> meta =  employeeDao.findById(id);
+		if(meta.isPresent())
+		{
+			EmployeeMeta m = meta.get();
+			m.getUser().setProfilepath(azureOperations.getProfile(id));
+			m.getUser().setIdcopypath(azureOperations.getIdCopy(id));
+			
+			return m;
+		}
+		
 		return null;
 	}
 

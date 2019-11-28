@@ -1,10 +1,13 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -42,11 +45,9 @@ public class AgentServiceImpl implements AgentService{
 	
 	@Value("${agentapprover}")
 	private String agentApprover;
-	
-	
+		
 	@Value("${agentUploadFolder}")
 	private String agentUploadFolder;
-
 	
 	private UserRepository userDao;
 	private IAzureOperations azureOperations;
@@ -138,19 +139,21 @@ public class AgentServiceImpl implements AgentService{
 
 	}
 
-
 	@Override
 	public AgentMeta addAgentMeta(AgentMeta agentMeta) {
 		Optional<User> user = userDao.findById(agentMeta.getUserid());
+		Optional<AgentMeta> agent = agentMetaDao.findByUserid(agentMeta.getUserid());
 		
 		if(!user.isPresent() || !user.get().getUsertype().equals(UserType.AGENT.name())) {
-			throw new RuntimeException("User not found or user does not match type employee");
+			throw new RuntimeException("User not found or user does not match type Agent");
+		}else if(agent.isPresent()){
+			throw new RuntimeException("Record of this user already exists");
 		}
-		
 		
 		final AgentMeta newMeta = agentMetaDao.save(agentMeta);
 		
 		final Optional<Config> approverConfig = configDao.findByName(agentApprover);
+		
 		if(approverConfig.isPresent()) {
 			Optional<User> approver = userDao.findById(approverConfig.get().getValue());
 			if(approver.isPresent()) {
@@ -161,21 +164,131 @@ public class AgentServiceImpl implements AgentService{
 		return newMeta;
 	}
 
+	
+	@Override
+	public AgentMeta getAgentByEmail(String email) {
+		Optional<User> user = userDao.findByEmail(email);
+		AgentMeta agentMeta = getAgentByUserId(user.get().getId());
+		
+		if(agentMeta == null) {
+			throw new RuntimeException("Agent not found");
+		}
+		return agentMeta;
+	}
+	
+	public AgentMeta getAgentByUserId(String agentId) {
+		Optional<AgentMeta> agent = agentMetaDao.findByUserid(agentId);
+		
+		if(!agent.isPresent()){
+			throw new RuntimeException("Agent not found");
+		}
+		
+		AgentMeta m = agent.get();
+		m.getUser().setCoipath(azureOperations.getAgentCertIncorp(agentId));
+		m.getUser().setProfilepath(azureOperations.getProfile(agentId));
+		m.getUser().setIdcopypath(azureOperations.getIdCopy(agentId));
+		
+		return m;
+	}
 
 	@Override
-	public AgentMeta getAgentById(String agentId) {
-		Optional<AgentMeta> agent = agentMetaDao.findById(agentId);
+	public AgentMeta activateAgent(String agentId) {
 		
-		if(agent.isPresent())
-		{
-			AgentMeta m = agent.get();
-			m.getUser().setCoipath(azureOperations.getAgentCertIncorp(agentId));
-			m.getUser().setProfilepath(azureOperations.getProfile(agentId));
-			m.getUser().setIdcopypath(azureOperations.getIdCopy(agentId));
+		AgentMeta agentMeta = getAgentByUserId(agentId);
+		if(agentMeta != null) {
 			
-			return m;
+			agentMeta.setActivatedon(new Date());
+			agentMeta.setIsactive(true);
+			agentMetaDao.save(agentMeta);
+			return getAgentByUserId(agentId);
+		}else {
+			throw new RuntimeException("Agent not found");
 		}
+	}
+
+	@Override
+	public AgentMeta deactivateAgent(String agentId) {
+		//add to logs and events
+		
+		AgentMeta agentMeta = getAgentByUserId(agentId);
+		if(agentMeta != null) {
+			agentMeta.setDeactivatedon(new Date());
+			agentMeta.setIsactive(false);
+			agentMetaDao.save(agentMeta);
+			return getAgentByUserId(agentId);
+		}else {
+			throw new RuntimeException("Agent not found");
+		}
+	}
+
+	@Override
+	public AgentMeta terminate(String agentId) {/*
+		AgentMeta agentMeta = getAgentByUserId(agentId);
+		if(agentMeta != null) {
+			agentMeta.setTerminatedon(new Date());
+			agentMeta.setIsterminated(true);
+			agentMetaDao.save(agentMeta);
+			return getAgentByUserId(agentId);
+		}else {
+			throw new RuntimeException("Agent not found");
+		}*/
 		return null;
+	}
+	
+	public void replaceFile(String filename, MultipartFile file) {
+		storageService.replaceFile(file, filename);
+	}
+
+	@Override
+	public Page<AgentMeta> findAllAgents(Pageable pageable) {
+		return agentMetaDao.findAll(pageable);
+	}
+
+
+	@Override
+	public Page<AgentMeta> getAllAgentsByActive(Pageable pageable, boolean isactive) {
+		
+		Page<AgentMeta> activated = agentMetaDao.findByIsactiveTrue(pageable);
+		Page<AgentMeta> notActivated = agentMetaDao.findByIsactiveFalse(pageable);
+		
+		if(activated.isEmpty() &&  notActivated.isEmpty()){
+			throw new RuntimeException("No Values");
+		}
+		
+		if(isactive == true) {
+			return activated;
+		}else{
+			return notActivated;
+		}
+	}
+
+
+	@Override
+	public AgentMeta getAgentByPhoneNumber(String phoneNumber) {
+		
+		Optional<User> user = userDao.findByPrimaryphone(phoneNumber);
+		
+		if(!user.isPresent()) {
+			throw new RuntimeException("User not found");
+		}
+		AgentMeta agentMeta = getAgentByUserId(user.get().getId());
+		
+		if(agentMeta == null) {
+			throw new RuntimeException("Agent not found");
+		}
+		return agentMeta;
+		
+	}
+
+	@Override
+	public AgentMeta updateAgentMeta(AgentMeta agentaMeta) {
+		
+		Optional<AgentMeta> meta = agentMetaDao.findById(agentaMeta.getUserid());
+		
+		if(!meta.isPresent()) {
+			throw new ItemNotFoundException(agentaMeta.getUserid());
+		}
+		return agentMetaDao.save(agentaMeta);
 	}
 
 }

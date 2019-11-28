@@ -3,45 +3,64 @@ package com.fredastone.pandacore.service.impl;
 import java.net.MalformedURLException;
 import java.security.InvalidKeyException;
 import java.util.Optional;
-
 import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import com.fredastone.pandacore.azure.AzureOperations;
 import com.fredastone.pandacore.azure.IAzureOperations;
+import com.fredastone.pandacore.constants.Operations;
+import com.fredastone.pandacore.constants.OperationsResults;
 import com.fredastone.pandacore.constants.UserType;
+import com.fredastone.pandacore.entity.PasswordResetToken;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
+import com.fredastone.pandacore.exception.ValueTakenException;
+import com.fredastone.pandacore.mail.EmailService;
+import com.fredastone.pandacore.models.OperationsStatusModel;
+import com.fredastone.pandacore.models.PasswordResetModel;
+import com.fredastone.pandacore.repository.PasswordResetTokenRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.UserService;
 import com.fredastone.pandacore.util.ServiceUtils;
+import com.fredastone.security.JwtTokenUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class UserServiceImpl implements UserService {
+	
+	private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
 	@Autowired
 	@Qualifier("passwordEncoderBean")
 	private BCryptPasswordEncoder passwordEncoder;
-
+	
+	@Autowired
+	private JwtTokenUtil jwtTokenUtil;
 	
 	private UserRepository userDao;
 	private IAzureOperations azureOperations;
+	private EmailService emailService;
+	private PasswordResetTokenRepository passwordResetTokenRepository;
 	
 	@Autowired
-	public UserServiceImpl(UserRepository userDao,IAzureOperations azureOperations) {
+	public UserServiceImpl(UserRepository userDao,
+			IAzureOperations azureOperations, 
+			EmailService emailService, 
+			PasswordResetTokenRepository passwordResetTokenRepository) {
+		
 		// TODO Auto-generated constructor stub
 		this.userDao = userDao;
 		this.azureOperations = azureOperations;
+		this.emailService = emailService;
+		this.passwordResetTokenRepository = passwordResetTokenRepository;
 		
 	}
 	
@@ -57,8 +76,10 @@ public class UserServiceImpl implements UserService {
 			user.setPrimaryphone(ServiceUtils.reformatUGPhoneNumbers(user.getPrimaryphone()));
 		}
 		
+		if (validateUserDetails(user)) {
+			userDao.save(user);
+		} 
 		
-		userDao.save(user);
 		user.setPassword(null);
 		
 		final String profilePath = azureOperations.uploadProfile(user.getId());
@@ -101,7 +122,6 @@ public class UserServiceImpl implements UserService {
 			throw new ItemNotFoundException(u.getId());
 		}
 		
-		
 		user.get().setCompanyemail(u.getCompanyemail());
 		user.get().setDateofbirth(u.getDateofbirth());
 		user.get().setEmail(u.getEmail());
@@ -139,19 +159,6 @@ public class UserServiceImpl implements UserService {
 		return user.get();
 	}
 
-
-	@Override
-	public User changePassword(String userId, String oldPassword, String newPassword, String token) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void forgotPassword(String userId) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	@Override
 	public void updateLastLogon(String userId, String lastLogon) {
 		// TODO Auto-generated method stub
@@ -180,6 +187,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public Page<User> getAllForActive(int page, int size, Direction direction, String sortby, boolean isactive) {
+		
 		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
 		Page<User> allsorted = userDao.findAllByisactive(pageRequest, isactive);
 	
@@ -190,7 +198,7 @@ public class UserServiceImpl implements UserService {
 	public Page<User> getAllByType(int page, int size, Direction direction, String sortby, UserType type) {
 		
 		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
-		Page<User> allsorted = userDao.findAllByusertype(pageRequest, type.name().toLowerCase());
+		Page<User> allsorted = userDao.findAllByusertype(pageRequest, type.name());
 	
 		return allsorted;
 	}
@@ -199,4 +207,133 @@ public class UserServiceImpl implements UserService {
 	public Optional<User> getUserByUsername(String username) {
 		return userDao.findLoginUser(username);
 	}
+
+	@Override
+	public Optional<User> getUserByPrimaryphone(String primaryphone) {
+		
+		if (!userDao.findByPrimaryphone(primaryphone).isPresent()) {
+			throw new ItemNotFoundException(primaryphone);
+		} else {
+			return userDao.findByPrimaryphone(primaryphone);
+		}
+		
+	}
+
+	@Override
+	public OperationsStatusModel forgotPasswordRequest(String username) {
+		Optional<User> user = userDao.findByUsername(username);
+		
+		OperationsStatusModel operationsStatusModel = new OperationsStatusModel();
+		operationsStatusModel.setOperationName(Operations.SEND_MAIL.name());
+		operationsStatusModel.setOperationResult(OperationsResults.FAILED.name());
+
+		if (!user.isPresent()) {
+			throw new ItemNotFoundException("user not found");
+		}
+
+		String token = jwtTokenUtil.generatePasswordRestToken(user.get().getId());
+		
+		
+		PasswordResetToken passwordResetToken = new PasswordResetToken();
+
+		passwordResetToken.setToken(token);
+		passwordResetToken.setUser(user.get());
+
+		try {
+			emailService.sendPasswordResetRequest(token, user.get());
+			passwordResetTokenRepository.save(passwordResetToken);
+			operationsStatusModel.setOperationName(Operations.PASSWORD_RESET.name());
+			operationsStatusModel.setOperationResult(OperationsResults.SUCCESS.name());
+			
+		} catch (MailException e) {
+			logger.info("Mail not sent");
+		}
+		return operationsStatusModel;
+
+	}
+	
+	@Override
+	public User changePassword(String userId, String oldPassword, String newPassword, String token) {
+		
+		Optional<User> user = userDao.findById(userId);
+		
+		if(!user.isPresent()) {
+			throw new ItemNotFoundException(userId);
+		}
+		String dbPassword = user.get().getPassword();
+		
+		if(dbPassword.equals(passwordEncoder.encode(newPassword))) {
+			throw new RuntimeException("Change new password");
+		}
+		
+		user.get().setPassword(passwordEncoder.encode(newPassword));
+		userDao.save(user.get());
+		
+		return user.get();
+	}
+
+	@Override
+	public void updateLastLogon(String userId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public User approveUser(String userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Transactional
+	@Override
+	public OperationsStatusModel passwordReset(PasswordResetModel passwordResetModel) {
+		
+		OperationsStatusModel operationsStatusModel = new OperationsStatusModel();
+		String token = passwordResetModel.getToken();
+		String password = passwordResetModel.getPassword();
+		
+		if(jwtTokenUtil.isTokenExpired(token)) {
+			throw new RuntimeException("expired request, try again");
+		}
+		
+		Optional<PasswordResetToken> passewordResetToken = passwordResetTokenRepository.findByToken(token);
+		
+		if(!passewordResetToken.isPresent()) {
+			throw new RuntimeException("Item not found");
+		}
+		
+		User user = passewordResetToken.get().getUser();
+		
+		if(user != null) {
+			user.setPassword(passwordEncoder.encode(password));
+			userDao.save(user);
+			
+			operationsStatusModel.setOperationName(Operations.PASSWORD_RESET.name());
+			operationsStatusModel.setOperationResult(OperationsResults.SUCCESS.name());
+			
+			passwordResetTokenRepository.delete(passewordResetToken.get());
+			/*
+			 * record system event
+			 * */
+			
+		}else {
+			operationsStatusModel.setOperationResult(OperationsResults.FAILED.name());
+		}
+		
+		return operationsStatusModel;
+	}
+	
+	public boolean validateUserDetails(User user) {
+
+		if (userDao.findByUsername(user.getUsername()).isPresent()) {
+			throw new ValueTakenException(user.getUsername(), "Username");
+		} else if (userDao.findByEmail(user.getEmail()).isPresent()) {
+			throw new ValueTakenException(user.getEmail(), "Email");
+		} else if (userDao.findByPrimaryphone(user.getPrimaryphone()).isPresent()) {
+			throw new ValueTakenException(user.getPrimaryphone(), "phone number");
+		} else {
+			return true;
+		}
+	}
+
 }

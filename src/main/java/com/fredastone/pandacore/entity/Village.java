@@ -8,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -34,5 +36,29 @@ public class Village implements java.io.Serializable {
 	
 	@Column(name = "name", length = 50)
 	private String name;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getParishid() {
+		return parishid;
+	}
+
+	public void setParishid(int parishid) {
+		this.parishid = parishid;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 	
 }

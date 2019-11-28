@@ -1,9 +1,7 @@
 package com.fredastone.pandacore.service.impl;
 
 import java.util.Optional;
-
 import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -13,13 +11,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.Config;
 import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
+import com.fredastone.pandacore.models.FileResponse;
 import com.fredastone.pandacore.repository.ConfigRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
 import com.fredastone.pandacore.repository.UserRepository;
@@ -64,23 +62,20 @@ public class EmployeeServiceImpl implements EmployeeService{
 		this.azureOperations = azureOperations;
 	}
 
-
-	
-
 	@Override
 	public EmployeeMeta findEmployeeById(String id) {
 		// TODO Auto-generated method stub
 		Optional<EmployeeMeta> meta =  employeeDao.findById(id);
-		if(meta.isPresent())
-		{
-			EmployeeMeta m = meta.get();
-			m.getUser().setProfilepath(azureOperations.getProfile(id));
-			m.getUser().setIdcopypath(azureOperations.getIdCopy(id));
-			
-			return m;
+		
+		if(!meta.isPresent()){
+			throw new RuntimeException("User not found");
 		}
 		
-		return null;
+		EmployeeMeta m = meta.get();
+		m.getUser().setProfilepath(azureOperations.getProfile(id));
+		m.getUser().setIdcopypath(azureOperations.getIdCopy(id));
+		
+		return m;
 	}
 
 	@Override
@@ -91,18 +86,28 @@ public class EmployeeServiceImpl implements EmployeeService{
 
 	@Override
 	public Optional<EmployeeMeta> findEmployeeByMobile(String mobile) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		Optional<EmployeeMeta> employeeMeta = employeeDao.findByMobile(mobile);
+		
+		if(!employeeMeta.isPresent()) {
+			throw new ItemNotFoundException(mobile);
+		}
+		return employeeMeta;			
 	}
 
 	@Override
-	public Optional<EmployeeMeta> findEmployeeByEmail(String email) {
-		// TODO Auto-generated method stub
-		return null;
+	public EmployeeMeta findEmployeeByEmail(String email) {
+		
+		Optional<User> user = userDao.findByEmail(email);
+		
+		if(!user.isPresent()) {
+			throw new RuntimeException("User not found");
+		}
+		String userId = user.get().getId();
+		
+		return findEmployeeById(userId);
 	}
 
-	
-	
 	@Override
 	public Page<EmployeeMeta> findAllEmployees(int page,int size){
 		
@@ -110,7 +115,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 	}
 
 	@Override
-	public void uploadProfilePhoto(MultipartFile file, RedirectAttributes redirectAttributes, String employeeId) {
+	public FileResponse uploadProfilePhoto(MultipartFile file, RedirectAttributes redirectAttributes, String employeeId) {
 		Optional<EmployeeMeta> pd = employeeDao.findById(employeeId);
 		
 		if(!pd.isPresent())
@@ -121,6 +126,12 @@ public class EmployeeServiceImpl implements EmployeeService{
     			employeeId,FilenameUtils.getExtension(file.getOriginalFilename())));
     	
     	pd.get().setProfilepath(String.format("%s.%s",employeeId,FilenameUtils.getExtension(file.getOriginalFilename())));
+    	    	
+    	String finalFileName = file.getOriginalFilename();
+		String filePath = String.format("%s.%s",employeeId,FilenameUtils.getExtension(file.getOriginalFilename()));
+    	
+    	
+    	return new FileResponse(finalFileName, filePath, file.getContentType(), file.getSize());
 		
 	}
 
@@ -140,9 +151,6 @@ public class EmployeeServiceImpl implements EmployeeService{
         return file;
 	}
 
-
-
-
 	@Transactional
 	@Override
 	public EmployeeMeta addEmployee(EmployeeMeta employeemeta) {
@@ -151,8 +159,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 		
 		if(!user.isPresent() || !user.get().getUsertype().equals(UserType.EMPLOYEE.name())) {
 			throw new RuntimeException("User not found or user does not match type employee");
-		}
-		
+		}		
 		
 		final EmployeeMeta newMeta = employeeDao.save(employeemeta);
 		
@@ -165,6 +172,17 @@ public class EmployeeServiceImpl implements EmployeeService{
 			}
 		}
 		return newMeta;
+	}
+
+	@Override
+	public EmployeeMeta updateEmployee(EmployeeMeta employeemeta) {
+		
+		Optional<EmployeeMeta> employee = employeeDao.findById(employeemeta.getUserid());
+		
+		if(!employee.isPresent()) {
+			throw new RuntimeException("EmployeeMeta data not found");
+		}
+		return employeeDao.save(employeemeta);
 	}
 	
 }

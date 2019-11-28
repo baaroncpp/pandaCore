@@ -21,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.entity.Equipment;
 import com.fredastone.pandacore.models.EquipmentModel;
+import com.fredastone.pandacore.models.FileResponse;
 import com.fredastone.pandacore.service.EquipmentService;
 import com.fredastone.pandacore.service.StorageService;
 import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
@@ -89,14 +90,15 @@ public class EquipmentController {
 			return ResponseEntity.notFound().build();
 		}
 
-		storageService.store(file,
-				String.format("%s/%s.%s", photosFolder, id, FilenameUtils.getExtension(file.getOriginalFilename())));
+		storageService.store(file, String.format("%s/%s.%s", photosFolder, id, FilenameUtils.getExtension(file.getOriginalFilename())));
 
 		eq.setEquipmentPhoto(String.format("%s.%s", id, FilenameUtils.getExtension(file.getOriginalFilename())));
 
 		equipmentService.updateEquipment(eq);
+		
+		FileResponse fileResponse = new FileResponse(file.getOriginalFilename(), photosFolder+"/"+eq.getId(), file.getContentType(), file.getSize());
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.ok(fileResponse);
 
 	}
 

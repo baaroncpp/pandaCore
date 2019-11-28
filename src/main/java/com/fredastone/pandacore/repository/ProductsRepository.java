@@ -12,4 +12,8 @@ public interface ProductsRepository extends CrudRepository<Product, String>{
 
 	Optional<Product> findByName(String name);
 	
+	Optional<Product> findById(String id);
+
+	Optional<Product> findBySerialNumber(String serial);
+	
 }

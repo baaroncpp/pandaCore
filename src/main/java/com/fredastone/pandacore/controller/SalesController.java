@@ -44,17 +44,18 @@ public class SalesController {
     }
 	
 	@RequestMapping(path="add/lease",params = {"leaseoffer","agentid","customerid","cordlat","cordlong","deviceserial"},method = RequestMethod.POST)
-    public ResponseEntity<?> postNewLeaseSale(@RequestParam("leaseoffer") int leaseId,@RequestParam("agentid") String agentid,
-    		@RequestParam("customerid") String customerid,@RequestParam("cordlat") float cord_lat,
+    public ResponseEntity<?> postNewLeaseSale(@RequestParam("leaseoffer") int leaseId,
+    		@RequestParam("agentid") String agentid,
+    		@RequestParam("customerid") String customerid,
+    		@RequestParam("cordlat") float cord_lat,
     		@RequestParam("cordlong") float cord_long,
     		@RequestParam("deviceserial") String deviceserial) {
 		
 		return ResponseEntity.ok(saleService.recoredNewLeaseSale(leaseId,agentid,customerid,cord_lat,cord_long,deviceserial));
-		
     }
 	
-    @RequestMapping(path="get",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
-    public ResponseEntity<?> getAllUsers(
+    @RequestMapping(path="get/allsales",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
+    public ResponseEntity<?> getAllSales(
     		@Valid @RequestParam("sortorder") 
     		Direction sortorder,
     		@Valid @RequestParam("sortby") 
@@ -109,9 +110,6 @@ public class SalesController {
     	return ResponseEntity.ok(saleService.getAllLeaseSaleByReviewStatus(reviewstatus,page, size, sortby, sortorder));
     }
     
-   
-    
-    
     @RequestMapping(path="get/lease/detail/{id}",method = RequestMethod.GET)
     public ResponseEntity<?> getLeaseSaleDetail(@PathVariable("id") String saleid) {
     	
@@ -154,7 +152,7 @@ public class SalesController {
 	
     
     @RequestMapping(path="get/unverified/withcustomer",params = {"agentid","page","size","sortby","sortorder" },method = RequestMethod.GET)
-    public ResponseEntity<?> getAllUnverifie(
+    public ResponseEntity<?> getAllUnverified(
     		@Valid @RequestParam("agentid")
     		String agentid,
     		@Valid @RequestParam("sortorder") 
@@ -165,7 +163,6 @@ public class SalesController {
     		int page,
     		@RequestParam("size") int size) {
     	
- 
 		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(sortorder,sortby));
     	return ResponseEntity.ok(verificationRepo.findAllUnverified(agentid, pageRequest));
     	
@@ -183,7 +180,6 @@ public class SalesController {
     		int page,
     		@RequestParam("size") int size) {
     	
-
 		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(sortorder,sortby));
     	return ResponseEntity.ok(verificationRepo.findAllVerified(agentid, pageRequest));
     }

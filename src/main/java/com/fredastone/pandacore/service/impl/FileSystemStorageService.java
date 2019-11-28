@@ -133,4 +133,29 @@ public class FileSystemStorageService implements StorageService {
             throw new StorageException("Could not initialize storage", e);
         }
     }
+    
+    public boolean deleteFile(String filename) {
+    	
+    	boolean result = false;
+    	
+	
+		if(loadAsResource(filename) != null) {
+			try {
+				result = loadAsResource(filename).getFile().delete();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	
+    	return result;
+    }
+    
+    public void replaceFile(MultipartFile file, String filename) {
+    	
+    	if(!deleteFile(filename)) {
+    		throw new RuntimeException("File not deleted: "+filename);
+    	}
+    	
+    	store(file, filename);
+    }
 }

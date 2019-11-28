@@ -34,26 +34,19 @@ public class ApprovalsController {
 	private String tokenHeader;
 
     @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    
+    private JwtTokenUtil jwtTokenUtil;    
 
 	@Autowired
 	public ApprovalsController(ApprovalService approvalService) {
 		// TODO Auto-generated constructor stub
 		this.approvalService = approvalService;
-	}
-	
+	}	
 
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE,ROLE_SUPPORT"})
 	@RequestMapping(path = "add/approvalreview", method = RequestMethod.POST)
 	public ResponseEntity<?> addApprovalReview(@RequestBody ApprovalReview approvalReview){
-		
-		
-		return ResponseEntity.ok(approvalService.addApprovalReview(approvalReview));
-		
-		
+		return ResponseEntity.ok(approvalService.addApprovalReview(approvalReview));		
 	}
-	
 
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE,ROLE_SUPPORT"})
 	@RequestMapping(path = "get/approvalreview/{id}", method = RequestMethod.GET)
@@ -82,7 +75,6 @@ public class ApprovalsController {
 			approvalConfigCount = "EMPLOYEEAPPROVALCOUNT";
 		case "agent":
 			approvalConfigCount = "AGENTAPPROVALCOUNT";
-
 		}
 
 		return null;
@@ -98,9 +90,14 @@ public class ApprovalsController {
 		if(result == null || result.isEmpty())
 			return ResponseEntity.noContent().build();
 		
-		return ResponseEntity.ok(result);
+		return ResponseEntity.ok(result);		
 		
-		
+	}
+	
+	@RequestMapping(path = "user/userrole/{id}", method = RequestMethod.PUT)
+	public ResponseEntity<?> approveUserRoles(@Valid @PathVariable("id") String approvalId,HttpServletRequest request){
+		final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		return ResponseEntity.ok(approvalService.approveUserRole(userid, approvalId));	
 	}
 	
 	class Approvers{
@@ -114,7 +111,6 @@ public class ApprovalsController {
 			this.totalapprovers = totalapprovers;
 			this.approvers = approvers;
 		}
-		
 		
 	}
 

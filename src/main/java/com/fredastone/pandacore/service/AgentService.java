@@ -1,6 +1,8 @@
 package com.fredastone.pandacore.service;
 
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -9,12 +11,30 @@ import com.fredastone.pandacore.entity.AgentMeta;
 
 public interface AgentService {
 	
-
 	AgentMeta addAgentMeta(AgentMeta agentMeta);
-	AgentMeta getAgentById(String agentId);
 	
+	AgentMeta updateAgentMeta(AgentMeta agentaMeta);
 	
-	public void uploadMetaInfo(MultipartFile file, RedirectAttributes redirectAttributes, String agentId,
-			AgentUploadType uploadType);
+	public AgentMeta getAgentByUserId(String agentId);
+	
+	public void uploadMetaInfo(MultipartFile file, RedirectAttributes redirectAttributes, String agentId, AgentUploadType uploadType);
+	
 	Resource getUploadedMetaInfo(String agentId, AgentUploadType uploadType);
+	
+	void replaceFile(String filename, MultipartFile file);
+	
+	public Page<AgentMeta> getAllAgentsByActive(Pageable pageable, boolean isactive);
+	
+	AgentMeta getAgentByPhoneNumber(String phoneNumber);
+	
+	AgentMeta getAgentByEmail(String email);
+
+	AgentMeta activateAgent(String agentId);
+	
+	AgentMeta deactivateAgent(String agentId);
+	
+	AgentMeta terminate(String agent);	
+	
+	public Page<AgentMeta> findAllAgents(Pageable pageable);
+
 }

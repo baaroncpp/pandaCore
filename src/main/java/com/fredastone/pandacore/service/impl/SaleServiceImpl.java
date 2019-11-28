@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
-
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +14,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.constants.TokenTypes;
 import com.fredastone.pandacore.entity.AgentMeta;
+import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeaseOffer;
 import com.fredastone.pandacore.entity.Product;
@@ -35,6 +34,7 @@ import com.fredastone.pandacore.models.LeaseSale;
 import com.fredastone.pandacore.models.Notification;
 import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
+import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.LeaseSaleDetailRepository;
@@ -88,8 +88,7 @@ public class SaleServiceImpl implements SaleService {
 	private int leaseFirstTokenDays;
 
 	@Autowired
-	private RabbitTemplate rabbitTemplate;
-	
+	private RabbitTemplate rabbitTemplate;	
 	
 	private SaleRollbackRepository rollbackDao;
 	private SaleRepository saleDao;
@@ -101,12 +100,13 @@ public class SaleServiceImpl implements SaleService {
 	private TotalLeasePaymentsRepository totalLeaseRepayDao;
 	private UserRepository userDao;
 	private LeaseSaleDetailRepository lsdDao;
+	private CustomerMetaRepository customerMetaRepository; 
 	
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
 	
 	@Autowired
-	public SaleServiceImpl(SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
+	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
 			ProductsRepository productDao,LeaseOfferRepository leaseOfferDao,LeaseRepository leaseDao,
 			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao,
 			LeaseSaleDetailRepository lsdDao) {
@@ -121,6 +121,7 @@ public class SaleServiceImpl implements SaleService {
 		this.totalLeaseRepayDao = totalLeaseRepayDao;
 		this.userDao = userDao;
 		this.lsdDao = lsdDao;
+		this.customerMetaRepository = customerMetaRepository;
 	}
 	
 	@Transactional
@@ -129,10 +130,10 @@ public class SaleServiceImpl implements SaleService {
 		
 		//Retrieve the product that is being sold
 		Optional<Product> product = productDao.findById(sale.getProductid());
+		
 		if(!product.isPresent() || !product.get().getIsActive()) {
 			throw new ProductNotFoundException(sale.getProductid());
 		}
-		
 		
 		//Get the agent making this sale
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
@@ -157,12 +158,10 @@ public class SaleServiceImpl implements SaleService {
 		
 		return saleDao.save(sale);
 	}
-
-
 	
 	@Transactional
 	@Override
-	public LeaseSale recoredNewLeaseSale(int leaseOfferId,String agentid,String customerid,float cord_lat,float cord_long,String scannedserial) {
+	public LeaseSale recoredNewLeaseSale(int leaseOfferId, String agentid, String customerid, float cord_lat, float cord_long, String scannedserial) {
 		
 		Optional<LeaseOffer> leaseOffer = leaseOfferDao.findById(leaseOfferId);
 		
@@ -170,15 +169,12 @@ public class SaleServiceImpl implements SaleService {
 			throw new LeaseOfferNotFoundException();
 		}
 		
-		final Product product = leaseOffer.get().getProduct();
-		
-		
+		final Product product = leaseOffer.get().getProduct();		
 		
 		//Retrieve the product that is being sold
 		if(!product.getIsActive()) {
 			throw new ProductNotFoundException(product.getId());
 		}
-		
 		
 		//Get the agent making this sale
 		Optional<AgentMeta> agent = agentDao.findById(agentid);
@@ -186,6 +182,13 @@ public class SaleServiceImpl implements SaleService {
 		if(!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
 			throw new AgentNotFoundException(agent.get().getUserid());
 		}
+		
+		Optional<CustomerMeta> customerMeta = customerMetaRepository.findById(customerid);
+		
+		if(!customerMeta.isPresent()) {
+			throw new RuntimeException("Customer of ID :"+customerid+" does not exist");
+		}
+		
 		
 		//For lease payments .. important are 
 		// initial deposit
@@ -239,7 +242,6 @@ public class SaleServiceImpl implements SaleService {
 		sale.setScannedserial(scannedserial);
 		sale.setProductid(lease.getLeaseOffer().getProduct().getId());
 		
-		
 		sale = saleDao.save(sale);
 		lease = leaseDao.save(lease);
 		
@@ -247,16 +249,13 @@ public class SaleServiceImpl implements SaleService {
 	
 	}
 
-
 	@Override
 	public Sale rollbackSale(String saleId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	
-	
-	@Transactional
+	@Transactional 
 	@Override
 	public Sale completeSale(String saleId) {
 		
@@ -287,8 +286,7 @@ public class SaleServiceImpl implements SaleService {
 			saleTokenDao.save(saleToken);
 			
 			final Sale s =  saleDao.save(sale.get());
-			
-			
+		
 			// Notify the user
 			
 			if(isSendDirectTokenMsg.equals("true")) {
@@ -307,7 +305,6 @@ public class SaleServiceImpl implements SaleService {
 				}
 				
 			}
-			
 			return s;
 			
 		}
@@ -360,8 +357,7 @@ public class SaleServiceImpl implements SaleService {
 			notificaton.setAddress(user.get().getEmail());
 			
 				rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notificaton.toString());
-		}
-		
+		}		
 		return s;
 	}
 

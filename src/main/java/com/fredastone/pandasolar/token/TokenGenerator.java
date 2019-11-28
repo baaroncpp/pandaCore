@@ -44,7 +44,6 @@ public class TokenGenerator {
 			throw new UnsupportedNumberOfDaysError();
 		}
 		
-
 		final String plain1 = addPaddingHex(Integer.toHexString(Integer.valueOf(days)))
 				+addPaddingHex(Integer.toHexString(Integer.valueOf(command.getCommandName())))+
 				addPaddingHex(Integer.toHexString(Integer.valueOf(times)))
@@ -122,7 +121,6 @@ public class TokenGenerator {
 		}
 		
 		return hexString;
-		
 		
 	}
 	

@@ -75,4 +75,93 @@ public class Equipment implements java.io.Serializable {
 	@Column(name = "createdon",insertable=false,updatable=false, nullable = false, length = 29)
 	private Date createdon;
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public EquipCategory getCategory() {
+		return category;
+	}
+
+	public void setCategory(EquipCategory category) {
+		this.category = category;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getModel() {
+		return model;
+	}
+
+	public void setModel(String model) {
+		this.model = model;
+	}
+
+	public Date getDateofmanufacture() {
+		return dateofmanufacture;
+	}
+
+	public void setDateofmanufacture(Date dateofmanufacture) {
+		this.dateofmanufacture = dateofmanufacture;
+	}
+
+	public boolean isAvailable() {
+		return available;
+	}
+
+	public void setAvailable(boolean available) {
+		this.available = available;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getSerial() {
+		return serial;
+	}
+
+	public void setSerial(String serial) {
+		this.serial = serial;
+	}
+
+	public BigDecimal getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(BigDecimal quantity) {
+		this.quantity = quantity;
+	}
+
+	public String getEquipmentPhoto() {
+		return equipmentPhoto;
+	}
+
+	public void setEquipmentPhoto(String equipmentPhoto) {
+		this.equipmentPhoto = equipmentPhoto;
+	}
+
+	public Date getCreatedon() {
+		return createdon;
+	}
+
+	public void setCreatedon(Date createdon) {
+		this.createdon = createdon;
+	}
+
+
 }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.service.ProductsService;
 
@@ -32,14 +31,12 @@ public class ProductController {
 		this.productService = productService;
 	}
 
-
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
 	@RequestMapping(path = "add", method = RequestMethod.POST)
 	public ResponseEntity<?> addProductt(@RequestBody Product product) {
 
 		return ResponseEntity.ok(productService.addProduct(product));
 	}
-
 
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
 	@RequestMapping(path = "update", method = RequestMethod.PUT)
@@ -70,11 +67,7 @@ public class ProductController {
 	@PostMapping(value = "/thumbnail/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
 			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {
-
-		productService.uploadProductImage(file, redirectAttributes, id);
-
-		return ResponseEntity.ok().build();
-
+		return ResponseEntity.ok(productService.uploadProductImage(file, redirectAttributes, id));
 	}
 
 	@GetMapping("/thumbnail/{id}")

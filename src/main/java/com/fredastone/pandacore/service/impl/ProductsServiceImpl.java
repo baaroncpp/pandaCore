@@ -11,6 +11,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
+import com.fredastone.pandacore.exception.ProductNotFoundException;
+import com.fredastone.pandacore.models.FileResponse;
 import com.fredastone.pandacore.repository.ProductsRepository;
 import com.fredastone.pandacore.service.ProductsService;
 import com.fredastone.pandacore.service.StorageService;
@@ -36,6 +38,11 @@ public class ProductsServiceImpl implements ProductsService {
 	@Override
 	public Product addProduct(Product p) {
 		// TODO Auto-generated method stub
+		Optional<Product> product = productDao.findByName(p.getName());
+		
+		if(product.isPresent()) {
+			throw new RuntimeException("Product with name "+p.getName()+" exists");
+		}
 		
 		p.setId(ServiceUtils.getUUID());
 		return productDao.save(p);
@@ -43,13 +50,23 @@ public class ProductsServiceImpl implements ProductsService {
 
 	@Override
 	public Optional<Product> getProduct(String id) {
-		// TODO Auto-generated method stub
+		
+		Optional<Product> product = productDao.findById(id);
+		
+		if(!product.isPresent()) {
+			throw new ProductNotFoundException(id);
+		}
 		return productDao.findById(id);
 	}
 
 	@Override
 	public Optional<Product> getProductByName(String name) {
-		// TODO Auto-generated method stub
+		
+		Optional<Product> product = productDao.findByName(name);
+		
+		if(!product.isPresent()) {
+			throw new ProductNotFoundException(name);
+		}
 		return productDao.findByName(name);
 	}
 
@@ -64,7 +81,7 @@ public class ProductsServiceImpl implements ProductsService {
 		
 		Optional<Product> pro = productDao.findById(p.getId());
 		if(!pro.isPresent()) {
-			throw new ItemNotFoundException(p.getId());
+			throw new ProductNotFoundException(p.getId());
 		}
 		
 		if(!p.getThumbnail().startsWith("http://")) {
@@ -83,18 +100,19 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
-	public void uploadProductImage(MultipartFile file, RedirectAttributes redirectAttributes, String productId) {
+	public FileResponse uploadProductImage(MultipartFile file, RedirectAttributes redirectAttributes, String productId) {
+		
 		Optional<Product> pd = productDao.findById(productId);
 		
 		if(!pd.isPresent())
 			throw new ItemNotFoundException(productId);
-    	
-        
+    	        
     	storageService.store(file,String.format("%s/%s.%s",productsThumbnailFolder,
     			productId,FilenameUtils.getExtension(file.getOriginalFilename())));
     	
     	pd.get().setThumbnail(String.format("%s.%s",productId,FilenameUtils.getExtension(file.getOriginalFilename())));
 		
+    	return new FileResponse(file.getOriginalFilename(), productsThumbnailFolder+"/"+pd.get().getThumbnail(), file.getContentType(), file.getSize());
 	}
 
 	@Override
@@ -113,5 +131,16 @@ public class ProductsServiceImpl implements ProductsService {
         return file;
 	}
 
-	
+	@Override
+	public Product getProductBySerial(String serial) {
+		
+		Optional<Product> product = productDao.findBySerialNumber(serial);
+		
+		if(!product.isPresent()) {
+			throw new RuntimeException("Product with serial number: "+serial+" does not exist");
+		}
+		
+		return product.get();
+	}
+
 }

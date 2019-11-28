@@ -20,5 +20,9 @@ public interface StorageService {
     Resource loadAsResource(String filename);
 
     void deleteAll();
+    
+    public boolean deleteFile(String filename);
+    
+    public void replaceFile(MultipartFile file, String filename);
 
 }

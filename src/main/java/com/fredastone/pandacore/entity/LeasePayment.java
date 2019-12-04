@@ -27,7 +27,6 @@ public class LeasePayment implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@Id
-
 	@Column(name = "id", unique = true, nullable = false, length = 36)
 	private String id;
 	
@@ -65,6 +64,5 @@ public class LeasePayment implements java.io.Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "createdon",insertable=false, nullable = false, length = 29)
 	private Date createdon;
-
 
 }

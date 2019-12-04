@@ -43,7 +43,6 @@ public class LeaseOffer implements java.io.Serializable {
 	private String name;
 	private String description;
 	private Date createdon;	
-
 	
 	@Id
 	@SequenceGenerator(name="panda_core.s_lease_offer",sequenceName="panda_core.s_lease_offer",allocationSize=1)

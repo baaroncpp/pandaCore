@@ -65,7 +65,6 @@ public class SaleServiceImpl implements SaleService {
 	@Value("${notification.routing.sms.key}")
 	private String smsRoutingKey;
 
-
 	@Value("${notification.routing.email.key}")
 	private String emailRoutingKey;
 	
@@ -225,7 +224,6 @@ public class SaleServiceImpl implements SaleService {
 		lease.setExpectedfinishdate(Date.from(LocalDate.now().plusDays(leaseOffer.get().
 				getLeaseperiod()).atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		
-	
 		Sale sale = new Sale();
 		
 		sale.setAgentcommission(agentCommission);
@@ -292,7 +290,7 @@ public class SaleServiceImpl implements SaleService {
 			if(isSendDirectTokenMsg.equals("true")) {
 				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(user.get()
 						.getPrimaryphone()).content(String.format(directSaleTokenMsg, token)).build();
-	
+				
 				rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
 				
 			//Move this to private m
@@ -300,13 +298,13 @@ public class SaleServiceImpl implements SaleService {
 				notificaton.setType(NotificationType.EMAIL);
 				notificaton.setSubject(directSaleTokenMsgSubj);
 				notificaton.setAddress(user.get().getEmail());
-				
+				 
 					rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notificaton.toString());
+					
 				}
 				
 			}
-			return s;
-			
+			return s;			
 		}
 		
 		if(sale.get().isIsreviewed() == Boolean.FALSE) {
@@ -348,7 +346,7 @@ public class SaleServiceImpl implements SaleService {
 		final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(user.get()
 				.getPrimaryphone()).content(String.format(leaseTokenNewMsg, user.get().getFirstname(),user.get().getLastname())).build();
 
-		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey, notificaton.toString());
 		
 		//Move this to private method
 		if(user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
@@ -356,7 +354,7 @@ public class SaleServiceImpl implements SaleService {
 			notificaton.setSubject(directSaleTokenMsgSubj);
 			notificaton.setAddress(user.get().getEmail());
 			
-				rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notificaton.toString());
+			rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey, notificaton.toString());
 		}		
 		return s;
 	}

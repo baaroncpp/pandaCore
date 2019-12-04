@@ -6,7 +6,8 @@ public enum ApprovalTypes {
 	EXPENSE(2),
 	AGENT(3),
 	EQUIPMENT_DISPATCH(4),
-	USER_ROLE(5);
+	USER_ROLE(5),
+	LEASE_SALE(6);
 
 	private final int index;
 	ApprovalTypes(int index) {

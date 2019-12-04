@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
@@ -35,6 +36,9 @@ public class ApprovalsController {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;    
+    
+    private static final String APPROVED = "approved";
+    private static final String REJECTED = "rejected";
 
 	@Autowired
 	public ApprovalsController(ApprovalService approvalService) {
@@ -56,6 +60,25 @@ public class ApprovalsController {
 				
 	}
 	
+	@RequestMapping(path = "sale/approve/{id}", method = RequestMethod.POST)
+	public ResponseEntity<?> approveLeaseSale(@Valid @PathVariable("id") String saleId, 
+			@RequestParam("approvestatus") String approvestatus,
+			@RequestParam("reviewdescription") String reviewdescription,
+			HttpServletRequest request){
+		
+		final String userId = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		
+		switch (approvestatus) {	
+			case APPROVED:
+				approvalService.approveLeaseSale(userId, saleId, reviewdescription, (short) ServiceConstants.ACCEPTED_APPROVAL);
+				break;
+			case REJECTED:
+				approvalService.approveLeaseSale(userId, saleId, reviewdescription, (short) ServiceConstants.REJECTED_APPROVAL);
+				break;			
+		}
+		
+		return null;
+	}
 	
 	@RequestMapping(path = "user/approve/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<?> approveUser(@Valid @PathVariable("id") String approvalId,HttpServletRequest request){
@@ -64,7 +87,6 @@ public class ApprovalsController {
 		return ResponseEntity.ok(approvalService.approveUser(approvalId, userid));
 				
 	}
-
 
 	@RequestMapping(path = "approvers/{service}", method = RequestMethod.GET)
 	public ResponseEntity<?> getServiceApprovers(@PathVariable("service") String service) {
@@ -94,10 +116,16 @@ public class ApprovalsController {
 		
 	}
 	
-	@RequestMapping(path = "user/userrole/{id}", method = RequestMethod.PUT)
-	public ResponseEntity<?> approveUserRoles(@Valid @PathVariable("id") String approvalId,HttpServletRequest request){
+	@RequestMapping(path = "userrole/activate/{id}", method = RequestMethod.PUT)
+	public ResponseEntity<?> approveUserRoles(@Valid @PathVariable("id") String approvalId, HttpServletRequest request){
 		final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
 		return ResponseEntity.ok(approvalService.approveUserRole(userid, approvalId));	
+	}
+	
+	@RequestMapping(path = "userrole/deactivate/{id}", method = RequestMethod.PUT)
+	public ResponseEntity<?> deactivateUserRole(@Valid @PathVariable("id") String approvalId, HttpServletRequest request){
+		final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		return ResponseEntity.ok("");
 	}
 	
 	class Approvers{

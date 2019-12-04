@@ -121,7 +121,6 @@ public class AzureOperations implements IAzureOperations{
 		return createAzureAccessToken(profileUploadPath, getImagePath("pic",userId), Boolean.FALSE);
 		
 	}
-
 	@Override
 	public String getProfile(String userId) {
 		// TODO Auto-generated method stub

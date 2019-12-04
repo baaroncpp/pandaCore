@@ -6,15 +6,18 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.fredastone.pandacore.constants.RoleName;
+import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.EmployeeMeta;
+import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
+import com.fredastone.pandacore.exception.SaleNotFoundException;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ApprovalReviewRepository;
 import com.fredastone.pandacore.repository.ApproverRepository;
@@ -22,6 +25,7 @@ import com.fredastone.pandacore.repository.ConfigRepository;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
 import com.fredastone.pandacore.repository.RoleRepository;
+import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.repository.VSaleApprovalReviewRepository;
@@ -41,6 +45,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 	private RoleRepository roleRepository;
 	private UserRoleRepository userRoleRepository;
 	private CustomerMetaRepository customerMetaRepository;
+	private SaleRepository saleRepository;
 	
 	private static final String CUSTOMER_USER_TYPE = "customer";
 	private static final String EMPLOYEE_USER_TYPE = "employee";
@@ -48,6 +53,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 	
 	@Autowired
 	public ApprovalServiceImpl(
+			SaleRepository saleRepository,
 			CustomerMetaRepository customerMetaRepository,
 			UserRoleRepository userRoleRepository,
 			RoleRepository roleRepository,
@@ -69,6 +75,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		this.roleRepository = roleRepository;
 		this.userRoleRepository = userRoleRepository;
 		this.customerMetaRepository = customerMetaRepository;
+		this.saleRepository = saleRepository;
 	}
 	
 
@@ -240,6 +247,113 @@ public class ApprovalServiceImpl implements ApprovalService {
 		this.addApprovalReview(review);
 		
 		return userRole.get();
+	}
+
+
+	@Override
+	public UserRole deactivateUserRole(String userRoleId, String approverId) {
+		
+		Optional<UserRole> userRole = userRoleRepository.findById(userRoleId);
+		
+		if(!userRole.isPresent()) {
+			throw new ItemNotFoundException(userRoleId);
+		}
+		
+		userRole.get().setIsActive(Boolean.FALSE);
+		userRoleRepository.save(userRole.get());
+		
+		final Approver approver = Approver.builder()
+				.createdon(new Date())
+				.id(ServiceUtils.getUUID())
+				.itemapproved("role")
+				.itemid(String.valueOf(userRole.get().getId()))
+				.userid(approverId).build();
+				
+		approverDao.save(approver);
+		
+		final ApprovalReview review = ApprovalReview.builder()
+				.createdon(new Date())
+				.itemid(String.valueOf(userRole.get().getId()))
+				.reviewtype(5)
+				.review("Role deactivated").build();				
+		
+		this.addApprovalReview(review);
+		
+		return userRole.get();
+	}
+
+
+	@Override
+	public User deactivateUser(String userId, String approverId) {
+		
+		Optional<User> user = this.userDao.findById(userId);
+		
+		if(!user.isPresent()) {
+			throw new RuntimeException("User with id "+userId+" not found in system");
+		}
+		
+		if(!user.get().isIsactive())
+			throw new RuntimeException("Operation is not supported for user with id "+userId);
+		
+		user.get().setIsactive(Boolean.FALSE);
+		userDao.save(user.get());
+		
+		final ApprovalReview review = ApprovalReview.builder()
+				.createdon(new Date())
+				.itemid(user.get().getId())
+				.reviewtype(2)
+				.review("User deactivated").build();				
+		
+		this.addApprovalReview(review);
+		
+		final Approver approver = Approver.builder()
+				.id(ServiceUtils.getUUID())
+				.createdon(new Date())
+				.userid(approverId)
+				.itemapproved("USER")
+				.itemid(user.get().getId()).build();
+		
+		approverDao.save(approver);
+		
+		return null;
+	}
+
+	@Override
+	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
+		
+		Optional<Sale> sale  = saleRepository.findById(saleId);
+		
+		if(!sale.isPresent()) {
+			throw new SaleNotFoundException(saleId);
+		}
+		
+		if( sale.get().getSaletype().equals("Direct") || sale.get().isIsreviewed() == Boolean.TRUE ) {
+			throw new RuntimeException("Sale doe not qualify for this operation");
+		}
+		
+		sale.get().setIsreviewed(Boolean.TRUE);
+		sale.get().setSalestatus(saleStatus);
+		
+		final ApprovalReview review = ApprovalReview.builder()
+				.createdon(new Date())
+				.itemid(saleId)
+				.reviewtype(6)
+				.review(reviewDescription).build();				
+		
+		this.addApprovalReview(review);
+		
+		final Approver approver = Approver.builder()
+				.id(ServiceUtils.getUUID())
+				.createdon(new Date())
+				.userid(approverId)
+				.itemapproved("SALE")
+				.itemid(saleId).build();
+		
+		approverDao.save(approver);
+		
+		//add notification
+		
+		return saleRepository.save(sale.get());
 	}
 
 }

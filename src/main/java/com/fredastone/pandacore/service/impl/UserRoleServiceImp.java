@@ -58,6 +58,8 @@ public class UserRoleServiceImp implements UserRoleService {
 			throw new RuntimeException("User does not qualify for ROLE: " +role);
 		}
 		
+		//notify for approval
+		
 	}
 	
 	public UserRole createUserRole(Role role, User user) {
@@ -87,5 +89,7 @@ public class UserRoleServiceImp implements UserRoleService {
 		
 		return userRoleRepository.findAllByUser(user.get());
 	}
+
+	
 
 }

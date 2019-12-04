@@ -157,6 +157,12 @@ public class EmployeeServiceImpl implements EmployeeService{
 
 		Optional<User> user = userDao.findById(employeemeta.getUserid());
 		
+		Optional<EmployeeMeta> empMeta = employeeDao.findById(employeemeta.getUserid());
+		
+		if(empMeta.isPresent()) {
+			throw new RuntimeException("EmployeeMeta data for user: "+employeemeta.getUserid()+" already exists");
+		}
+		
 		if(!user.isPresent() || !user.get().getUsertype().equals(UserType.EMPLOYEE.name())) {
 			throw new RuntimeException("User not found or user does not match type employee");
 		}		

@@ -14,4 +14,6 @@ public class LeaseController {
     public ResponseEntity<?> getAllLease(@RequestParam("direction") String direction,@RequestParam("page") int page,@RequestParam("size") int size) {
         return ResponseEntity.ok("Greetings from admin protected method!");
     }
+    
+    
 }

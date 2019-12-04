@@ -22,6 +22,4 @@ public class Notification {
 		return "{\"type\":\"" + type + "\", \"subject\":\"" + subject + "\", \"content\":\"" + content + "\", \"address\":\"" + address+"\"}";
 	}
 	
-	
-	
 }

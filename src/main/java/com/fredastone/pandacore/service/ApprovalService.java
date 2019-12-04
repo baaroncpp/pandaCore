@@ -1,10 +1,8 @@
 package com.fredastone.pandacore.service;
 
 import java.util.List;
-
-import javax.validation.Valid;
-
 import com.fredastone.pandacore.entity.ApprovalReview;
+import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
@@ -17,8 +15,14 @@ public interface ApprovalService {
 	
 	User approveUser(String userId,String approverId);
 	
-	List<VSaleApprovalReview> getSaleApprovalReviewByAgent(String agentId,String saleId);
+	List<VSaleApprovalReview> getSaleApprovalReviewByAgent(String agentId, String saleId);
 	
 	public UserRole approveUserRole(String approverId, String approvalId);
+	
+	UserRole deactivateUserRole(String userRoleId, String approverId);
+	
+	User deactivateUser(String userId,String approverId);
+	
+	Sale approveLeaseSale(String userId, String saleId, String review, short saleStatus);
 	
 }

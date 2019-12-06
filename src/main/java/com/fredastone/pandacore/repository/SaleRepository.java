@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.repository;
 
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +25,11 @@ public interface SaleRepository extends PagingAndSortingRepository<Sale, String>
 
 	@Query("Select s from Sale s where agentid = :agentid")
 	Page<Sale> findAllSaleByAgentId(@Param("agentid") String agentid, Pageable pageable);
+
+	Optional<Sale> findByScannedserial(String serial);
+	
+	@Query("Select s from Sale s where customerid = :customerid")
+	List<Sale> findAllByCustomerid(@Param("customerid") String customerId, Pageable pageable);
 
 }
 

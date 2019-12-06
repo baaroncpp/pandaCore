@@ -1,7 +1,7 @@
 package com.fredastone.pandacore.service;
 
 import java.util.List;
-
+import org.springframework.data.domain.Page;
 import com.fredastone.pandacore.entity.LeasePayment;
 
 public interface LeasePaymentService {
@@ -10,6 +10,8 @@ public interface LeasePaymentService {
 	LeasePayment updateLeasePayment(LeasePayment payment);
 	List<LeasePayment> getpaymentByCustomerId(int size,int page,String sortBy,String customerId);
 	LeasePayment getPaymentById(String id);
-	List<LeasePayment> getAllPayments(int size,int page,String sortOrder);
+	Page<LeasePayment> getAllPayments(int size,int page,String sortOrder);
+	List<LeasePayment> getLeasePaymentsByLeaseId(String leaseid);
+	List<LeasePayment> getLeasePaymentByDeviceSerial(String serial);
 
 }

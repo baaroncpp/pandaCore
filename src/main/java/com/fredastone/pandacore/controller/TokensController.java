@@ -43,6 +43,13 @@ public class TokensController {
 		
 		return ResponseEntity.ok(token);
 	}
+	
+	//test
+	@RequestMapping(path = "test", method = RequestMethod.GET)
+	public ResponseEntity<?> getoken(){
+		BuyToken bt = new BuyToken();
+		return ResponseEntity.ok(bt);
+	}
 
 	@RequestMapping(path = "financialinfo/{deviceserial}", method = RequestMethod.GET)
 	public ResponseEntity<?> buyToken(@PathVariable("deviceserial") String deviceSerial) {

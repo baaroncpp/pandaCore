@@ -1,9 +1,16 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +18,7 @@ import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeaseOffer;
 import com.fredastone.pandacore.entity.LeasePayment;
 import com.fredastone.pandacore.entity.Sale;
+import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeasePaymentRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
@@ -91,23 +99,103 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
 	@Override
 	public List<LeasePayment> getpaymentByCustomerId(int size, int page, String sortBy, String customerId) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		List<LeasePayment> result = new ArrayList<>();
+		List<Sale> sales = new ArrayList<>();
+		Pageable pageable;
+		
+		if(sortBy.equalsIgnoreCase("DESC")) {
+			
+			pageable = PageRequest.of(page, size, Sort.by("createdon").descending());
+			sales = saleRepository.findAllByCustomerid(customerId, pageable);
+			
+		}else if(sortBy.equalsIgnoreCase("ASC")) {
+			
+			pageable = PageRequest.of(page, size, Sort.by("createdon").descending());
+			sales = saleRepository.findAllByCustomerid(customerId, pageable);
+			
+		}else {
+			pageable = PageRequest.of(page, size);
+			sales = saleRepository.findAllByCustomerid(customerId, pageable);
+		}
+		
+		if(sales.isEmpty()) {
+			throw new RuntimeException("No Sales made to customer with ID: "+customerId);
+		}
+		
+		System.out.println(sales.size());
+		
+		for(Sale object : sales) {
+			result.addAll(lpDao.findAllByleaseid(object.getId()));	//back
+		}
+		
+		if(result.isEmpty()) {
+			throw new RuntimeException("No Lease payments made by customer with ID: "+customerId);
+		}
+		
+		return result;
 	}
 
 	@Override
 	public LeasePayment getPaymentById(String id) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		Optional<LeasePayment> leasePayment = lpDao.findById(id);
+		
+		if(!leasePayment.isPresent()) {
+			throw new ItemNotFoundException(id);
+		}
+		return leasePayment.get();
 	}
 
 	@Override
-	public List<LeasePayment> getAllPayments(int size, int page, String sortOrder) {
-		// TODO Auto-generated method stub
-		return null;
+	public Page<LeasePayment> getAllPayments(int size, int page, String sortOrder) {
+		// TODO Auto-generated method stub		
+		if(sortOrder.equalsIgnoreCase("DESC")) {
+			return lpDao.findAll(PageRequest.of(page, size, Sort.by("payeename").descending()));
+		}else if(sortOrder.equalsIgnoreCase("ASC")) {
+			return lpDao.findAll(PageRequest.of(page, size, Sort.by("payeename").ascending()));
+		}else {
+			return lpDao.findAll(PageRequest.of(page, size));
+		}
+		
+	}
+
+	@Override
+	public List<LeasePayment> getLeasePaymentsByLeaseId(String leaseid) {
+		
+		List<LeasePayment> leasePayments = lpDao.findAllByleaseid(leaseid);
+		
+		if(leasePayments.isEmpty()) {
+			throw new RuntimeException("No payments with Lease ID: "+leaseid);
+		}
+		return leasePayments;
+	}
+
+	@Override
+	public List<LeasePayment> getLeasePaymentByDeviceSerial(String serial) {
+		
+		Optional<Sale> sale = saleRepository.findByScannedserial(serial);
+		
+		if(!sale.isPresent()) {
+			throw new RuntimeException("No sale with serial number: "+serial);
+		}
+		
+		Optional<Lease> lease = leaseReposotory.findById(sale.get().getId());
+		
+		if(!lease.isPresent()) {
+			throw new RuntimeException("No Lease is associated serial number: "+serial);
+		}
+		
+		List<LeasePayment> leasePayments = lpDao.findAllByleaseid(lease.get().getId());
+		
+		if(leasePayments.isEmpty()) {
+			throw new RuntimeException("No Payments for device with serial number: "+serial);
+		}
+		
+		return leasePayments;
 	}
 
 }

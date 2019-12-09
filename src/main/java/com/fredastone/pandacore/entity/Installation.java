@@ -37,6 +37,7 @@ public class Installation implements java.io.Serializable {
 	private Date endtime;
 	
 	private Date createdon;
+	private String deviceserial;
 	
 
 	@Id

@@ -3,19 +3,14 @@ package com.fredastone.pandacore.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.fredastone.pandacore.entity.Lease;
-import com.fredastone.pandacore.entity.LeaseOffer;
 import com.fredastone.pandacore.entity.LeasePayment;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
@@ -25,7 +20,6 @@ import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.service.LeasePaymentService;
 import com.fredastone.pandacore.service.SaleService;
-import com.fredastone.pandacore.util.ServiceUtils;
 
 @Service
 public class LeasePaymentServiceImpl implements LeasePaymentService {
@@ -33,8 +27,6 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 	private LeasePaymentRepository lpDao;
 	private LeaseRepository leaseReposotory;
 	private SaleRepository saleRepository;
-	private SaleService saleService;
-	private LeaseOfferRepository leaseOfferRepository;
 	
 	@Autowired
 	public LeasePaymentServiceImpl(LeasePaymentRepository lpDao,
@@ -46,8 +38,6 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		this.lpDao = lpDao;
 		this.leaseReposotory = leaseReposotory;
 		this.saleRepository = saleRepository;
-		this.saleService = saleService;
-		this.leaseOfferRepository = leaseOfferRepository;
 	}
 	
 	@Override
@@ -96,8 +86,14 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 
 	@Override
 	public LeasePayment updateLeasePayment(LeasePayment payment) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		Optional<LeasePayment> leasePayment = lpDao.findById(payment.getId());
+		
+		if(!leasePayment.isPresent()) {
+			throw new ItemNotFoundException(payment.getId());
+		}
+		
+		return lpDao.save(payment);
 	}
 	
 	@Override
@@ -129,7 +125,7 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		System.out.println(sales.size());
 		
 		for(Sale object : sales) {
-			result.addAll(lpDao.findAllByleaseid(object.getId()));	//back
+			result.addAll(lpDao.findAllByleaseid(object.getId()));
 		}
 		
 		if(result.isEmpty()) {
@@ -174,7 +170,7 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		return leasePayments;
 	}
 
-	@Override
+/*	@Override
 	public List<LeasePayment> getLeasePaymentByDeviceSerial(String serial) {
 		
 		Optional<Sale> sale = saleRepository.findByScannedserial(serial);
@@ -197,5 +193,5 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		
 		return leasePayments;
 	}
-
+*/
 }

@@ -54,7 +54,7 @@ public class InstallationController {
 
 	
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_AGENT,ROLE_SALE_AGENT"})
-	  @RequestMapping(path="get",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
+	@RequestMapping(path="get",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllUsers(
     		@Valid @RequestParam("sortorder") 
     		Direction sortOrder,
@@ -72,11 +72,14 @@ public class InstallationController {
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_AGENT,ROLE_SALE_AGENT"})
 	@RequestMapping(path = "get/{id}", method = RequestMethod.GET)
 	public ResponseEntity<?> getInstallation(@PathVariable("id") String id) {
-		
 		return ResponseEntity.ok(installationService.getInstallationById(id));
-
 	}
 	
+	@Secured({"ROLE_ENGINEER"})
+	@RequestMapping(path = "finish/{id}", method = RequestMethod.GET)
+	public ResponseEntity<?> finishInstallation(@PathVariable("id") String id) {
+		return ResponseEntity.ok(installationService.finishInstallation(id));
+	}
 
 	@GetMapping("/media/{id}")
 	@ResponseBody

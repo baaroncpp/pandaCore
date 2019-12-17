@@ -1,5 +1,9 @@
 package com.fredastone.pandacore.service;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.Optional;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,6 +12,7 @@ import com.fredastone.pandacore.constants.CustomerUploadType;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.models.FileResponse;
+import com.microsoft.azure.storage.StorageException;
 
 public interface CustomerService {
 	
@@ -18,7 +23,7 @@ public interface CustomerService {
 
 	//Page<User> getAllActiveCustomers(boolean status,int size,int page);
 	
-	FileResponse uploadMetaInfo(MultipartFile file,  RedirectAttributes redirectAttributes,String customerId,CustomerUploadType customerUploadType);
+	FileResponse uploadMetaInfo(MultipartFile file,  RedirectAttributes redirectAttributes,String customerId,CustomerUploadType customerUploadType) throws InvalidKeyException, MalformedURLException, URISyntaxException, IOException, StorageException;
 	
 	Resource getUploadedMetaInfo(String customerId,CustomerUploadType uploadType);
 

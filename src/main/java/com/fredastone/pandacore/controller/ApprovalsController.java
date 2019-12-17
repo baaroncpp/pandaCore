@@ -116,11 +116,11 @@ public class ApprovalsController {
 		
 	}
 	
-	@RequestMapping(path = "userrole/activate/{id}", method = RequestMethod.PUT)
+	/*@RequestMapping(path = "userrole/activate/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<?> approveUserRoles(@Valid @PathVariable("id") String approvalId, HttpServletRequest request){
 		final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
 		return ResponseEntity.ok(approvalService.approveUserRole(userid, approvalId));	
-	}
+	}*/
 	
 	@RequestMapping(path = "userrole/deactivate/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<?> deactivateUserRole(@Valid @PathVariable("id") String approvalId, HttpServletRequest request){

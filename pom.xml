@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>com.microsoft.azure</groupId>
 			<artifactId>azure-spring-boot-starter</artifactId>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
@@ -96,7 +96,13 @@
 			<artifactId>commons-fileupload</artifactId>
 			<version>1.4</version>
 		</dependency>
-
+	<!--  
+		<dependency>
+		   <groupId>org.apache.jackrabbit</groupId>
+		   <artifactId>oak-blob-cloud-azure</artifactId>
+		   <version>1.20.0</version>
+		</dependency>
+      -->
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -176,12 +182,21 @@
 			<artifactId>log4j-1.2-api</artifactId>
 			<version>2.11.0</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>com.microsoft.azure</groupId>
 			<artifactId>azure-storage-blob</artifactId>
 			<version>11.0.0</version>
+		</dependency> 
+		
+		<!-- https://mvnrepository.com/artifact/com.microsoft.azure/azure-storage -->
+		
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure-storage</artifactId>
+		    <version>8.4.0</version>
 		</dependency>
+		
 		
 		<dependency>
 		    <groupId>org.springframework</groupId>
@@ -199,18 +214,20 @@
 		    <version>1.18.10</version>
 		    <scope>provided</scope>
 		</dependency>
-
+		
 	</dependencies>
 
 	<dependencyManagement>
 		<dependencies>
+		   
 			<dependency>
 				<groupId>com.microsoft.azure</groupId>
 				<artifactId>azure-spring-boot-bom</artifactId>
-				<version>${azure.version}</version>
+				<version>${azure.version}</version> 
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			
 		</dependencies>
 	</dependencyManagement>
 

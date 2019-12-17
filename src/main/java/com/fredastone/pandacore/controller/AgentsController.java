@@ -1,5 +1,8 @@
 package com.fredastone.pandacore.controller;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import javax.validation.Valid;
 import javax.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +24,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import com.fredastone.pandacore.constants.AgentUploadType;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.models.AgentModel;
 import com.fredastone.pandacore.service.AgentService;
+import com.microsoft.azure.storage.blob.StorageException;
 
 
 @RestController
@@ -111,12 +114,15 @@ public class AgentsController {
     
     @PostMapping(value = "/uploads/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-			RedirectAttributes redirectAttributes, @PathVariable("id") String id,
-			@RequestParam("uploadType") AgentUploadType uploadType) {
+			RedirectAttributes redirectAttributes,
+			@PathVariable("id") String id,
+			@RequestParam("uploadType") AgentUploadType uploadType) throws InvalidKeyException, URISyntaxException, StorageException, IOException, com.microsoft.azure.storage.StorageException{
 
-		agentService.uploadMetaInfo(file, redirectAttributes, id, uploadType);
+		//agentService.uploadMetaInfo(file, redirectAttributes, id, uploadType);
+		
+		//redirectAttributes.addFlashAttribute(agentService.uploadMetaInfo(file, redirectAttributes, id, uploadType));
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.ok(agentService.uploadMetaInfo(file, redirectAttributes, id, uploadType));
 
 	}
 

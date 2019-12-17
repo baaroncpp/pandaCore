@@ -17,9 +17,9 @@ public interface ApprovalService {
 	
 	List<VSaleApprovalReview> getSaleApprovalReviewByAgent(String agentId, String saleId);
 	
-	public UserRole approveUserRole(String approverId, String approvalId);
+	//public UserRole approveUserRole(String approverId, String approvalId);
 	
-	UserRole deactivateUserRole(String userRoleId, String approverId);
+	//UserRole deactivateUserRole(String userRoleId, String approverId);
 	
 	User deactivateUser(String userId,String approverId);
 	

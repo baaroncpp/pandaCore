@@ -18,7 +18,7 @@ import lombok.Data;
  */
 @Data
 @Entity
-@Table(name = "t_user_roles",schema="panda_core")
+@Table(name = "t_user_role",schema="panda_core")
 public class UserRole implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -38,16 +38,5 @@ public class UserRole implements java.io.Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "createdon", nullable = false, length = 29)
 	private Date createdon;
-	
-	@Column(name = "isactive", nullable = false)
-	private Boolean isActive;
-	/*
-	public UserRole(Role role, User user, Date createdon, boolean isActive) {
-		super();
-		this.role = role;
-		this.user = user;
-		this.createdon = createdon;
-		this.isActive = isActive;
-	}*/
 
 }

@@ -1,5 +1,9 @@
 package com.fredastone.pandacore.controller;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -19,12 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.entity.Equipment;
 import com.fredastone.pandacore.models.EquipmentModel;
 import com.fredastone.pandacore.models.FileResponse;
 import com.fredastone.pandacore.service.EquipmentService;
 import com.fredastone.pandacore.service.StorageService;
 import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
+import com.microsoft.azure.storage.StorageException;
 
 @RestController
 @RequestMapping("v1/equipment")
@@ -35,12 +41,15 @@ public class EquipmentController {
 
 	@Value("${equipmentphotosfolder}")
 	private String photosFolder;
+	
+	private IAzureOperations azureOperations;
 
 	@Autowired
-	public EquipmentController(EquipmentService equipmentService, StorageService storageService) {
+	public EquipmentController(EquipmentService equipmentService, StorageService storageService, IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.equipmentService = equipmentService;
 		this.storageService = storageService;
+		this.azureOperations = azureOperations;
 	}
 
 	@Secured({ "ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE" })
@@ -80,16 +89,20 @@ public class EquipmentController {
 	}
 
 	@Secured({ "ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE" })
-	@PostMapping(value = "/media/{id}")
+	@PostMapping(value = "/image/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {
+			RedirectAttributes redirectAttributes, @PathVariable("id") String id) throws URISyntaxException, IOException, StorageException, InvalidKeyException {
 
 		Equipment eq = equipmentService.findEquipmentById(id);
 
 		if (eq == null) {
 			return ResponseEntity.notFound().build();
 		}
-
+		
+		String filePath = azureOperations.uploadEquipmentPicture(id);
+		
+		
+		/*
 		storageService.store(file, String.format("%s/%s.%s", photosFolder, id, FilenameUtils.getExtension(file.getOriginalFilename())));
 
 		eq.setEquipmentPhoto(String.format("%s.%s", id, FilenameUtils.getExtension(file.getOriginalFilename())));
@@ -97,8 +110,8 @@ public class EquipmentController {
 		equipmentService.updateEquipment(eq);
 		
 		FileResponse fileResponse = new FileResponse(file.getOriginalFilename(), photosFolder+"/"+eq.getId(), file.getContentType(), file.getSize());
-
-		return ResponseEntity.ok(fileResponse);
+		*/
+		return ResponseEntity.ok(azureOperations.uploadToAzure(file, filePath));
 
 	}
 

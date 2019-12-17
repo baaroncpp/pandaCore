@@ -13,5 +13,7 @@ public interface UserRoleRepository extends CrudRepository<UserRole, String>{
 	List<UserRole> findAllByUser(User user);
 
 	Optional<UserRole> findById(String userRoleId);
+	
+	//List<UserRole> getUser
 
 }

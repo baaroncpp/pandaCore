@@ -1,8 +1,10 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.Date;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -11,24 +13,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.AgentUploadType;
 import com.fredastone.pandacore.constants.UserType;
-//import com.fredastone.pandacore.entity.Agent;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.Config;
-import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
+import com.fredastone.pandacore.models.FileResponse;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ConfigRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.service.AgentService;
 import com.fredastone.pandacore.service.StorageService;
-import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
-
+//import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
+import com.microsoft.azure.storage.StorageException;
 
 @Service
 public class AgentServiceImpl implements AgentService{
@@ -67,10 +67,11 @@ public class AgentServiceImpl implements AgentService{
 		this.storageService = storageService;
 	}
 
-
 	@Override
-	public void uploadMetaInfo(MultipartFile file, RedirectAttributes redirectAttributes, String agentId,
-			AgentUploadType uploadType) {
+	public FileResponse uploadMetaInfo(MultipartFile file, 
+			RedirectAttributes redirectAttributes, 
+			String agentId,
+			AgentUploadType uploadType) throws InvalidKeyException, URISyntaxException, StorageException, IOException {
 		// TODO Auto-generated method stub
 		Optional<AgentMeta> pd = agentMetaDao.findById(agentId);
 
@@ -89,25 +90,29 @@ public class AgentServiceImpl implements AgentService{
 			meta = pd.get();
 		}
 			
-		String finalFileName = null;
+		//String finalFileName = null;
+		String finalFilePath = null;
 
 		switch (uploadType) {
 		case PROFILE:
-			finalFileName = "profile_" + agentId;
-			meta.setProfilepath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			//finalFileName = "profile_" + agentId;
+			//meta.setProfilepath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			finalFilePath = azureOperations.uploadProfile(agentId);
 			break;
 		case CONTRACT_DOC_PATH:
-			finalFileName = "contract_" + agentId;
-			meta.setContractdocpath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			//finalFileName = "contract_" + agentId;
+			//meta.setContractdocpath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			finalFilePath = azureOperations.uploadAgentContract(agentId);
 			break;
 		}
 
-		storageService.store(file, String.format("%s/%s.%s", agentUploadFolder, finalFileName,
-				FilenameUtils.getExtension(file.getOriginalFilename())));
-
+		//storageService.store(file, String.format("%s/%s.%s", agentUploadFolder, finalFileName, FilenameUtils.getExtension(file.getOriginalFilename())));
+		
+		FileResponse response = azureOperations.uploadToAzure(file, finalFilePath);
 		
 		agentMetaDao.save(meta);	
-
+		
+		return response;
 	}
 	
 	@Override
@@ -129,8 +134,7 @@ public class AgentServiceImpl implements AgentService{
 			if (pd.get().getContractdocpath().isEmpty())
 				throw new ItemNotFoundException(agentId);
 
-			return storageService.loadAsResource(
-					String.format("%s/%s",agentUploadFolder, pd.get().getContractdocpath()));
+			return storageService.loadAsResource(String.format("%s/%s",agentUploadFolder, pd.get().getContractdocpath()));
 	
 		default:
 			return null;
@@ -221,20 +225,6 @@ public class AgentServiceImpl implements AgentService{
 		}
 	}
 
-	@Override
-	public AgentMeta terminate(String agentId) {/*
-		AgentMeta agentMeta = getAgentByUserId(agentId);
-		if(agentMeta != null) {
-			agentMeta.setTerminatedon(new Date());
-			agentMeta.setIsterminated(true);
-			agentMetaDao.save(agentMeta);
-			return getAgentByUserId(agentId);
-		}else {
-			throw new RuntimeException("Agent not found");
-		}*/
-		return null;
-	}
-	
 	public void replaceFile(String filename, MultipartFile file) {
 		storageService.replaceFile(file, filename);
 	}

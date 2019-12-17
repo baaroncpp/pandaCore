@@ -1,5 +1,9 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,7 @@ import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.EmployeeService;
 import com.fredastone.pandacore.service.StorageService;
 import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
+import com.microsoft.azure.storage.StorageException;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService{
@@ -115,13 +120,15 @@ public class EmployeeServiceImpl implements EmployeeService{
 	}
 
 	@Override
-	public FileResponse uploadProfilePhoto(MultipartFile file, RedirectAttributes redirectAttributes, String employeeId) {
+	public FileResponse uploadProfilePhoto(MultipartFile file, RedirectAttributes redirectAttributes, String employeeId) throws InvalidKeyException, URISyntaxException, IOException, StorageException {
 		Optional<EmployeeMeta> pd = employeeDao.findById(employeeId);
 		
 		if(!pd.isPresent())
 			throw new ItemNotFoundException(employeeId);
+		
+		String finalFilePath = azureOperations.uploadProfile(employeeId);
     	
-        
+        /*
     	storageService.store(file,String.format("%s/%s.%s",employeePhotoFolder,
     			employeeId,FilenameUtils.getExtension(file.getOriginalFilename())));
     	
@@ -129,9 +136,9 @@ public class EmployeeServiceImpl implements EmployeeService{
     	    	
     	String finalFileName = file.getOriginalFilename();
 		String filePath = String.format("%s.%s",employeeId,FilenameUtils.getExtension(file.getOriginalFilename()));
+    	*/
     	
-    	
-    	return new FileResponse(finalFileName, filePath, file.getContentType(), file.getSize());
+    	return azureOperations.uploadToAzure(file, finalFilePath);
 		
 	}
 

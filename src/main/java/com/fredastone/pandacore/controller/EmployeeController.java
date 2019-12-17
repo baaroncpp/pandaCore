@@ -1,5 +1,10 @@
 package com.fredastone.pandacore.controller;
 
+import java.io.IOException;
+//import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.springframework.http.HttpHeaders;
@@ -18,8 +23,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+//import com.fredastone.pandacore.constants.EmployeeUploadType;
 import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.service.EmployeeService;
+import com.microsoft.azure.storage.StorageException;
 
 
 @RestController
@@ -73,9 +81,9 @@ public class EmployeeController {
     }
    
     
-	@PostMapping(value = "/uploads/{id}")
+	@PostMapping(value = "/uploads/profile/{id}")
 	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {
+			RedirectAttributes redirectAttributes,/*@RequestParam("uploadType") EmployeeUploadType uploadType,*/ @PathVariable("id") String id) throws InvalidKeyException, URISyntaxException, IOException, StorageException {
 		return ResponseEntity.ok(employeeService.uploadProfilePhoto(file, redirectAttributes, id));
 	}
 

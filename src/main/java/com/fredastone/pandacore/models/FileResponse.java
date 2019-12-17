@@ -5,6 +5,8 @@ public class FileResponse {
     private String uri;
     private String type;
     private long size;
+    
+    public FileResponse() {}
 
     public FileResponse(String name, String uri, String type, long size) {
         this.name = name;

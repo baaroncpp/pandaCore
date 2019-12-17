@@ -1,5 +1,8 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.exception.ProductNotFoundException;
@@ -18,6 +22,7 @@ import com.fredastone.pandacore.service.ProductsService;
 import com.fredastone.pandacore.service.StorageService;
 import com.fredastone.pandacore.util.ServiceUtils;
 import com.microsoft.applicationinsights.core.dependencies.apachecommons.io.FilenameUtils;
+import com.microsoft.azure.storage.StorageException;
 
 @Service
 public class ProductsServiceImpl implements ProductsService {
@@ -28,11 +33,14 @@ public class ProductsServiceImpl implements ProductsService {
 	@Value("${productsphotosfolder}")
 	private String productsThumbnailFolder;
 	
+	private IAzureOperations azureOperations;
+	
 	@Autowired
-	public ProductsServiceImpl(ProductsRepository productDao,StorageService storageService) {
+	public ProductsServiceImpl(ProductsRepository productDao,StorageService storageService, IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.productDao = productDao;
 		this.storageService = storageService;
+		this.azureOperations = azureOperations;
 	}
 
 	@Override
@@ -100,19 +108,20 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
-	public FileResponse uploadProductImage(MultipartFile file, RedirectAttributes redirectAttributes, String productId) {
+	public FileResponse uploadProductImage(MultipartFile file, RedirectAttributes redirectAttributes, String productId) throws URISyntaxException, IOException, StorageException, InvalidKeyException {
 		
 		Optional<Product> pd = productDao.findById(productId);
 		
 		if(!pd.isPresent())
 			throw new ItemNotFoundException(productId);
-    	        
-    	storageService.store(file,String.format("%s/%s.%s",productsThumbnailFolder,
-    			productId,FilenameUtils.getExtension(file.getOriginalFilename())));
+		
+		String finalFilePath = azureOperations.uploadProuctPicture(productId);
+    	/*        
+    	storageService.store(file,String.format("%s/%s.%s",productsThumbnailFolder,	productId,FilenameUtils.getExtension(file.getOriginalFilename())));
     	
     	pd.get().setThumbnail(String.format("%s.%s",productId,FilenameUtils.getExtension(file.getOriginalFilename())));
-		
-    	return new FileResponse(file.getOriginalFilename(), productsThumbnailFolder+"/"+pd.get().getThumbnail(), file.getContentType(), file.getSize());
+		*/
+    	return azureOperations.uploadToAzure(file,finalFilePath);
 	}
 
 	@Override

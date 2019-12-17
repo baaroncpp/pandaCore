@@ -1,5 +1,9 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,7 @@ import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.CustomerService;
 import com.fredastone.pandacore.service.StorageService;
+import com.microsoft.azure.storage.StorageException;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -75,7 +80,7 @@ public class CustomerServiceImpl implements CustomerService {
 	
 	@Override
 	public FileResponse uploadMetaInfo(MultipartFile file, RedirectAttributes redirectAttributes, String customerId,
-			CustomerUploadType uploadType) {
+			CustomerUploadType uploadType) throws InvalidKeyException, URISyntaxException, IOException, StorageException {
 		// TODO Auto-generated method stub
 		Optional<CustomerMeta> pd = customerMetaDao.findById(customerId);
 
@@ -98,29 +103,31 @@ public class CustomerServiceImpl implements CustomerService {
 
 		switch (uploadType) {
 		case PROFILE:
-			finalFileName = "profile_" + customerId;
-			meta.setProfilephotopath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
-			filePath = meta.getProfilephotopath();
+			//finalFileName = "profile_" + customerId;
+			//meta.setProfilephotopath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			//filePath = meta.getProfilephotopath();
+			filePath = azureOperations.uploadProfile(customerId);
 			break;
 		case ID_COPY:
-			finalFileName = "idcopy_" + customerId;
-			meta.setIdcopypath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
-			filePath = meta.getIdcopypath();
+			//finalFileName = "idcopy_" + customerId;
+			//meta.setIdcopypath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			//filePath = meta.getIdcopypath();
+			filePath = azureOperations.uploadIdCopy(customerId);
 			break;
 		case CONSENT_FORM:
-			finalFileName = "consentform_" + customerId;
-			meta.setConsentformpath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
-			filePath = meta.getConsentformpath();
+			//finalFileName = "consentform_" + customerId;
+			//meta.setConsentformpath(String.format("%s.%s",finalFileName,FilenameUtils.getExtension(file.getOriginalFilename())));
+			//filePath = meta.getConsentformpath();
+			filePath = azureOperations.uploadCustConsent(customerId);
 			break;
 		}
 
-		storageService.store(file, String.format("%s/%s.%s", customerUploadFolder, finalFileName,
-				FilenameUtils.getExtension(file.getOriginalFilename())));
+		//storageService.store(file, String.format("%s/%s.%s", customerUploadFolder, finalFileName, FilenameUtils.getExtension(file.getOriginalFilename())));
 
 		
 		customerMetaDao.save(meta);	
 		
-		return new FileResponse(finalFileName, filePath, file.getContentType(), file.getSize());
+		return azureOperations.uploadToAzure(file, filePath);
 
 	}
 

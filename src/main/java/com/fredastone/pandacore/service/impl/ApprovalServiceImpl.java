@@ -3,21 +3,22 @@ package com.fredastone.pandacore.service.impl;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.fredastone.pandacore.constants.RoleName;
-import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
-import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
-import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.exception.SaleNotFoundException;
+import com.fredastone.pandacore.models.Notification;
+import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ApprovalReviewRepository;
 import com.fredastone.pandacore.repository.ApproverRepository;
@@ -34,6 +35,33 @@ import com.fredastone.pandacore.util.ServiceUtils;
 
 @Service
 public class ApprovalServiceImpl implements ApprovalService {
+	
+	@Value("${notification.exchange.name}")
+	private String notificationExchange;
+
+	@Value("${notification.queue.email.name}")
+	private String emailQueue;
+
+	@Value("${notification.queue.sms.name}")
+	private String smsQueue;
+
+	@Value("${notification.routing.sms.key}")
+	private String smsRoutingKey;
+
+	@Value("${notification.routing.email.key}")
+	private String emailRoutingKey;
+	
+	@Value("{notification.message.userapproval}")
+	private String userApprovalMessage;
+	
+	@Value("{notification.message.passwordresetrequestmessage}")
+	private String passwordResetMessage;
+	
+	@Value("{notification.message.saleapproval}")
+	private String saleApprovalMessage;
+	
+	@Autowired
+	private RabbitTemplate rabbitTemplate;
 
 	private ApproverRepository approverDao;
 	private ApprovalReviewRepository approvalReviewDao;
@@ -104,7 +132,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 			employeeMeta.get().setIsterminated(Boolean.FALSE);
 			
 			this.employeeDao.save(employeeMeta.get());
-			userRoleRepository.save(addNApproveDefaultUserRole(user.get()));
+			userRoleRepository.save(addDefaultUserRole(user.get()));
 			
 		}
 		
@@ -146,7 +174,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 			this.addApprovalReview(review);
 			
 			agentDao.save(agentMeta.get());
-			userRoleRepository.save(addNApproveDefaultUserRole(user.get()));
+			userRoleRepository.save(addDefaultUserRole(user.get()));
 		}
 		
 		
@@ -158,6 +186,16 @@ public class ApprovalServiceImpl implements ApprovalService {
 				.itemid(user.get().getId()).build();
 		
 		approverDao.save(approver);
+		
+		//approval mail notification
+		Notification notify = Notification.builder()
+				.type(NotificationType.EMAIL)
+				.subject("PANDA SOLAR ACCOUNT APPROVED")
+				.address(user.get().getCompanyemail())
+				.content(String.format(userApprovalMessage, user.get().getFirstname()+" "+user.get().getLastname())).build();
+		
+		rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.toString());
+		
 		
 		return this.userDao.save(user.get());
 	}
@@ -184,7 +222,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 	}
 	
 	//assigns default userrole when user is approved n activated
-	public UserRole addNApproveDefaultUserRole(User user) {
+	public UserRole addDefaultUserRole(User user) {
 		String userType = user.getUsertype();
 		UserRole userRole = new UserRole();
 		
@@ -192,16 +230,12 @@ public class ApprovalServiceImpl implements ApprovalService {
 		case "CUSTOMER":
 			userRole.setRole(roleRepository.findByName(RoleName.ROLE_CUSTOMER).get());
 			userRole.setUser(user);
-			userRole.setIsActive(Boolean.TRUE);
 			userRole.setCreatedon(new Date());
-			userRole.setId(ServiceUtils.getUUID());
 			break;
 		case "AGENT":
 			userRole.setRole(roleRepository.findByName(RoleName.ROLE_AGENT).get());
 			userRole.setUser(user);
-			userRole.setIsActive(Boolean.TRUE);
 			userRole.setCreatedon(new Date());
-			userRole.setId(ServiceUtils.getUUID());
 			break;
 		/*case "EMPLOYEE":
 			userRole.setRole(roleRepository.findByName(RoleName.ROLE_EMPLOYEE).get());
@@ -213,7 +247,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		return userRole;
 	}
 
-
+/*
 	public UserRole approveUserRole(String approverId, String userRoleId) {
 		
 		Optional<UserRole> userRole = userRoleRepository.findById(userRoleId);
@@ -248,10 +282,10 @@ public class ApprovalServiceImpl implements ApprovalService {
 		
 		return userRole.get();
 	}
-
-
+*/
+/*
 	@Override
-	public UserRole deactivateUserRole(String userRoleId, String approverId) {
+	public UserRole removeUserRole(String userRoleId, String approverId) {
 		
 		Optional<UserRole> userRole = userRoleRepository.findById(userRoleId);
 		
@@ -281,7 +315,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		
 		return userRole.get();
 	}
-
+*/	
 
 	@Override
 	public User deactivateUser(String userId, String approverId) {
@@ -315,7 +349,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		
 		approverDao.save(approver);
 		
-		return null;
+		return user.get();
 	}
 
 	@Override
@@ -352,6 +386,26 @@ public class ApprovalServiceImpl implements ApprovalService {
 		approverDao.save(approver);
 		
 		//add notification
+		Optional<User> agentUser = userDao.findById(sale.get().getAgentid());
+		Optional<User> customerUser = userDao.findById(sale.get().getCustomerid());
+		Optional<User> approverUser = userDao.findById(approverId);
+		
+		String agentName = agentUser.get().getFirstname()+" "+agentUser.get().getLastname();
+		String customerName = customerUser.get().getFirstname()+" "+customerUser.get().getLastname();
+		String approverName = approverUser.get().getFirstname()+" "+approverUser.get().getLastname();
+		
+		if(!agentUser.isPresent()) {
+			throw new RuntimeException("Sale agent of ID: "+sale.get().getAgentid()+" does not exist ");
+		}
+		
+		//notify sale approval
+		Notification notify = Notification.builder()
+				.type(NotificationType.EMAIL)
+				.subject("PANDA SOLAR SALE APPROVED")
+				.address(agentUser.get().getCompanyemail())
+				.content(String.format(saleApprovalMessage, agentName, customerName, approverName)).build();
+		
+		rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.toString());
 		
 		return saleRepository.save(sale.get());
 	}

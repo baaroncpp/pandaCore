@@ -1,5 +1,10 @@
 package com.fredastone.pandacore.controller;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -22,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.fredastone.pandacore.constants.CustomerUploadType;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.service.CustomerService;
+import com.microsoft.azure.storage.StorageException;
 
 @RestController
 @RequestMapping("v1/customermeta")
@@ -52,15 +58,13 @@ public class CustomerController {
         return ResponseEntity.ok(cm);
     }
 	
-//    @PostMapping(value = "/uploads/{id}")
-//	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-//			RedirectAttributes redirectAttributes, @PathVariable("id") String id,@RequestParam("uploadType") CustomerUploadType uploadType) {
-//
-//		customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType);
-//
-//		return ResponseEntity.ok().build();
-//
-//	}
+    @PostMapping(value = "/uploads/{id}")
+	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
+			RedirectAttributes redirectAttributes, @PathVariable("id") String id, @RequestParam("uploadType") CustomerUploadType uploadType) throws InvalidKeyException, MalformedURLException, URISyntaxException, IOException, StorageException {
+
+		return ResponseEntity.ok(customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType));
+
+	}
 
 //	@GetMapping("/media/{id}")
 //	@ResponseBody

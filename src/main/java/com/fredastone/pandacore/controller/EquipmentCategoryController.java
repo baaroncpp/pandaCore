@@ -31,7 +31,13 @@ public class EquipmentCategoryController {
 	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
    @RequestMapping(path="add",method = RequestMethod.POST)
     public ResponseEntity<?> addNewCategory(@RequestBody EquipCategory category) {
-	   
+	
+		Optional<EquipCategory> equipCategory = categoryRepo.findByName(category.getName());
+		
+		if(equipCategory.isPresent()) {
+			throw new RuntimeException("EquipmentCategory of name "+category.getName()+" already exists");
+		}
+		
 	   	category.setId(ServiceUtils.getUUID());
 	   	categoryRepo.save(category);
 	   	
@@ -39,36 +45,41 @@ public class EquipmentCategoryController {
     }
    
 
-	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
+   @Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
    @RequestMapping(path="update",method = RequestMethod.PUT)
    public ResponseEntity<?> updateCategory(@RequestBody EquipCategory category) {
 	   
 	   if(category.getId().isEmpty()) {
 		   throw new RuntimeException("Expected a category Id to work with");
 	   }
-	   	Optional<EquipCategory> cat = categoryRepo.findById(category.getId());
+	   Optional<EquipCategory> cat = categoryRepo.findById(category.getId());
 	   	
-	   	if(!cat.isPresent())
-	   		throw new ItemNotFoundException(category.getId()); 
+	   if(!cat.isPresent())
+		   throw new ItemNotFoundException(category.getId()); 
 	   	
-	   	cat.get().setIsactive(category.getIsactive());
-	   	cat.get().setName(category.getName());
-	   	cat.get().setDescription(category.getDescription());
+	   cat.get().setIsactive(category.getIsactive());
+	   cat.get().setName(category.getName());
+	   cat.get().setDescription(category.getDescription());
 	  
-	   	categoryRepo.save(cat.get());
+	   categoryRepo.save(cat.get());
 	   	
-	   	return  ResponseEntity.ok(cat.get());
+	   return  ResponseEntity.ok(cat.get());
    }
 
     @RequestMapping(path="get",method = RequestMethod.GET)
     public Iterable<EquipCategory> getAllEquipment() {
-        
     	return categoryRepo.findAll();
     }
 
     
     @RequestMapping(path="get/{id}",method = RequestMethod.GET)
     public ResponseEntity<?> getEquipmentById(@PathVariable("id") String id) {
+    	
+    	Optional<EquipCategory> category = categoryRepo.findById(id);
+    	
+    	if(!category.isPresent()) {
+    		throw new RuntimeException("Category of ID "+id+" does not exist");
+    	}
         
     	return ResponseEntity.ok(categoryRepo.findById(id));
     }

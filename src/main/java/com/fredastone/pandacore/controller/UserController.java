@@ -3,10 +3,8 @@ package com.fredastone.pandacore.controller;
 import java.net.MalformedURLException;
 import java.security.InvalidKeyException;
 import java.util.Optional;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,9 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.User;
+import com.fredastone.pandacore.models.PasswordResetModel;
 import com.fredastone.pandacore.service.UserService;
 import com.fredastone.security.JwtTokenUtil;
 
@@ -45,7 +43,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    
     
     private static final String ALL_APPROVED_PATH = "approved";
     private static final String ALL_NOT_APPROVED_PATH = "notapproved";
@@ -92,10 +89,10 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
     
-    @RequestMapping(path="get/username/{id}",method = RequestMethod.GET)
-    public ResponseEntity<?> getUserByUsername(@Valid @PathVariable("id")String  id) {
+    @RequestMapping(path="get/username/{username}",method = RequestMethod.GET)
+    public ResponseEntity<?> getUserByUsername(@Valid @PathVariable("username")String username) {
     	
-    	Optional<User> user = userService.getUserByUsername(id);
+    	Optional<User> user = userService.getUserByUsername(username);
     	if(!user.isPresent())
     		return ResponseEntity.noContent().build();
     	
@@ -120,10 +117,10 @@ public class UserController {
     	Page<User> users;
     	switch(type) {
     	case ALL_APPROVED_PATH:
-    		users = userService.getAllForApproval(page, size, sortorder, sortby,Boolean.FALSE);
+    		users = userService.getAllForApproval(page, size, sortorder, sortby,Boolean.TRUE);
     		break;
     	case ALL_NOT_APPROVED_PATH:
-    		users = userService.getAllForApproval(page, size, sortorder, sortby,Boolean.TRUE);
+    		users = userService.getAllForApproval(page, size, sortorder, sortby,Boolean.FALSE);
     		break;
     	case ALL_ACTIVE_PATH:
     		users = userService.getAllForActive(page, size, sortorder, sortby,Boolean.TRUE);
@@ -132,13 +129,13 @@ public class UserController {
     		users = userService.getAllForActive(page, size, sortorder, sortby,Boolean.FALSE);
     		break;
     	case ALL_AGENTS:
-    		users = userService.getAllByType(page, size, sortorder, sortby,UserType.AGENT);
+    		users = userService.getAllByType(page, size, sortorder, sortby, UserType.AGENT);
     		break;
     	case ALL_CUSTOMERS:
-    		users = userService.getAllByType(page, size, sortorder, sortby,UserType.CUSTOMER);
+    		users = userService.getAllByType(page, size, sortorder, sortby, UserType.CUSTOMER);
     		break;
     	case ALL_EMPLOYEES:
-    		users = userService.getAllByType(page, size, sortorder, sortby,UserType.EMPLOYEE);
+    		users = userService.getAllByType(page, size, sortorder, sortby, UserType.EMPLOYEE);
     		break;
     	default:
     		users = userService.getUsers(page, size, sortorder, sortby);
@@ -148,5 +145,14 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
     
+    @RequestMapping(path = "forgotpassword/{username}", method = RequestMethod.GET)
+	public ResponseEntity<?> forgotPassword(@Valid @PathVariable("username") String username) {
+		return ResponseEntity.ok(userService.forgotPasswordRequest(username));
+	}
+
+	@RequestMapping(path = "passwordreset", method = RequestMethod.POST)
+	public ResponseEntity<?> resetPassword(@Valid @NotNull @RequestBody PasswordResetModel passwordResetModel) {
+		return ResponseEntity.ok(userService.passwordReset(passwordResetModel));
+	}
     
 }

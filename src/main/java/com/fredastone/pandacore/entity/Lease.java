@@ -22,14 +22,12 @@ import lombok.Data;
 @Entity
 @Table(name = "t_lease",schema="panda_core")
 public class Lease implements java.io.Serializable {
-
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6594190583348198883L;
 	
 	@Id
-
 	@Column(name = "id", unique = true, nullable = false, length = 36)
 	private String id;
 	
@@ -40,11 +38,9 @@ public class Lease implements java.io.Serializable {
 	@Column(name = "customerid", nullable = false, length = 36)
 	private String customerid;
 	
-
 	@Column(name = "initialdeposit", nullable = false)
 	private float initialdeposit;
 	
-
 	@Column(name = "couponcode", nullable = false)
 	private String couponcode;
 	
@@ -55,7 +51,6 @@ public class Lease implements java.io.Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "createdon", nullable = false, insertable=false,updatable=false,length = 29)
 	private Date createdon;
-	
 	
 	@Column(name = "saleagentid", nullable = false)
 	private String saleagentid;
@@ -79,7 +74,6 @@ public class Lease implements java.io.Serializable {
 	@Column(name = "isactivated", nullable = false)
 	private boolean isactivated;
 	
-
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "paymentcompletedon", nullable = false, length = 29)
 	private Date paymentcompletedon;

@@ -24,4 +24,5 @@ public class AndroidTokens {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="createdon",insertable=false,updatable=false)
 	private Date createdon;
+	
 }

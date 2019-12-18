@@ -7,6 +7,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -35,6 +37,30 @@ public class County implements java.io.Serializable {
 	
 	@Column(name = "name", length = 50)
 	private String name;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDistrictid() {
+		return districtid;
+	}
+
+	public void setDistrictid(int districtid) {
+		this.districtid = districtid;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 	
 //	@OneToMany(fetch = FetchType.LAZY, mappedBy = "countyid")
 //	private Set<Subcounty> subcounties = new HashSet<Subcounty>(0);

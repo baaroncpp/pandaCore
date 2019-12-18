@@ -12,9 +12,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
 import com.fredastone.pandacore.config.RabbitMqConfigReader;
-
 
 @Configuration
 @ComponentScan(basePackages= {"com.fredastone"})
@@ -50,7 +48,7 @@ public class InitialConfiguration {
 
 	public TopicExchange getNotificationExchange() {
 
-	return new TopicExchange(getApplicationConfig().getNotificationExchange());
+		return new TopicExchange(getApplicationConfig().getNotificationExchange());
 
 	}
 
@@ -59,7 +57,7 @@ public class InitialConfiguration {
 	@Bean
 	public Queue getSmsQueue() {
 
-	return new Queue(getApplicationConfig().getSmsQueue(),Boolean.TRUE,Boolean.FALSE,Boolean.FALSE);
+		return new Queue(getApplicationConfig().getSmsQueue(),Boolean.TRUE,Boolean.FALSE,Boolean.FALSE);
 
 	}
 	
@@ -67,7 +65,7 @@ public class InitialConfiguration {
 	@Bean
 	public Queue getEmailQueue() {
 
-	return new Queue(getApplicationConfig().getEmailQueue(),Boolean.TRUE,Boolean.FALSE,Boolean.FALSE);
+		return new Queue(getApplicationConfig().getEmailQueue(),Boolean.TRUE,Boolean.FALSE,Boolean.FALSE);
 
 	}
 	/* Binding between Exchange and Queue using routing key */
@@ -91,7 +89,7 @@ public class InitialConfiguration {
 	@Bean
 	public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
 
-	final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+		final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
 		return rabbitTemplate;
 
 	}

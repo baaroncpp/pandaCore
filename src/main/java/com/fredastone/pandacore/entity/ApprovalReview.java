@@ -23,9 +23,7 @@ import lombok.NoArgsConstructor;
 @Table(name="t_approval_review",schema="panda_core")
 public class ApprovalReview {
 	
-	
 	@Id
-	
 	String id;
 	
 	@NotEmpty
@@ -36,9 +34,7 @@ public class ApprovalReview {
 	
 	@NotEmpty
 	private String review;
-	
-	
-	
+		
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="createdon",updatable=false,insertable=false)
 	private Date createdon;

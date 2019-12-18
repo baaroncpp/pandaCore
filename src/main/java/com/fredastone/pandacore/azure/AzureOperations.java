@@ -1,18 +1,29 @@
 package com.fredastone.pandacore.azure;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.time.OffsetDateTime;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.fredastone.pandacore.exception.StorageException;
+import com.fredastone.pandacore.models.FileResponse;
 import com.microsoft.azure.storage.blob.BlobSASPermission;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.azure.storage.blob.SASProtocol;
 import com.microsoft.azure.storage.blob.SASQueryParameters;
 import com.microsoft.azure.storage.blob.ServiceSASSignatureValues;
 import com.microsoft.azure.storage.blob.SharedKeyCredentials;
+
+
 
 //class build from microsoft github testcases
 @Service
@@ -27,8 +38,7 @@ public class AzureOperations implements IAzureOperations{
 	
 	@Value("${pandacore.azure.access.minutes}")
 	private  int accessMinutes;
-	
-	
+		
 	@Value("${fileuploadfolder}")
 	private String fileuploadfolder;
 	
@@ -52,6 +62,9 @@ public class AzureOperations implements IAzureOperations{
 	
 	@Value("${profilephotosFolder}")
 	private String profileUploadPath;
+	
+	@Value("{idcopyphotofolder}")
+	private String idcopyUploadFolder;
 	
 	private static final String IMAGE_SUFFIX = ".png";
 	private static final String PDF_SUFFIX = ".pdf";
@@ -118,16 +131,15 @@ public class AzureOperations implements IAzureOperations{
 	
 	@Override
 	public String uploadProfile(String userId) throws InvalidKeyException, MalformedURLException {
-		return createAzureAccessToken(profileUploadPath, getImagePath("pic",userId), Boolean.FALSE);
-		
+		return createAzureAccessToken(profileUploadPath, getImagePath("profile",userId), Boolean.FALSE);
 	}
-
+	
 	@Override
 	public String getProfile(String userId) {
 		// TODO Auto-generated method stub
 		try {
 			
-			return createAzureAccessToken(profileUploadPath, getImagePath("pic",userId), Boolean.TRUE);
+			return createAzureAccessToken(profileUploadPath, getImagePath("profile",userId), Boolean.TRUE);
 			
 		} catch (InvalidKeyException | MalformedURLException e) {
 			// TODO Auto-generated catch block
@@ -226,13 +238,54 @@ public class AzureOperations implements IAzureOperations{
 
 	@Override
 	public String uploadProuctPicture(String productId) throws InvalidKeyException, MalformedURLException {
-		return createAzureAccessToken(productsThumbnailFolder, getImagePath("",productId), Boolean.TRUE);
+		return createAzureAccessToken(productsThumbnailFolder, getImagePath("prod",productId), Boolean.FALSE);
 	}
 
 	@Override
-	public String uploadEquipemntPicture(String equipmentId) throws InvalidKeyException, MalformedURLException {
-		return createAzureAccessToken(equipmentPhotoFolder, getImagePath("",equipmentId), Boolean.TRUE);
+	public String uploadEquipmentPicture(String equipmentId) throws InvalidKeyException, MalformedURLException {
+		return createAzureAccessToken(equipmentPhotoFolder, getImagePath("equip",equipmentId), Boolean.FALSE);
+	}
+	
+	public FileResponse uploadToAzure(MultipartFile file,String urlString) throws URISyntaxException, StorageException, IOException, com.microsoft.azure.storage.StorageException {
+		
+		URI url = new URI(urlString);
+		CloudBlockBlob blob = null;
+		
+		blob = new CloudBlockBlob(url);
+		
+		blob.uploadFromFile(convertFile(file).getAbsolutePath());
+		
+		FileResponse response = new FileResponse();
+		response.setName(file.getOriginalFilename());
+		response.setSize(file.getSize());
+		response.setType(file.getContentType());
+		response.setUri(urlString);
+		
+		return response;
+	}
+	
+	public static File convertFile(MultipartFile file) throws IOException {
+		
+		 File convFile = new File(file.getOriginalFilename());
+		 
+		 convFile.createNewFile();
+		 FileOutputStream fos = new FileOutputStream(convFile);
+		 
+		 fos.write(file.getBytes());
+		 fos.close();
+		 
+		 return convFile;
+		 
 	}
 
+	@Override
+	public String getProductPicture(String productId) throws InvalidKeyException, MalformedURLException {
+		return createAzureAccessToken(productsThumbnailFolder, getImagePath("prod",productId), Boolean.TRUE);
+	}
+
+	@Override
+	public String getEquipmentPicture(String equipmentId) throws InvalidKeyException, MalformedURLException {
+		return createAzureAccessToken(equipmentPhotoFolder, getImagePath("equip",equipmentId), Boolean.TRUE);
+	}
 
 }

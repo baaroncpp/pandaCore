@@ -38,7 +38,19 @@ public class EquipmentServiceImpl implements EquipmentService{
 
 	@Override
 	public Equipment addNewEquipment(EquipmentModel equip) {
-		// TODO Auto-generated method stub
+		
+		Equipment equipment = equipmentDao.findEquipmentBySerial(equip.getSerial());
+		
+		Optional<Equipment> equip2 = equipmentDao.findByName(equip.getName());		
+		
+		if(equipment != null) {
+			throw new RuntimeException("Equipment of serial "+equip.getSerial()+" already exists");
+		}
+		
+		if(equip2.isPresent()) {
+			throw new RuntimeException("Equipment of NAME: "+equip.getName()+" already exists");
+		}
+		
 		Equipment e = new Equipment();
 		e.setId(ServiceUtils.getUUID());
 		e.setDateofmanufacture(equip.getDateofmanufacture());
@@ -48,7 +60,6 @@ public class EquipmentServiceImpl implements EquipmentService{
 		e.setQuantity(equip.getQuantity());
 		e.setSerial(equip.getSerial());
 		e.setCategory(new EquipCategory());
-		
 		e.getCategory().setId(equip.getCategoryId());
 		
 		return equipmentDao.save(e);
@@ -60,8 +71,7 @@ public class EquipmentServiceImpl implements EquipmentService{
 		// TODO log
 		final Optional<Equipment> e = equipmentDao.findById(equip.getId());
 		
-		if(!e.isPresent())
-		{
+		if(!e.isPresent()){
 			throw new ItemNotFoundException(equip.getId());
 		}
 		
@@ -72,7 +82,6 @@ public class EquipmentServiceImpl implements EquipmentService{
 		e.get().setQuantity(equip.getQuantity());
 		e.get().setSerial(equip.getSerial());
 		//e.get().setCategory(new EquipCategory());
-		
 		e.get().getCategory().setId(equip.getCategory().getId());
 		
 		return equipmentDao.save(e.get());
@@ -83,6 +92,7 @@ public class EquipmentServiceImpl implements EquipmentService{
 		// TODO log
 		
 		final Equipment e = equipmentDao.findEquipmentBySerial(serial);
+		
 		if(e == null){
 			throw new ItemNotFoundException(serial);
 		}
@@ -94,10 +104,10 @@ public class EquipmentServiceImpl implements EquipmentService{
 	public Equipment findEquipmentById(String id) {
 		// TODO log
 		final Optional<Equipment> e = equipmentDao.findById(id);
+		
 		if(!e.isPresent()) {
 			throw new ItemNotFoundException(id);
-		}
-		
+		}		
 		return e.get();
 	}
 

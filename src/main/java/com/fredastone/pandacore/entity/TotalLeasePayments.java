@@ -9,7 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-
 import lombok.Data;
 
 /**
@@ -43,4 +42,5 @@ public class TotalLeasePayments implements java.io.Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="updatedon",insertable=true,nullable=false)
 	private Date updatedon;
+
 }

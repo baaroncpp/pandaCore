@@ -1,20 +1,33 @@
 package com.fredastone.pandacore.controller;
 
+import java.io.IOException;
+//import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
+import org.springframework.http.HttpHeaders;
+import org.springframework.core.io.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+//import com.fredastone.pandacore.constants.EmployeeUploadType;
 import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.service.EmployeeService;
+import com.microsoft.azure.storage.StorageException;
 
 
 @RestController
@@ -22,8 +35,7 @@ import com.fredastone.pandacore.service.EmployeeService;
 public class EmployeeController {
 	
 	@Autowired
-	private EmployeeService employeeService;
-	
+	private EmployeeService employeeService;	
 	
 	/*
 	 * Adding an employee triggers an approval stage that may involve collecting documents from employee and adding them to payroll
@@ -33,6 +45,11 @@ public class EmployeeController {
 		
         return ResponseEntity.ok(employeeService.addEmployee(employee));
     }
+	
+	@RequestMapping(path="update",method = RequestMethod.PUT)
+	public ResponseEntity<?> updateEmployeeMeta(@Valid @NotNull @RequestBody EmployeeMeta employee){
+		return ResponseEntity.ok(employeeService.updateEmployee(employee));
+	}
 	
     @RequestMapping(path="approve/{id}",method = RequestMethod.PUT)
     public ResponseEntity<?> approveEmployee(@PathVariable("id") String employeeId) {
@@ -64,26 +81,22 @@ public class EmployeeController {
     }
    
     
-//	@PostMapping(value = "/uploads/{id}")
-//	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-//			RedirectAttributes redirectAttributes, @PathVariable("id") String id) {
-//
-//		employeeService.uploadProfilePhoto(file, redirectAttributes, id);
-//
-//		return ResponseEntity.ok().build();
-//
-//	}
-//
-//	@GetMapping("/media/{id}")
-//	@ResponseBody
-//	public ResponseEntity<Resource> serveFile(@PathVariable("id") String id) {
-//
-//		final Resource file = employeeService.getProfilePhoto(id);
-//
-//		return ResponseEntity.ok()
-//				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-//				.body(file);
-//	}
+	@PostMapping(value = "/uploads/profile/{id}")
+	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
+			RedirectAttributes redirectAttributes,/*@RequestParam("uploadType") EmployeeUploadType uploadType,*/ @PathVariable("id") String id) throws InvalidKeyException, URISyntaxException, IOException, StorageException {
+		return ResponseEntity.ok(employeeService.uploadProfilePhoto(file, redirectAttributes, id));
+	}
+
+	@GetMapping("/media/{id}")
+	@ResponseBody
+	public ResponseEntity<Resource> serveFile(@PathVariable("id") String id) {
+
+		final Resource file = employeeService.getProfilePhoto(id);
+
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+				.body(file);
+	}
 
 
 }

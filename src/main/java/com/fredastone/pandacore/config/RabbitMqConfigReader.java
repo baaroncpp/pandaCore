@@ -3,9 +3,7 @@ package com.fredastone.pandacore.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-
 import lombok.Getter;
-
 
 @Configuration
 @PropertySource("classpath:application.properties")
@@ -27,10 +25,8 @@ private String smsQueue;
 @Value("${notification.routing.sms.key}")
 private String smsRoutingKey;
 
-
 @Getter
 @Value("${notification.routing.email.key}")
 private String emailRoutingKey;
-
 
 }

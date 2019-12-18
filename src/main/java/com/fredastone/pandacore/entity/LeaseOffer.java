@@ -25,8 +25,6 @@ import lombok.Setter;
 @Entity
 @Table(name = "t_lease_offer",schema="panda_core")
 public class LeaseOffer implements java.io.Serializable {
-
-
 	/**
 	 * 
 	 */
@@ -44,9 +42,7 @@ public class LeaseOffer implements java.io.Serializable {
 	private float intialdeposit;
 	private String name;
 	private String description;
-	private Date createdon;
-	
-
+	private Date createdon;	
 	
 	@Id
 	@SequenceGenerator(name="panda_core.s_lease_offer",sequenceName="panda_core.s_lease_offer",allocationSize=1)

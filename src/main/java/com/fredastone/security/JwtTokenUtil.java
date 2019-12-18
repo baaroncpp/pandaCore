@@ -68,7 +68,7 @@ public class JwtTokenUtil implements Serializable {
             .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(clock.now());
     }
@@ -145,4 +145,18 @@ public class JwtTokenUtil implements Serializable {
     private Date calculateExpirationDate(Date createdDate) {
         return new Date(createdDate.getTime() + expiration * 1000);
     }
+    
+    public String generatePasswordRestToken(String userId) {
+    	
+    	final Date createdDate = clock.now();
+        final Date expirationDate = calculateExpirationDate(createdDate);
+    	
+    	return Jwts.builder()
+    			.setSubject(userId)
+    			.setIssuedAt(createdDate)
+    			.setExpiration(expirationDate)
+    			.signWith(SignatureAlgorithm.HS512, secret)
+    			.compact();
+    }
+
 }

@@ -19,4 +19,6 @@ public interface InstallationService {
 	void uploadProductImage(MultipartFile file, RedirectAttributes redirectAttributes, String customerId);
 	Resource getProductImage(String customerId);
 	
+	public Installation finishInstallation(String installationId);
+	
 }

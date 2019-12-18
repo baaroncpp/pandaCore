@@ -1,7 +1,14 @@
 package com.fredastone.pandacore.azure;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fredastone.pandacore.models.FileResponse;
+import com.microsoft.azure.storage.StorageException;
 
 public interface IAzureOperations {
 	
@@ -19,6 +26,11 @@ public interface IAzureOperations {
 	 String getHousePhotoPath(String customerId);
 	 
 	 String uploadProuctPicture(String productId)  throws InvalidKeyException, MalformedURLException;
-	 String uploadEquipemntPicture(String equipmentId)  throws InvalidKeyException, MalformedURLException;
+	 String getProductPicture(String productId)throws InvalidKeyException, MalformedURLException;
+	 
+	 String uploadEquipmentPicture(String equipmentId)  throws InvalidKeyException, MalformedURLException;
+	 String getEquipmentPicture(String equipmentId)throws InvalidKeyException, MalformedURLException;
+	 
+	 public FileResponse uploadToAzure(MultipartFile file,String urlString) throws URISyntaxException,  IOException, StorageException;
 	 
 }

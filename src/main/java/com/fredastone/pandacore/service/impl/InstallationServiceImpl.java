@@ -1,9 +1,9 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
-
 import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -16,11 +16,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fredastone.pandacore.constants.RoleName;
 import com.fredastone.pandacore.entity.CustomerMeta;
+import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.Installation;
+import com.fredastone.pandacore.entity.Product;
+import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
+import com.fredastone.pandacore.repository.EmployeeRepository;
 import com.fredastone.pandacore.repository.InstallationRepository;
+import com.fredastone.pandacore.repository.ProductsRepository;
+import com.fredastone.pandacore.repository.UserRepository;
+import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.service.InstallationService;
 import com.fredastone.pandacore.service.StorageService;
 import com.fredastone.pandacore.util.ServiceUtils;
@@ -33,24 +41,73 @@ public class InstallationServiceImpl implements InstallationService{
 	private InstallationRepository installDao;
 	private CustomerMetaRepository customerMetaDao;
 	private StorageService storageService;
+	private ProductsRepository productsRepository;
+	private EmployeeRepository employeeRepository;
+	private UserRoleRepository userRoleRepository;
+	private UserRepository userRepository;
 		
 	@Value("${homePhotosFolder}")
 	private String homePhotosUploadFolder;
 	
 	@Autowired
-	public InstallationServiceImpl(InstallationRepository installDao,CustomerMetaRepository customerMetaDao,StorageService storageService) {
-		// TODO Auto-generated constructor stub
+	public InstallationServiceImpl(InstallationRepository installDao,
+			CustomerMetaRepository customerMetaDao,
+			StorageService storageService, 
+			ProductsRepository productsRepository,
+			EmployeeRepository employeeRepository,
+			UserRoleRepository userRoleRepository,
+			UserRepository userRepository) {
+		
 		this.installDao = installDao;
 		this.customerMetaDao = customerMetaDao;
 		this.storageService = storageService;
+		this.productsRepository = productsRepository;
+		this.employeeRepository = employeeRepository;
+		this.userRoleRepository = userRoleRepository;
+		this.userRepository = userRepository;
 	}
 	
 	@Override
 	public Installation makeNewInstallation(Installation installation) {
-		// TODO Auto-generated method stub
+				
+		int count = 0;
 		
-		installation.setId(ServiceUtils.getUUID());
-		return installDao.save(installation);
+		Optional<Product> product = productsRepository.findBySerialNumber(installation.getDeviceserial());
+		Optional<CustomerMeta> customerMeta = customerMetaDao.findById(installation.getCustomerid());		
+		
+		if(!product.isPresent()) {
+			throw new RuntimeException("Installation product of serial number: "+installation.getDeviceserial()+" does not exist");
+		}
+		
+		Optional<EmployeeMeta> employeeMeta = employeeRepository.findById(installation.getEmployeeid());
+		
+		if(!employeeMeta.isPresent()) {
+			throw new RuntimeException("Installation user of ID: "+installation.getEmployeeid()+" does not exist");
+		}
+		
+		List<UserRole> userRoles = userRoleRepository.findAllByUser(userRepository.findById(installation.getEmployeeid()).get());
+		
+		if(userRoles.isEmpty()) {
+			throw new RuntimeException("Employee does not qualify for Installation operation");
+		}else {
+			
+			for(UserRole object : userRoles) {
+				if(object.getRole().getName().name().equals(RoleName.ROLE_ENGINEER.name())) {
+					count = count + 1;
+				}
+			}
+			
+		}
+		
+		if(count <= 0) {
+			throw new RuntimeException("Employee of ID: "+installation.getEmployeeid()+" is not an installation Engineer");
+		}else {
+			
+			installation.setId(ServiceUtils.getUUID());
+			installation.setCreatedon(new Date());
+			
+			return installDao.save(installation);
+		}
 	}
 
 	@Override
@@ -107,9 +164,11 @@ public class InstallationServiceImpl implements InstallationService{
 	public Installation getInstallationById(String id) {
 		Optional<Installation> install = installDao.findById(id);
 		
-		if(install.isPresent())
-			return install.get();
-		return null;
+		if(!install.isPresent()) {
+			throw new ItemNotFoundException(id);
+		}
+		
+		return install.get();
 	}
 
 	@Override
@@ -121,6 +180,20 @@ public class InstallationServiceImpl implements InstallationService{
 	
 		return allsorted;
 	
+	}
+
+	@Override
+	public Installation finishInstallation(String installationId) {
+		
+		Optional<Installation> installation = installDao.findById(installationId);
+		
+		if(!installation.isPresent()) {
+			throw new ItemNotFoundException(installationId);
+		}
+		
+		installation.get().setEndtime(new Date());
+		
+		return installation.get();
 	}
 
 }

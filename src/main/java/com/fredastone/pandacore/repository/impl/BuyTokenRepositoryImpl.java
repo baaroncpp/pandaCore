@@ -22,6 +22,7 @@ import com.fredastone.pandacore.entity.LeasePaymentExtra;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.TotalLeasePayments;
 import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
+import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.exception.LowTransactionValueException;
 import com.fredastone.pandacore.exception.PaymentDetailsNotFoundException;
 import com.fredastone.pandacore.models.BuyToken;
@@ -60,8 +61,6 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 	
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
-
-
 	
 	@Autowired
 	private CustomerFinanceInfoRepository financialInfoDao;
@@ -72,15 +71,12 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 	@Autowired
 	private LeasePaymentRepository leasePaymentDao;
 	
-	
 	@Autowired
-	private TokenRepository tokenRespository;
-	
+    private TokenRepository tokenRespository;
 	
 	@Autowired
 	private NamedParameterJdbcTemplate jdbcTemplate;
 	
-
 	private TokenOperation tokenOperation;
 	
 	private static final short PAYMENT_COMPLETED_STATUS = 2;
@@ -99,7 +95,6 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 	
 	private final static String LEASE_UPDATE_QUERY = "UPDATE panda_core.t_lease SET iscompleted = TRUE,paymentcompletedon = now() WHERE id = :leaseid";
 
-	
 	public BuyTokenRepositoryImpl() {
 		
 		tokenOperation = new TokenOperation();
@@ -223,8 +218,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 				
 	}
 	
-	
-	private Token recordToken(TokenTypes tokenType,String token,int days, int times,String paymentid) {
+	private Token recordToken(TokenTypes tokenType,String token, int days, int times,String paymentid) {
 		
 		Token t = new Token();
 		t.setToken(token);
@@ -331,5 +325,75 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		}
 		
 	}
+
+	public <S extends Token> S save(S entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+	public <S extends Token> Iterable<S> saveAll(Iterable<S> entities) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public Optional<Token> findById(String id) {
+		
+		Optional<Token> token = tokenRespository.findById(id);
+		
+		if(!token.isPresent()) {
+			throw new ItemNotFoundException(id);
+		}
+		return token;
+	}
+
+
+	public boolean existsById(String id) {
+		Optional<Token> token = tokenRespository.findById(id);
+				
+		if(!token.isPresent()) {
+			return Boolean.FALSE;
+		}else {
+			return Boolean.TRUE;
+		}
+	}
+
+
+	public Iterable<Token> findAll() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public Iterable<Token> findAllById(Iterable<String> ids) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public long count() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	public void deleteById(String id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	public void delete(Token entity) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	public void deleteAll(Iterable<? extends Token> entities) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }

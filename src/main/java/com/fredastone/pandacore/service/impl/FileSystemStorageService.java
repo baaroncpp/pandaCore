@@ -63,8 +63,7 @@ public class FileSystemStorageService implements StorageService {
                                 + filename);
             }
             try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, this.rootLocation.resolve(filename),
-                    StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(inputStream, this.rootLocation.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
             }
         }
         catch (IOException e) {
@@ -94,6 +93,7 @@ public class FileSystemStorageService implements StorageService {
 
     @Override
     public Resource loadAsResource(String filename) {
+    	
         try {
             Path file = load(filename);
             Resource resource = new UrlResource(file.toUri());
@@ -108,6 +108,7 @@ public class FileSystemStorageService implements StorageService {
         catch (MalformedURLException e) {
             throw new StorageFileNotFoundException("Could not read file: " + filename, e);
         }
+        
     }
 
     @Override
@@ -132,5 +133,30 @@ public class FileSystemStorageService implements StorageService {
         catch (IOException e) {
             throw new StorageException("Could not initialize storage", e);
         }
+    }
+    
+    public boolean deleteFile(String filename) {
+    	
+    	boolean result = false;
+    	
+	
+		if(loadAsResource(filename) != null) {
+			try {
+				result = loadAsResource(filename).getFile().delete();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	
+    	return result;
+    }
+    
+    public void replaceFile(MultipartFile file, String filename) {
+    	
+    	if(!deleteFile(filename)) {
+    		throw new RuntimeException("File not deleted: "+filename);
+    	}
+    	
+    	store(file, filename);
     }
 }

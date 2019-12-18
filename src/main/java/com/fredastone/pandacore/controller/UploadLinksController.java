@@ -26,7 +26,6 @@ public class UploadLinksController {
 		
 	}
 	
-	
     @RequestMapping(path="employee/{id}",method = RequestMethod.GET)
     public ResponseEntity<?> getEmployeeUploadLinks(@PathVariable("id") String id) throws InvalidKeyException, MalformedURLException{
     	

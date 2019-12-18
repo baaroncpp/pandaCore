@@ -44,5 +44,44 @@ public class EquipCategory implements java.io.Serializable {
 	@Column(name = "isactive")
 	private Boolean isactive;
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public Date getCreateon() {
+		return createon;
+	}
+
+	public void setCreateon(Date createon) {
+		this.createon = createon;
+	}
+
+	public Boolean getIsactive() {
+		return isactive;
+	}
+
+	public void setIsactive(Boolean isactive) {
+		this.isactive = isactive;
+	}
 	
 }

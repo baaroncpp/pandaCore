@@ -24,15 +24,17 @@ public interface UserRepository extends CrudRepository<User, String>,PagingAndSo
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
     
-    Page<User> findAllByisapproved(Pageable pageable,boolean approved);
+    Page<User> findAllByisapproved(Pageable pageable, boolean approved);
 
-    Page<User> findAllByusertype(Pageable pageable,String usertype);
+    Page<User> findAllByusertype(Pageable pageable, String usertype);
 
-    Page<User> findAllByisactive(Pageable pageable,boolean isactive);
+    Page<User> findAllByisactive(Pageable pageable, boolean isactive);
     
     @Query("Select u from User u where u.usertype = 'customer' and u.id = :id")
     Optional<User> findCustomerById(@Param("id") String id);
     
     @Query("Select u from User u where u.username = :user or u.email = :user")
     Optional<User> findLoginUser(@Param("user") String user);
+    
+	Optional<User> findByPrimaryphone(String primaryphone);
 }

@@ -2,12 +2,9 @@ package com.fredastone.pandacore.service.impl;
 
 import java.util.List;
 import java.util.Optional;
-
 import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.fredastone.pandacore.entity.LeaseOffer;
 import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
@@ -58,19 +55,29 @@ public class LeaseOfferServiceImpl implements LeaseOfferService{
 	@Override
 	public Optional<LeaseOffer> getLeaseOffer(int id) {
 		// TODO Auto-generated method stub
+		Optional<LeaseOffer> leaseOffer = leaseOfferDao.findById(id);
+		
+		if(!leaseOffer.isPresent()) {
+			throw new RuntimeException("LeaseOffer of ID:"+id+"does not exist");
+		}
+		
 		return leaseOfferDao.findById(id);
 	}
 
 	@Override
 	public List<LeaseOffer> getLeaseOfferByProductId(String productId) {
 		
-		// TODO Correct failing
-		return leaseOfferDao.findByProductId(productId);
+		List<LeaseOffer> leaseOffers = leaseOfferDao.findByProductId(productId);
+		
+		if(leaseOffers.isEmpty()) {
+			throw new RuntimeException("No LeaseOffers associated with product of ID : "+productId);
+		}
+		
+		return leaseOffers;
 	}
 
 	@Override
 	public Iterable<LeaseOffer> getAllLeaseOffers() {
-		// TODO Auto-generated method stub
 		return leaseOfferDao.findAll();
 	}
 
@@ -78,7 +85,9 @@ public class LeaseOfferServiceImpl implements LeaseOfferService{
 	@Transactional
 	public LeaseOffer updateLeaseOffer(LeaseOfferModel lo) {
 		// TODO Auto-generated method stub
+		
 		Optional<LeaseOffer> offer = leaseOfferDao.findById(lo.getId());
+		
 		if(!offer.isPresent())
 		{
 			throw new ItemNotFoundException(String.valueOf(lo.getId()));

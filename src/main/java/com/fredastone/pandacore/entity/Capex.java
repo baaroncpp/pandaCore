@@ -12,7 +12,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-
 import lombok.Data;
 
 /**
@@ -50,6 +49,9 @@ public class Capex implements java.io.Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "createdon", nullable = false, length = 29)
 	private Date createdon;
+	
+	@Column(name = "isapproved", nullable = false)
+	private Boolean isapproved;
 	
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "approvedon", length = 29)

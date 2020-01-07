@@ -34,8 +34,8 @@ public class CapexType implements java.io.Serializable {
 	@Column(name = "name", length = 50)
 	private String name;
 	
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "TCapexType")
-	private Set<Capex> TCapexes = new HashSet<Capex>(0);
+	//@OneToMany(fetch = FetchType.LAZY, mappedBy = "TCapexType")
+	//private Set<Capex> TCapexes = new HashSet<Capex>(0);
 
 
 }

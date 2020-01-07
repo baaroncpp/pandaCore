@@ -52,6 +52,8 @@ public class Opex implements java.io.Serializable {
 	@Column(name = "createdon", nullable = false, length = 29)
 	private Date createdon;
 	
+	@Column(name = "isapproved", nullable = false)
+	private Boolean isapproved;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "approvedon", length = 29)

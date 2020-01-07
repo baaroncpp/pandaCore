@@ -75,7 +75,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.exceptionHandling()
 				.authenticationEntryPoint(unauthorizedHandler).and().sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
-				.antMatchers("/v1/approvals/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER")
+				//.antMatchers("/v1/approvals/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER")
 				.antMatchers("/v1/installation/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER","ROLE_ENGINEER")
 				
 				// .antMatchers("/").permitAll();

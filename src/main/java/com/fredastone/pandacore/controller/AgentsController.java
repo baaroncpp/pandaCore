@@ -49,8 +49,7 @@ public class AgentsController {
     
     @RequestMapping(path="get",params = { "active", "direction", "page","size" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllAgentsByActive(@RequestParam("isactive")String isactive,
-    		@RequestParam("direction") String direction,@RequestParam("page") int page,@RequestParam("size") int size) {
-    	
+    		@RequestParam("direction") String direction,@RequestParam("page") int page,@RequestParam("size") int size) {    	
     	
     	Pageable sortedByCreatedon = PageRequest.of(page, size, Sort.by("createdon").descending());
     	

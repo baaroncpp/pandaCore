@@ -3,6 +3,8 @@ package com.fredastone.pandacore.controller;
 import java.net.MalformedURLException;
 import java.security.InvalidKeyException;
 import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,9 +86,14 @@ public class UserController {
     
     @RequestMapping(path="get/{id}",method = RequestMethod.GET)
     public ResponseEntity<?> getUser(@Valid @PathVariable("id")String  id) {
-    	
     	User user = userService.getUserById(id);
         return ResponseEntity.ok(user);
+    }
+    
+    @RequestMapping(path="get/androiduser",method = RequestMethod.GET)
+    public ResponseEntity<?> getAndroidUser(HttpServletRequest request){
+    	final String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+    	return ResponseEntity.ok(userService.getUserById(id));
     }
     
     @RequestMapping(path="get/username/{username}",method = RequestMethod.GET)

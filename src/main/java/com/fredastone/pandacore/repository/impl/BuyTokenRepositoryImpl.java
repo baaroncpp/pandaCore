@@ -5,16 +5,13 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.transaction.Transactional;
-
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
 import com.fredastone.pandacore.constants.TokenTypes;
 import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeasePayment;

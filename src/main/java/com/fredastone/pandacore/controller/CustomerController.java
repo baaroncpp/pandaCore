@@ -10,6 +10,10 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,6 +69,15 @@ public class CustomerController {
 		return ResponseEntity.ok(customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType));
 
 	}
+    
+    @RequestMapping(path="get/all", params = {"page","size","sortby","sortorder" }, method = RequestMethod.GET)
+    public ResponseEntity<?> getAllCustomerMeta(@Valid @RequestParam("sortorder") Direction sortorder,
+									    		@Valid @RequestParam("sortby") String sortby,
+									    		@Valid @RequestParam("page") int page,
+									    		@RequestParam("size") int size){
+    	
+    	return ResponseEntity.ok(customerService.getAllCustomerMeta(page, size, sortby, sortorder));
+    }
 
 //	@GetMapping("/media/{id}")
 //	@ResponseBody

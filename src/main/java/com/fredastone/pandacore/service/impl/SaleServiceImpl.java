@@ -129,6 +129,7 @@ public class SaleServiceImpl implements SaleService {
 		
 		//Retrieve the product that is being sold
 		Optional<Product> product = productDao.findById(sale.getProductid());
+		//Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
 		
 		if(!product.isPresent() || !product.get().getIsActive()) {
 			throw new ProductNotFoundException(sale.getProductid());

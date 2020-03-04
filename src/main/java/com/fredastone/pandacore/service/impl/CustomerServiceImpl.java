@@ -1,14 +1,20 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.awt.print.Pageable;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -229,6 +235,16 @@ public class CustomerServiceImpl implements CustomerService {
 		}
 		
 		return customerMetaDao.save(customerMeta);
+	}
+
+
+	@Override
+	public Page<CustomerMeta> getAllCustomerMeta(int page,int size,String sortBy,Direction sortOrder) {
+		
+		final org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size,Sort.by(sortOrder,sortBy));
+		Page<CustomerMeta> custMeta = customerMetaDao.findAll(pageable);
+		// TODO Auto-generated method stub
+		return custMeta;
 	}
 
 }

@@ -46,9 +46,7 @@ public class Sale implements java.io.Serializable {
 	@Column(name = "customerid",nullable=false)
 	private String customerid;
 
-
 	@Id
-
 	@Column(name = "id", unique = true, nullable = false, length = 36)
 	public String getId() {
 		return this.id;

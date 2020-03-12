@@ -38,6 +38,7 @@ import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.repository.VSaleApprovalReviewRepository;
 import com.fredastone.pandacore.service.ApprovalService;
+import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.pandacore.util.ServiceUtils;
 
 @Service
@@ -87,6 +88,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 	private SaleRepository saleRepository;
 	private CapexRepository capexRepository;
 	private OpexRepository opexRepository;
+	private SaleService saleService;
 	
 	private static final String CUSTOMER_USER_TYPE = "customer";
 	private static final String EMPLOYEE_USER_TYPE = "employee";
@@ -104,7 +106,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 			ApproverRepository approverDao,
 			OpexRepository opexRepository,
 			CapexRepository capexRepository,
-			VSaleApprovalReviewRepository saleReviewRepo) {
+			VSaleApprovalReviewRepository saleReviewRepo, SaleService saleService) {
 		
 		this.approvalReviewDao = approvalReviewDao;
 		this.userDao = userDao;
@@ -117,6 +119,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		this.saleRepository = saleRepository;
 		this.capexRepository = capexRepository;
 		this.opexRepository = opexRepository;
+		this.saleService = saleService;
 	}
 	
 
@@ -298,59 +301,56 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
 		
-		Optional<Sale> sale  = saleRepository.findById(saleId);
+		/*
+		 * Optional<Sale> sale = saleRepository.findById(saleId);
+		 * 
+		 * if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
+		 * 
+		 * if( sale.get().getSaletype().equals("Direct") || sale.get().isIsreviewed() ==
+		 * Boolean.FALSE ) { throw new
+		 * RuntimeException("Sale does not qualify for this operation"); }
+		 * 
+		 * sale.get().setIsreviewed(Boolean.TRUE); sale.get().setSalestatus(saleStatus);
+		 * 
+		 * final ApprovalReview review = ApprovalReview.builder() .createdon(new Date())
+		 * .itemid(saleId) .reviewtype(6) .review(reviewDescription).build();
+		 * 
+		 * this.addApprovalReview(review);
+		 * 
+		 * final Approver approver = Approver.builder() .id(ServiceUtils.getUUID())
+		 * .createdon(new Date()) .userid(approverId) .itemapproved("SALE")
+		 * .itemid(saleId).build();
+		 * 
+		 * approverDao.save(approver);
+		 * 
+		 * //add notification Optional<User> agentUser =
+		 * userDao.findById(sale.get().getAgentid()); Optional<User> customerUser =
+		 * userDao.findById(sale.get().getCustomerid()); Optional<User> approverUser =
+		 * userDao.findById(approverId);
+		 * 
+		 * String agentName =
+		 * agentUser.get().getFirstname()+" "+agentUser.get().getLastname(); String
+		 * customerName =
+		 * customerUser.get().getFirstname()+" "+customerUser.get().getLastname();
+		 * String approverName =
+		 * approverUser.get().getFirstname()+" "+approverUser.get().getLastname();
+		 * 
+		 * if(!agentUser.isPresent()) { throw new
+		 * RuntimeException("Sale agent of ID: "+sale.get().getAgentid()
+		 * +" does not exist "); }
+		 * 
+		 * //notify sale approval Notification notify = Notification.builder()
+		 * .type(NotificationType.EMAIL) .subject("PANDA SOLAR SALE APPROVED")
+		 * .address(agentUser.get().getCompanyemail())
+		 * .content(String.format(saleApprovalMessage, agentName, customerName,
+		 * approverName)).build();
+		 * 
+		 * rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.
+		 * toString());
+		 */
+		return saleService.completeSale(saleId);
 		
-		if(!sale.isPresent()) {
-			throw new SaleNotFoundException(saleId);
-		}
-		
-		if( sale.get().getSaletype().equals("Direct") || sale.get().isIsreviewed() == Boolean.TRUE ) {
-			throw new RuntimeException("Sale doe not qualify for this operation");
-		}
-		
-		sale.get().setIsreviewed(Boolean.TRUE);
-		sale.get().setSalestatus(saleStatus);
-		
-		final ApprovalReview review = ApprovalReview.builder()
-				.createdon(new Date())
-				.itemid(saleId)
-				.reviewtype(6)
-				.review(reviewDescription).build();				
-		
-		this.addApprovalReview(review);
-		
-		final Approver approver = Approver.builder()
-				.id(ServiceUtils.getUUID())
-				.createdon(new Date())
-				.userid(approverId)
-				.itemapproved("SALE")
-				.itemid(saleId).build();
-		
-		approverDao.save(approver);
-		
-		//add notification
-		Optional<User> agentUser = userDao.findById(sale.get().getAgentid());
-		Optional<User> customerUser = userDao.findById(sale.get().getCustomerid());
-		Optional<User> approverUser = userDao.findById(approverId);
-		
-		String agentName = agentUser.get().getFirstname()+" "+agentUser.get().getLastname();
-		String customerName = customerUser.get().getFirstname()+" "+customerUser.get().getLastname();
-		String approverName = approverUser.get().getFirstname()+" "+approverUser.get().getLastname();
-		
-		if(!agentUser.isPresent()) {
-			throw new RuntimeException("Sale agent of ID: "+sale.get().getAgentid()+" does not exist ");
-		}
-		
-		//notify sale approval
-		Notification notify = Notification.builder()
-				.type(NotificationType.EMAIL)
-				.subject("PANDA SOLAR SALE APPROVED")
-				.address(agentUser.get().getCompanyemail())
-				.content(String.format(saleApprovalMessage, agentName, customerName, approverName)).build();
-		
-		rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.toString());
-		
-		return saleRepository.save(sale.get());
+		//return saleRepository.save(sale.get());
 	}
 
 	@Transactional

@@ -2,7 +2,9 @@ package com.fredastone.pandacore.service.impl;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +29,14 @@ import com.fredastone.pandacore.entity.TotalLeasePayments;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.exception.AgentNotFoundException;
+import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.exception.LeaseOfferNotFoundException;
 import com.fredastone.pandacore.exception.ProductNotFoundException;
 import com.fredastone.pandacore.exception.SaleNotFoundException;
 import com.fredastone.pandacore.models.LeaseSale;
 import com.fredastone.pandacore.models.Notification;
 import com.fredastone.pandacore.models.Notification.NotificationType;
+import com.fredastone.pandacore.models.SaleModel;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
@@ -270,6 +274,7 @@ public class SaleServiceImpl implements SaleService {
 		//Sale is availabe and in pending state
 		sale.get().setSalestatus((short) ServiceConstants.ACCEPTED_APPROVAL);
 		sale.get().setCompletedon(new Date());
+		sale.get().setIsreviewed(Boolean.TRUE);
 		
 		Token saleToken  = new Token();
 		saleToken.setLeasepaymentid(sale.get().getId());
@@ -361,12 +366,20 @@ public class SaleServiceImpl implements SaleService {
 	}
 
 	@Override
-	public Page<Sale> getAllSales(int page, int size, String sortby, Direction sortOrder) {
+	public List<SaleModel> getAllSales(int page, int size, String sortby, Direction sortOrder) {
+		
+		List<SaleModel> saleModels = new ArrayList<>();
 	
 		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
 		Page<Sale> allsorted = saleDao.findAll(pageRequest);
-	
-		return allsorted;
+			
+		List<Sale> sales = allsorted.getContent();
+		
+		for(Sale object : sales) {
+			saleModels.add(convertToSaleModel(object));
+		}
+		
+		return saleModels;
 	}
 
 	@Override
@@ -409,10 +422,57 @@ public class SaleServiceImpl implements SaleService {
 	}
 
 	@Override
-	public Page<Sale> getAllSalesByAgentId(String agentid, int page, int count, String sortby, Direction orderby) {
+	public List<SaleModel> getAllSalesByAgentId(String agentid, int page, int count, String sortby, Direction orderby) {
+		List<SaleModel> saleModels = new ArrayList<>();
 		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
 		Page<Sale> sales = saleDao.findAllSaleByAgentId(agentid,pageRequest);
-		return sales;
+		
+		List<Sale> salesList = sales.getContent();
+		
+		for(Sale object : salesList) {
+			saleModels.add(convertToSaleModel(object));
+		}
+		
+		return saleModels;
+	}
+	
+	public SaleModel convertToSaleModel(Sale sale) {
+		
+		SaleModel saleModel = new SaleModel();
+		
+		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
+		if(!agent.isPresent()){
+			throw new ItemNotFoundException(sale.getAgentid());
+		}
+		
+		Optional<CustomerMeta> customer = customerMetaRepository.findById(sale.getCustomerid());
+		if(!customer.isPresent()){
+			throw new ItemNotFoundException(sale.getCustomerid());
+		}
+		
+		Optional<Product> product = productDao.findById(sale.getProductid());
+		if(!product.isPresent()){
+			throw new ItemNotFoundException(sale.getProductid());
+		}
+		
+		saleModel.setAgent(agent.get());
+		saleModel.setCustomer(customer.get());
+		saleModel.setProduct(product.get());
+		saleModel.setAgentcommission(sale.getAgentcommission());
+		saleModel.setAmount(sale.getAmount());
+		saleModel.setCompletedon(sale.getCompletedon());
+		saleModel.setCreatedon(sale.getCreatedon());
+		saleModel.setDescription(sale.getDescription());
+		saleModel.setId(sale.getId());
+		saleModel.setIsreviewed(sale.isIsreviewed());
+		saleModel.setLat(sale.getLat());
+		saleModel.setLong_(sale.getLong_());
+		saleModel.setQuantity(sale.getQuantity());
+		saleModel.setSalestatus(sale.getSalestatus());
+		saleModel.setSaletype(sale.getSaletype());
+		saleModel.setScannedserial(sale.getScannedserial());
+		
+		return saleModel;
 	}
 
 }

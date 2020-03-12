@@ -150,9 +150,9 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 	public Page<LeasePayment> getAllPayments(int size, int page, String sortOrder) {
 		// TODO Auto-generated method stub		
 		if(sortOrder.equalsIgnoreCase("DESC")) {
-			return lpDao.findAll(PageRequest.of(page, size, Sort.by("payeename").descending()));
+			return lpDao.findAll(PageRequest.of(page, size, Sort.by("createdon").descending()));
 		}else if(sortOrder.equalsIgnoreCase("ASC")) {
-			return lpDao.findAll(PageRequest.of(page, size, Sort.by("payeename").ascending()));
+			return lpDao.findAll(PageRequest.of(page, size, Sort.by("createdon").ascending()));
 		}else {
 			return lpDao.findAll(PageRequest.of(page, size));
 		}

@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +18,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fredastone.pandacore.constants.PayGoProductStatus;
 import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.constants.TokenTypes;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeaseOffer;
+import com.fredastone.pandacore.entity.PayGoProduct;
 import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.Token;
@@ -42,6 +47,7 @@ import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.LeaseSaleDetailRepository;
+import com.fredastone.pandacore.repository.PayGoProductRepository;
 import com.fredastone.pandacore.repository.ProductsRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.SaleRollbackRepository;
@@ -104,6 +110,7 @@ public class SaleServiceImpl implements SaleService {
 	private UserRepository userDao;
 	private LeaseSaleDetailRepository lsdDao;
 	private CustomerMetaRepository customerMetaRepository; 
+	private PayGoProductRepository payGoRepo;
 	
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
@@ -112,7 +119,7 @@ public class SaleServiceImpl implements SaleService {
 	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
 			ProductsRepository productDao,LeaseOfferRepository leaseOfferDao,LeaseRepository leaseDao,
 			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao,
-			LeaseSaleDetailRepository lsdDao) {
+			LeaseSaleDetailRepository lsdDao, PayGoProductRepository payGoRepo) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -125,6 +132,7 @@ public class SaleServiceImpl implements SaleService {
 		this.userDao = userDao;
 		this.lsdDao = lsdDao;
 		this.customerMetaRepository = customerMetaRepository;
+		this.payGoRepo = payGoRepo;
 	}
 	
 	@Transactional
@@ -132,8 +140,8 @@ public class SaleServiceImpl implements SaleService {
 	public Sale recoredNewDirectSale(Sale sale) {
 		
 		//Retrieve the product that is being sold
-		Optional<Product> product = productDao.findById(sale.getProductid());
-		//Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
+		//Optional<Product> product = productDao.findById(sale.getProductid());
+		Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
 		
 		if(!product.isPresent() || !product.get().getIsActive()) {
 			throw new ProductNotFoundException(sale.getProductid());
@@ -155,6 +163,7 @@ public class SaleServiceImpl implements SaleService {
 		sale.setAgentcommission(agentCommission);
 		sale.setAmount(totalAmount);
 		sale.setSalestatus((short) ServiceConstants.PENDING_APPROVAL);
+		sale.setProductid(product.get().getId());
 		
 		sale.setId(ServiceUtils.getUUID());
 		sale.setSaletype(DIRECT_SALE);
@@ -312,6 +321,20 @@ public class SaleServiceImpl implements SaleService {
 			}
 			return s;			
 		}
+		//set product status to sold
+		Optional<PayGoProduct> payGo = payGoRepo.findById(sale.get().getScannedserial());
+		if(!payGo.isPresent()) {
+			throw new RuntimeException("PayGo with serial number "+sale.get().getScannedserial()+" does not exist");
+		}
+		
+		PayGoProduct prod = payGo.get();
+		
+		if(prod.getPayGoProductStatus() != PayGoProductStatus.SOLD) {
+			prod.setPayGoProductStatus(PayGoProductStatus.SOLD);
+			payGoRepo.save(prod);
+		}else {
+			throw new RuntimeException("PayGo with serial number "+prod.getTokenSerialNumber()+" is already sold");
+		}
 		
 		if(sale.get().isIsreviewed() == Boolean.FALSE) {
 			throw new RuntimeException("Transaction has not been reviewed");
@@ -434,6 +457,63 @@ public class SaleServiceImpl implements SaleService {
 		}
 		
 		return saleModels;
+	}
+	
+	@Override
+	public Map<String, Integer> getCustomerSaleSums(String customerId){
+		
+		Optional<User> user = userDao.findById(customerId);		
+		if(!user.isPresent()) {
+			throw new RuntimeException("Aget does not exist");
+		}
+		
+		Map<String, Integer> result = new HashMap<>();
+		
+		List<Sale> directSales = saleDao.findAllBycustomerid(customerId, "Direct");
+		
+		if(!directSales.isEmpty()) {
+			result.put("DIRECT", directSales.size());
+		}else {
+			result.put("DIRECT", 0);
+		}
+		
+		List<Sale> leaseSales = saleDao.findAllBycustomerid(customerId, "Lease");
+		
+		if(!leaseSales.isEmpty()) {
+			result.put("LEASE", leaseSales.size());
+		}else {
+			result.put("LEASE", 0);
+		}		
+		
+		return result;
+	}
+	
+	@Override
+	public Map<String, Integer> getAgentSaleSums(String agentId){
+		
+		Optional<User> user = userDao.findById(agentId);		
+		if(!user.isPresent()) {
+			throw new RuntimeException("Aget does not exist");
+		}
+		
+		Map<String, Integer> result = new HashMap<>();
+		
+		List<Sale> directSales = saleDao.findAllByagentid(agentId, "Direct");
+		
+		if(!directSales.isEmpty()) {
+			result.put("DIRECT", directSales.size());
+		}else {
+			result.put("DIRECT", 0);
+		}
+		
+		List<Sale> leaseSales = saleDao.findAllByagentid(agentId, "Lease");
+		
+		if(!leaseSales.isEmpty()) {
+			result.put("LEASE", leaseSales.size());
+		}else {
+			result.put("LEASE", 0);
+		}
+		return result;
 	}
 	
 	public SaleModel convertToSaleModel(Sale sale) {

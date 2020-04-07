@@ -190,4 +190,14 @@ public class SalesController {
        return ResponseEntity.ok(saleService.completeSale(sale));
     }
 	
+	@RequestMapping(path="customer/salesum/{id}",method = RequestMethod.GET)
+	public ResponseEntity<?> getAgentSaleSum(@PathVariable("id") String id){
+		return ResponseEntity.ok(saleService.getAgentSaleSums(id));
+	}
+	
+	@RequestMapping(path="agent/salesum/{id}",method = RequestMethod.GET)
+	public ResponseEntity<?> getCustomerSaleSum(@PathVariable("id") String id){
+		return ResponseEntity.ok(saleService.getCustomerSaleSums(id));
+	}
+		
 }

@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.fredastone.pandacore.azure.IAzureOperations;
@@ -24,11 +25,13 @@ import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
+import com.fredastone.pandacore.models.CustomerModel;
 import com.fredastone.pandacore.models.FileResponse;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.CustomerService;
 import com.fredastone.pandacore.service.StorageService;
+import com.fredastone.pandacore.service.UserService;
 import com.microsoft.azure.storage.StorageException;
 
 @Service
@@ -41,15 +44,17 @@ public class CustomerServiceImpl implements CustomerService {
 	private UserRepository userDao;
 	private IAzureOperations azureOperations;
 	private StorageService storageService;
+	private UserService userService;
 
 	@Autowired
 	public CustomerServiceImpl( CustomerMetaRepository customerMetaDao,UserRepository userDao,
-			StorageService storageService,IAzureOperations azureOperations) {
+			StorageService storageService,IAzureOperations azureOperations, UserService userService) {
 		// TODO Auto-generated constructor stub
 		this.customerMetaDao = customerMetaDao;
 		this.storageService = storageService;
 		this.userDao = userDao;
 		this.azureOperations = azureOperations;
+		this.userService = userService;
 	}
 
 
@@ -66,6 +71,60 @@ public class CustomerServiceImpl implements CustomerService {
 		
 	}
 
+	@Transactional
+	@Override
+	public CustomerMeta addMobileCustomer(CustomerModel customerModel) throws InvalidKeyException, MalformedURLException {
+		
+		Optional<User> user = userDao.findByPrimaryphone(customerModel.getPrimaryphone());
+		
+		if(user.isPresent() && user.get().getUsertype().equals(UserType.CUSTOMER.toString())) {
+			throw new RuntimeException("Phone number "+customerModel.getPrimaryphone()+" is used by another customer");
+		}
+		
+		Optional<User> user1 = userDao.findByEmail(customerModel.getEmail());
+		
+		if(user1.isPresent() && user1.get().getUsertype().equals(UserType.CUSTOMER.toString())) {
+			throw new RuntimeException("Email "+customerModel.getEmail()+" is used by another customer");
+		}
+		
+		Optional<CustomerMeta> customerMeta = customerMetaDao.findByidnumber(customerModel.getIdnumber());
+		
+		if(customerMeta.isPresent()) {
+			throw new RuntimeException("ID with number "+customerModel.getIdnumber()+" is used by another customer");
+		}
+		
+		User user2 = new User();
+		
+		user2.setCompanyemail(customerModel.getCompanyemail());
+		user2.setDateofbirth(customerModel.getDateofbirth());
+		user2.setEmail(customerModel.getEmail());
+		user2.setFirstname(customerModel.getFirstname());
+		user2.setLastname(customerModel.getLastname());
+		user2.setMiddlename(customerModel.getMiddlename());
+		user2.setPassword(customerModel.getPassword());
+		user2.setUsername(customerModel.getUsername());
+		user2.setUsertype(customerModel.getUsertype().toString());
+		user2.setPrimaryphone(customerModel.getPrimaryphone());
+		
+		CustomerMeta cust = new CustomerMeta();
+		
+		cust.setAddress(customerModel.getAddress());
+		cust.setConsentformpath(customerModel.getConsentformpath());
+		cust.setHomelat(customerModel.getHomelat());
+		cust.setHomelong(customerModel.getHomelong());
+		cust.setIdnumber(customerModel.getIdnumber());
+		cust.setIdtype(customerModel.getIdtype());
+		cust.setProfilephotopath("");
+		cust.setSecondaryemail(customerModel.getSecondaryemail());
+		cust.setSecondaryphone(customerModel.getSecondaryphone());
+		cust.setVillageid(customerModel.getVillageid());
+		
+		cust.setUserid(userService.addUser(user2).getId());;
+		
+		return addCustomerMeta(cust);
+	}
+
+	
 	@Override
 	public Optional<User> getCustomer(String id) {
 		

@@ -301,16 +301,15 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
 		
-		/*
-		 * Optional<Sale> sale = saleRepository.findById(saleId);
-		 * 
-		 * if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
-		 * 
-		 * if( sale.get().getSaletype().equals("Direct") || sale.get().isIsreviewed() ==
-		 * Boolean.FALSE ) { throw new
-		 * RuntimeException("Sale does not qualify for this operation"); }
-		 * 
-		 * sale.get().setIsreviewed(Boolean.TRUE); sale.get().setSalestatus(saleStatus);
+		  Optional<Sale> sale = saleRepository.findById(saleId);
+		  
+		  if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
+		  
+		  if( sale.get().getSaletype().equals("Direct")) { 
+			  throw new RuntimeException("Sale does not qualify for this operation"); 
+		  }
+		  
+		 /* sale.get().setIsreviewed(Boolean.TRUE); sale.get().setSalestatus(saleStatus);
 		 * 
 		 * final ApprovalReview review = ApprovalReview.builder() .createdon(new Date())
 		 * .itemid(saleId) .reviewtype(6) .review(reviewDescription).build();

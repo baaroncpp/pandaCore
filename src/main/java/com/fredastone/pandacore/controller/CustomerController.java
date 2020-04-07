@@ -30,6 +30,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.constants.CustomerUploadType;
 import com.fredastone.pandacore.entity.CustomerMeta;
+import com.fredastone.pandacore.models.CustomerModel;
 import com.fredastone.pandacore.service.CustomerService;
 import com.microsoft.azure.storage.StorageException;
 
@@ -44,6 +45,11 @@ public class CustomerController {
 	public CustomerController(CustomerService customerService) {
 		this.customerService = customerService;
 		
+	}
+	
+	@RequestMapping(path="add/mobile",method = RequestMethod.POST)
+	public ResponseEntity<?> addMobileCustomer(@Valid @NotNull @RequestBody CustomerModel customerModel) throws InvalidKeyException, MalformedURLException{
+		return ResponseEntity.ok(customerService.addMobileCustomer(customerModel));
 	}
 	
 	@RequestMapping(path="add",method = RequestMethod.POST)

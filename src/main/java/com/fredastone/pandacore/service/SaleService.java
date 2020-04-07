@@ -1,6 +1,7 @@
 package com.fredastone.pandacore.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
@@ -26,4 +27,7 @@ public interface SaleService {
 		
 	List<SaleModel> getAllSales(int page,int count, String sortby,Direction sortOrder);
 	List<SaleModel> getAllSalesByAgentId(String agentId,int page,int count,String sortBy,Direction orderBy);
+	
+	public Map<String, Integer> getAgentSaleSums(String agentId);
+	public Map<String, Integer> getCustomerSaleSums(String customerId);
 }

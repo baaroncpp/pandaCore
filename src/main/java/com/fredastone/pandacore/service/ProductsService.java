@@ -1,6 +1,7 @@
 package com.fredastone.pandacore.service;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.Optional;
@@ -19,7 +20,7 @@ public interface ProductsService {
 	Product updateProduct(Product p);
 	Optional<Product> getProduct(String id);
 	Optional<Product> getProductByName(String name);
-	Iterable<Product> getAllProducts();
+	Iterable<Product> getAllProducts()throws InvalidKeyException, MalformedURLException;
 	FileResponse uploadProductImage(MultipartFile file,  RedirectAttributes redirectAttributes,String productId) throws URISyntaxException, IOException, StorageException, InvalidKeyException;
 	Resource getProductImage(String productId);
 	Product getProductBySerial(String serial);

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
@@ -298,12 +299,19 @@ public class CustomerServiceImpl implements CustomerService {
 
 
 	@Override
-	public Page<CustomerMeta> getAllCustomerMeta(int page,int size,String sortBy,Direction sortOrder) {
+	public List<CustomerMeta> getAllCustomerMeta(int page,int size,String sortBy,Direction sortOrder) {
 		
 		final org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size,Sort.by(sortOrder,sortBy));
 		Page<CustomerMeta> custMeta = customerMetaDao.findAll(pageable);
+		
+		List<CustomerMeta> result = new ArrayList<>();
+		
+		for(CustomerMeta object : custMeta) {
+			object.setProfilephotopath(azureOperations.getProfile(object.getIdnumber()));
+			result.add(object);
+		}
 		// TODO Auto-generated method stub
-		return custMeta;
+		return result;
 	}
 
 }

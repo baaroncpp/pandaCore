@@ -94,7 +94,6 @@ public class RegionController {
         return ResponseEntity.ok(d);
     }
     
-    
     @RequestMapping(path="subcounty/add",params= {"county","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<?> addNewSubCounty(
@@ -105,8 +104,6 @@ public class RegionController {
     		@RequestParam("name") String name) {
     	
     	Subcounty d = Subcounty.builder().name(name).countyid(county).build();
-    	
-    
     	
     	d = subCountyRepository.save(d);
     	
@@ -129,7 +126,6 @@ public class RegionController {
         return ResponseEntity.ok(p);
     }
     
-    
     @RequestMapping(path="village/add",params= {"parish","name"},method = RequestMethod.POST)
     //@PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<?> addNewVillage(
@@ -149,12 +145,13 @@ public class RegionController {
         return ResponseEntity.ok(v);
     }
     
+    @RequestMapping(path="village/get/all",method = RequestMethod.GET)
+    public ResponseEntity<?> getAllVillages(){
+    	return ResponseEntity.ok(villageRepository.findAll());
+    }
     
     @RequestMapping(path="district/add/review",params= {"id","action"},method = RequestMethod.PUT)
-    public ResponseEntity<?> addDistrictForReview(
-    		@Valid @NotNull
-    		 @RequestParam("id") int id,@Valid @NotNull @RequestParam("action") String action
-    		) {
+    public ResponseEntity<?> addDistrictForReview(@Valid @NotNull @RequestParam("id") int id,@Valid @NotNull @RequestParam("action") String action) {
     	
     	Optional<District> d = districtRepository.findById(id);
     	if(!d.isPresent()) {
@@ -162,15 +159,15 @@ public class RegionController {
     	}
     	
     	switch (action) {
-		case RegionController.APPROVE_ACTION:
-			d.get().setReview(Boolean.FALSE);
-			break;
-			
-		case RegionController.REJECT_ACTION:
-			//Not sure how to handle this yet
-
-		default:
-			break;
+			case RegionController.APPROVE_ACTION:
+				d.get().setReview(Boolean.FALSE);
+				break;
+				
+			case RegionController.REJECT_ACTION:
+				//Not sure how to handle this yet
+	
+			default:
+				break;
 		}
     	final District k = districtRepository.save(d.get());
     	
@@ -204,5 +201,4 @@ public class RegionController {
         return ResponseEntity.ok(regionRepositoryCu.getVillages(parishid));
     }
     
-	
 }

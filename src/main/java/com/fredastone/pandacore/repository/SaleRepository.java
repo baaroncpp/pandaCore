@@ -30,11 +30,11 @@ public interface SaleRepository extends PagingAndSortingRepository<Sale, String>
 	@Query("Select s from Sale s where s.customerid = :customerid")
 	List<Sale> findAllByCustomerid(@Param("customerid") String customerId, Pageable pageable);
 	
-	@Query("Select s from Sale s where customerid = :customerid and saletype = :saletype")
-	List<Sale> findAllBycustomerid(@Param("customerid")String customerid, @Param("saletype") String saletype);
+	@Query("Select s from Sale s where s.customerid = :customerid and s.saletype = :saletype")
+	List<Sale> findAllByCustomeridAndSaletype(@Param("customerid")String customerid, @Param("saletype") String saletype);
 	
-	@Query("Select s from Sale s where agentid = :agentid and saletype = :saletype")
-	List<Sale> findAllByagentid(@Param("agentid") String agentid, @Param("saletype")String saletype);
+	@Query("Select s from Sale s where s.agentid = :agentid and s.saletype = :saletype")
+	List<Sale> findAllByAgentidAndSaletype(@Param("agentid") String agentid, @Param("saletype")String saletype);
 	
 }
 

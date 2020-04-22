@@ -1,8 +1,11 @@
 package com.fredastone.pandacore.service.impl;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,8 +82,15 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
-	public Iterable<Product> getAllProducts() {
-		return productDao.findAll();
+	public Iterable<Product> getAllProducts() throws InvalidKeyException, MalformedURLException {
+		
+		List<Product> result = new ArrayList<>();
+		
+		for(Product object : productDao.findAll()) {
+			object.setThumbnail(azureOperations.getProductPicture(object.getId()));
+			result.add(object);
+		}		
+		return result;
 	}
 
 	@Override

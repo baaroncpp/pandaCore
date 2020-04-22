@@ -42,5 +42,10 @@ public class UploadLinksController {
         return ResponseEntity.ok(operations.getAgentUploadLinks(id));
     }
     
+    @RequestMapping(path="product/{id}",method = RequestMethod.GET)
+    public ResponseEntity<?> getProductUploadLink(@PathVariable("id") String id) throws InvalidKeyException, MalformedURLException{
+    	return ResponseEntity.ok(operations.getProductUploadLinks(id));
+    }
+    
 
 }

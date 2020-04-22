@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.PayGoProductStatus;
 import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.constants.TokenTypes;
@@ -111,6 +112,7 @@ public class SaleServiceImpl implements SaleService {
 	private LeaseSaleDetailRepository lsdDao;
 	private CustomerMetaRepository customerMetaRepository; 
 	private PayGoProductRepository payGoRepo;
+	private IAzureOperations azureOperations;
 	
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
@@ -119,7 +121,7 @@ public class SaleServiceImpl implements SaleService {
 	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
 			ProductsRepository productDao,LeaseOfferRepository leaseOfferDao,LeaseRepository leaseDao,
 			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao,
-			LeaseSaleDetailRepository lsdDao, PayGoProductRepository payGoRepo) {
+			LeaseSaleDetailRepository lsdDao, PayGoProductRepository payGoRepo, IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -133,6 +135,7 @@ public class SaleServiceImpl implements SaleService {
 		this.lsdDao = lsdDao;
 		this.customerMetaRepository = customerMetaRepository;
 		this.payGoRepo = payGoRepo;
+		this.azureOperations = azureOperations;
 	}
 	
 	@Transactional
@@ -464,12 +467,12 @@ public class SaleServiceImpl implements SaleService {
 		
 		Optional<User> user = userDao.findById(customerId);		
 		if(!user.isPresent()) {
-			throw new RuntimeException("Aget does not exist");
+			throw new RuntimeException("Agent does not exist");
 		}
 		
 		Map<String, Integer> result = new HashMap<>();
 		
-		List<Sale> directSales = saleDao.findAllBycustomerid(customerId, "Direct");
+		List<Sale> directSales = saleDao.findAllByCustomeridAndSaletype(customerId, "Direct");
 		
 		if(!directSales.isEmpty()) {
 			result.put("DIRECT", directSales.size());
@@ -477,7 +480,7 @@ public class SaleServiceImpl implements SaleService {
 			result.put("DIRECT", 0);
 		}
 		
-		List<Sale> leaseSales = saleDao.findAllBycustomerid(customerId, "Lease");
+		List<Sale> leaseSales = saleDao.findAllByCustomeridAndSaletype(customerId, "Lease");
 		
 		if(!leaseSales.isEmpty()) {
 			result.put("LEASE", leaseSales.size());
@@ -498,7 +501,7 @@ public class SaleServiceImpl implements SaleService {
 		
 		Map<String, Integer> result = new HashMap<>();
 		
-		List<Sale> directSales = saleDao.findAllByagentid(agentId, "Direct");
+		List<Sale> directSales = saleDao.findAllByAgentidAndSaletype(agentId, "Direct");
 		
 		if(!directSales.isEmpty()) {
 			result.put("DIRECT", directSales.size());
@@ -506,7 +509,7 @@ public class SaleServiceImpl implements SaleService {
 			result.put("DIRECT", 0);
 		}
 		
-		List<Sale> leaseSales = saleDao.findAllByagentid(agentId, "Lease");
+		List<Sale> leaseSales = saleDao.findAllByAgentidAndSaletype(agentId, "Lease");
 		
 		if(!leaseSales.isEmpty()) {
 			result.put("LEASE", leaseSales.size());
@@ -525,10 +528,15 @@ public class SaleServiceImpl implements SaleService {
 			throw new ItemNotFoundException(sale.getAgentid());
 		}
 		
+		agent.get().setProfilepath(azureOperations.getProfile(sale.getAgentid()));
+		
+		
 		Optional<CustomerMeta> customer = customerMetaRepository.findById(sale.getCustomerid());
 		if(!customer.isPresent()){
 			throw new ItemNotFoundException(sale.getCustomerid());
 		}
+		
+		customer.get().setProfilephotopath(azureOperations.getProfile(sale.getCustomerid()));
 		
 		Optional<Product> product = productDao.findById(sale.getProductid());
 		if(!product.isPresent()){

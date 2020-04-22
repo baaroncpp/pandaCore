@@ -39,5 +39,10 @@ public class PayGoProductController {
 	public ResponseEntity<?> productIsAvailable(@Valid @PathVariable("serial") String tokenSerial){
 		return ResponseEntity.ok(payGoProductService.isPayGoPayGoProductAvailable(tokenSerial));
 	}
+	
+	@RequestMapping(path="paygo/stock",method = RequestMethod.GET)
+	public ResponseEntity<?> getStockValue(){
+		return ResponseEntity.ok(payGoProductService.getPayGoStockValues());
+	}
 
 }

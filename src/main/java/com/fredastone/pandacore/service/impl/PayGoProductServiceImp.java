@@ -1,6 +1,8 @@
 package com.fredastone.pandacore.service.impl;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import com.fredastone.pandacore.models.PayGoProductModel;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.PayGoProductRepository;
 import com.fredastone.pandacore.service.PayGoProductService;
+import com.fredastone.pandacore.models.StockProduct;
 
 @Service
 public class PayGoProductServiceImp implements PayGoProductService {
@@ -34,6 +37,12 @@ public class PayGoProductServiceImp implements PayGoProductService {
 		
 		if(!leaseOffer.isPresent()) {
 			throw new ItemNotFoundException(String.valueOf(payGoProductModel.getLeaseOfferid()));
+		}
+		
+		Optional<PayGoProduct> payGo = payGoProductRepository.findById(payGoProductModel.getTokenSerialNumber());
+		
+		if(payGo.isPresent()){
+			throw new RuntimeException("PayGo product with serial number "+payGoProductModel.getTokenSerialNumber()+" already exists");
 		}
 		
 		PayGoProduct payGoProduct = new PayGoProduct();
@@ -97,6 +106,33 @@ public class PayGoProductServiceImp implements PayGoProductService {
 			throw new ItemNotFoundException(serialToken);
 		}
 		return payGoProduct.get();
+	}
+	
+	@Override
+	public long countPayGoByStatus(PayGoProductStatus status, int leaseOfferid) {
+		
+		Optional<LeaseOffer> leaseOffer = leaseOfferRepository.findById(10);
+		LeaseOffer lo = leaseOffer.get();
+		
+		return payGoProductRepository.countByPayGoProductStatusAndLeaseOffer(PayGoProductStatus.AVAILABLE, lo);
+	}
+	
+	@Override
+	public List<StockProduct> getPayGoStockValues(){
+		
+		List<StockProduct> result = new ArrayList<>();
+		
+		Iterable<LeaseOffer> leaseOffers = leaseOfferRepository.findAll();
+		
+		for(LeaseOffer object : leaseOffers) {
+			StockProduct stockProduct = new StockProduct();
+			stockProduct.setLeaseOffer(object);
+			//stockProduct.setStockValue(countPayGoByStatus(PayGoProductStatus.AVAILABLE, object.getId()));
+			stockProduct.setStockValue((long) 10);
+			result.add(stockProduct);
+		}
+		
+		return result;
 	}
 
 }

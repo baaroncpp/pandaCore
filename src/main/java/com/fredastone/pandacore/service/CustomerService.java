@@ -25,7 +25,7 @@ public interface CustomerService {
 	CustomerMeta updateCustomerMeta(CustomerMeta customerMeta);
 	Optional<User> getCustomer(String id);
 	CustomerMeta getCustomerMeta(String id);
-	Page<CustomerMeta> getAllCustomerMeta(int page, int count, String sortBy, Direction sortOrder);
+	List<CustomerMeta> getAllCustomerMeta(int page, int count, String sortBy, Direction sortOrder);
 
 	//Page<User> getAllActiveCustomers(boolean status,int size,int page);
 	

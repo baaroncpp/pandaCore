@@ -2,6 +2,8 @@ package com.fredastone.pandacore.service.impl;
 
 import java.net.MalformedURLException;
 import java.security.InvalidKeyException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,7 +55,12 @@ public class UploadLinksServiceImpl implements UploadLinksService {
 		
 		return links;
 	}
-	
-	
 
+	@Override
+	public Map<String, String> getProductUploadLinks(String productId) throws InvalidKeyException, MalformedURLException {
+		Map<String, String> result = new HashMap<>();
+		result.put("productImagePath", azureOperations.getProductPicture(productId));
+		return result;
+	}
+	
 }

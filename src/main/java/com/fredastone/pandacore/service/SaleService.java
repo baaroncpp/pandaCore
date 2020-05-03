@@ -28,6 +28,8 @@ public interface SaleService {
 	List<SaleModel> getAllSales(int page,int count, String sortby,Direction sortOrder);
 	List<SaleModel> getAllSalesByAgentId(String agentId,int page,int count,String sortBy,Direction orderBy);
 	
+	List<SaleModel> mobileUserGetSales(String userId,int page,int count,String sortBy,Direction orderBy);
+	
 	public Map<String, Integer> getAgentSaleSums(String agentId);
 	public Map<String, Integer> getCustomerSaleSums(String customerId);
 }

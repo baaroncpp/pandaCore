@@ -308,6 +308,9 @@ public class CustomerServiceImpl implements CustomerService {
 		
 		for(CustomerMeta object : custMeta) {
 			object.setProfilephotopath(azureOperations.getProfile(object.getIdnumber()));
+			object.setConsentformpath(azureOperations.getCustConsent(object.getIdnumber()));
+			object.setIdcopypath(azureOperations.getIdCopy(object.getIdnumber()));
+			object.setHousephotopath(azureOperations.getHousePhotoPath(object.getIdnumber()));
 			result.add(object);
 		}
 		// TODO Auto-generated method stub

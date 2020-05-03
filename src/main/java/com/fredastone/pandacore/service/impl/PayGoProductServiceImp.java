@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fredastone.pandacore.constants.PayGoProductStatus;
 import com.fredastone.pandacore.entity.LeaseOffer;
@@ -109,12 +110,21 @@ public class PayGoProductServiceImp implements PayGoProductService {
 	}
 	
 	@Override
+	@Transactional 
 	public long countPayGoByStatus(PayGoProductStatus status, int leaseOfferid) {
 		
-		Optional<LeaseOffer> leaseOffer = leaseOfferRepository.findById(10);
+		List<PayGoProduct> result = new ArrayList<>();
+		Optional<LeaseOffer> leaseOffer = leaseOfferRepository.findById(leaseOfferid);
 		LeaseOffer lo = leaseOffer.get();
 		
-		return payGoProductRepository.countByPayGoProductStatusAndLeaseOffer(PayGoProductStatus.AVAILABLE, lo);
+		List<PayGoProduct> payGos = payGoProductRepository.findAllByLeaseOffer(lo);
+		
+		for(PayGoProduct object : payGos) {
+			if(object.getPayGoProductStatus() == status) {
+				result.add(object);
+			}
+		}
+		return result.size();
 	}
 	
 	@Override
@@ -127,8 +137,8 @@ public class PayGoProductServiceImp implements PayGoProductService {
 		for(LeaseOffer object : leaseOffers) {
 			StockProduct stockProduct = new StockProduct();
 			stockProduct.setLeaseOffer(object);
-			//stockProduct.setStockValue(countPayGoByStatus(PayGoProductStatus.AVAILABLE, object.getId()));
-			stockProduct.setStockValue((long) 10);
+			stockProduct.setStockValue(countPayGoByStatus(PayGoProductStatus.AVAILABLE, object.getId()));
+			//stockProduct.setStockValue((long) 10);
 			result.add(stockProduct);
 		}
 		

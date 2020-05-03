@@ -92,7 +92,7 @@ public class UserController {
     
     @RequestMapping(path="get/androiduser",method = RequestMethod.GET)
     public ResponseEntity<?> getAndroidUser(HttpServletRequest request){
-    	final String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+    	String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
     	return ResponseEntity.ok(userService.getUserById(id));
     }
     

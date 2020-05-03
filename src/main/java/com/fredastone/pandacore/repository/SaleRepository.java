@@ -24,6 +24,10 @@ public interface SaleRepository extends PagingAndSortingRepository<Sale, String>
 
 	@Query("Select s from Sale s where agentid = :agentid")
 	Page<Sale> findAllSaleByAgentId(@Param("agentid") String agentid, Pageable pageable);
+	
+	List<Sale> findAllByAgentid(String agentid);
+	
+	List<Sale> findAllByCustomerid(String customerid);
 
 	Optional<Sale> findByScannedserial(String serial);
 	

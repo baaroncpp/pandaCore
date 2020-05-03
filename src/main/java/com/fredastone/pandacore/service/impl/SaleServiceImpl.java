@@ -23,6 +23,7 @@ import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.PayGoProductStatus;
 import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.constants.TokenTypes;
+import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.Lease;
@@ -63,7 +64,7 @@ import com.fredastone.pandasolar.token.TokenOperation;
 @Transactional
 @Service
 public class SaleServiceImpl implements SaleService {
-	
+
 	@Value("${notification.exchange.name}")
 	private String notificationExchange;
 
@@ -78,28 +79,28 @@ public class SaleServiceImpl implements SaleService {
 
 	@Value("${notification.routing.email.key}")
 	private String emailRoutingKey;
-	
+
 	@Value("${notification.message.newdirecttoken}")
 	private String directSaleTokenMsg;
-	
+
 	@Value("${notification.message.newtoken.send}")
 	private String isSendDirectTokenMsg;
-	
+
 	@Value("${notification.message.newtokensubject}")
 	private String directSaleTokenMsgSubj;
-	
+
 	@Value("${notification.message.leasetokennewmessage}")
 	private String leaseTokenNewMsg;
-	
+
 	@Value("${notification.message.leasetokensubject}")
 	private String leaseTokenNewSubj;
-	
+
 	@Value("${leasefirsttokendays}")
 	private int leaseFirstTokenDays;
 
 	@Autowired
-	private RabbitTemplate rabbitTemplate;	
-	
+	private RabbitTemplate rabbitTemplate;
+
 	private SaleRollbackRepository rollbackDao;
 	private SaleRepository saleDao;
 	private ProductsRepository productDao;
@@ -110,18 +111,19 @@ public class SaleServiceImpl implements SaleService {
 	private TotalLeasePaymentsRepository totalLeaseRepayDao;
 	private UserRepository userDao;
 	private LeaseSaleDetailRepository lsdDao;
-	private CustomerMetaRepository customerMetaRepository; 
+	private CustomerMetaRepository customerMetaRepository;
 	private PayGoProductRepository payGoRepo;
 	private IAzureOperations azureOperations;
-	
+
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
-	
+
 	@Autowired
-	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,SaleRepository saleDao,AgentMetaRepository agentDao,
-			ProductsRepository productDao,LeaseOfferRepository leaseOfferDao,LeaseRepository leaseDao,
-			TokenRepository saleTokenDao,TotalLeasePaymentsRepository totalLeaseRepayDao,UserRepository userDao,
-			LeaseSaleDetailRepository lsdDao, PayGoProductRepository payGoRepo, IAzureOperations azureOperations) {
+	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,
+			SaleRepository saleDao, AgentMetaRepository agentDao, ProductsRepository productDao,
+			LeaseOfferRepository leaseOfferDao, LeaseRepository leaseDao, TokenRepository saleTokenDao,
+			TotalLeasePaymentsRepository totalLeaseRepayDao, UserRepository userDao, LeaseSaleDetailRepository lsdDao,
+			PayGoProductRepository payGoRepo, IAzureOperations azureOperations) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -137,97 +139,97 @@ public class SaleServiceImpl implements SaleService {
 		this.payGoRepo = payGoRepo;
 		this.azureOperations = azureOperations;
 	}
-	
+
 	@Transactional
 	@Override
 	public Sale recoredNewDirectSale(Sale sale) {
-		
-		//Retrieve the product that is being sold
-		//Optional<Product> product = productDao.findById(sale.getProductid());
+
+		// Retrieve the product that is being sold
+		// Optional<Product> product = productDao.findById(sale.getProductid());
 		Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
-		
-		if(!product.isPresent() || !product.get().getIsActive()) {
+
+		if (!product.isPresent() || !product.get().getIsActive()) {
 			throw new ProductNotFoundException(sale.getProductid());
 		}
-		
-		//Get the agent making this sale
+
+		// Get the agent making this sale
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
-		
-		if(!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
+
+		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
 			throw new AgentNotFoundException(sale.getAgentid());
 		}
-		
-		final float agentCommissionRate = (float)agent.get().getAgentcommissionrate()/100;
-		
-		//Get the total amount to be paid
-		float totalAmount = product.get().getUnitcostselling()*sale.getQuantity();
+
+		final float agentCommissionRate = (float) agent.get().getAgentcommissionrate() / 100;
+
+		// Get the total amount to be paid
+		float totalAmount = product.get().getUnitcostselling() * sale.getQuantity();
 		float agentCommission = totalAmount * agentCommissionRate;
-		
+
 		sale.setAgentcommission(agentCommission);
 		sale.setAmount(totalAmount);
 		sale.setSalestatus((short) ServiceConstants.PENDING_APPROVAL);
 		sale.setProductid(product.get().getId());
-		
+
 		sale.setId(ServiceUtils.getUUID());
 		sale.setSaletype(DIRECT_SALE);
-		
-		
+
 		return saleDao.save(sale);
 	}
-	
+
 	@Transactional
 	@Override
-	public LeaseSale recoredNewLeaseSale(int leaseOfferId, String agentid, String customerid, float cord_lat, float cord_long, String scannedserial) {
-		
+	public LeaseSale recoredNewLeaseSale(int leaseOfferId, String agentid, String customerid, float cord_lat,
+			float cord_long, String scannedserial) {
+
 		Optional<LeaseOffer> leaseOffer = leaseOfferDao.findById(leaseOfferId);
-		
-		if(!leaseOffer.isPresent() || !leaseOffer.get().isIsactive()) {
+
+		if (!leaseOffer.isPresent() || !leaseOffer.get().isIsactive()) {
 			throw new LeaseOfferNotFoundException();
 		}
-		
-		final Product product = leaseOffer.get().getProduct();		
-		
-		//Retrieve the product that is being sold
-		if(!product.getIsActive()) {
+
+		final Product product = leaseOffer.get().getProduct();
+
+		// Retrieve the product that is being sold
+		if (!product.getIsActive()) {
 			throw new ProductNotFoundException(product.getId());
 		}
-		
-		//Get the agent making this sale
+
+		// Get the agent making this sale
 		Optional<AgentMeta> agent = agentDao.findById(agentid);
-		
-		if(!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
+
+		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
 			throw new AgentNotFoundException(agent.get().getUserid());
 		}
-		
+
 		Optional<CustomerMeta> customerMeta = customerMetaRepository.findById(customerid);
-		
-		if(!customerMeta.isPresent()) {
-			throw new RuntimeException("Customer of ID :"+customerid+" does not exist");
+
+		if (!customerMeta.isPresent()) {
+			throw new RuntimeException("Customer of ID :" + customerid + " does not exist");
 		}
-		
-		
-		//For lease payments .. important are 
+
+		// For lease payments .. important are
 		// initial deposit
 		// coupon if any -- not processing this right now
 		// unit cost
 		// percent markup
 		// lease period
-		
-		final float agentCommissionRate = (float)agent.get().getAgentcommissionrate()/100;
-		
-		//Get the total amount to be paid
+
+		final float agentCommissionRate = (float) agent.get().getAgentcommissionrate() / 100;
+
+		// Get the total amount to be paid
 		final float agentCommission = product.getUnitcostselling() * agentCommissionRate;
-		
-		//Get mark up on sale
-		final float markup = product.getUnitcostselling() * ((float)leaseOffer.get().getPercentlease()/100);
+
+		// Get mark up on sale
+		final float markup = product.getUnitcostselling() * ((float) leaseOffer.get().getPercentlease() / 100);
 
 		float totalAmount = product.getUnitcostselling() + markup;
-		
-		//Get the daily payment to be made
-		final float dailypayment = (float)(totalAmount-leaseOffer.get().getIntialdeposit())/leaseOffer.get().getLeaseperiod();
-		
+
+		// Get the daily payment to be made
+		final float dailypayment = (float) (totalAmount - leaseOffer.get().getIntialdeposit())
+				/ leaseOffer.get().getLeaseperiod();
+
 		final String id = ServiceUtils.getUUID();
-		
+
 		Lease lease = new Lease();
 		lease.setId(id);
 		lease.setCustomerid(customerid);
@@ -238,15 +240,15 @@ public class SaleServiceImpl implements SaleService {
 		lease.setSaleagentid(agentid);
 		lease.setTotalleaseperiod(leaseOffer.get().getLeaseperiod());
 		lease.setTotalleasevalue(totalAmount);
-		lease.setExpectedfinishdate(Date.from(LocalDate.now().plusDays(leaseOffer.get().
-				getLeaseperiod()).atStartOfDay(ZoneId.systemDefault()).toInstant()));
-		
+		lease.setExpectedfinishdate(Date.from(LocalDate.now().plusDays(leaseOffer.get().getLeaseperiod())
+				.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
 		Sale sale = new Sale();
-		
+
 		sale.setAgentcommission(agentCommission);
 		sale.setAmount(totalAmount);
 		sale.setSalestatus((short) ServiceConstants.PENDING_APPROVAL);
-		
+
 		sale.setId(id);
 		sale.setSaletype(LEASE_SALE);
 		sale.setAgentid(agentid);
@@ -256,12 +258,12 @@ public class SaleServiceImpl implements SaleService {
 		sale.setLong_(cord_long);
 		sale.setScannedserial(scannedserial);
 		sale.setProductid(lease.getLeaseOffer().getProduct().getId());
-		
+
 		sale = saleDao.save(sale);
 		lease = leaseDao.save(lease);
-		
+
 		return new LeaseSale(sale, lease);
-	
+
 	}
 
 	@Override
@@ -269,97 +271,99 @@ public class SaleServiceImpl implements SaleService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	@Transactional 
+
+	@Transactional
 	@Override
 	public Sale completeSale(String saleId) {
-		
-		//Locate the sale that should be completed and verify that is in pending state
-		Optional<Sale> sale  = saleDao.findById(saleId);
+
+		// Locate the sale that should be completed and verify that is in pending state
+		Optional<Sale> sale = saleDao.findById(saleId);
 		final TokenOperation tokenService = new TokenOperation();
-		
-		if(!sale.isPresent() || sale.get().getSalestatus() != ServiceConstants.PENDING_APPROVAL) {
+
+		if (!sale.isPresent() || sale.get().getSalestatus() != ServiceConstants.PENDING_APPROVAL) {
 			throw new SaleNotFoundException(saleId);
 		}
-		
+
 		final Optional<User> user = userDao.findById(sale.get().getCustomerid());
-		//Sale is availabe and in pending state
+		// Sale is availabe and in pending state
 		sale.get().setSalestatus((short) ServiceConstants.ACCEPTED_APPROVAL);
 		sale.get().setCompletedon(new Date());
 		sale.get().setIsreviewed(Boolean.TRUE);
-		
-		Token saleToken  = new Token();
+
+		Token saleToken = new Token();
 		saleToken.setLeasepaymentid(sale.get().getId());
-		//Generate full unlock for that device
-		//Check if its a direct sale and unlock the device
-		if(sale.get().getSaletype().equals(DIRECT_SALE)) {
-			
-			//TODO: Give this to the queue to send email and SMS message to customer
-			final String token = tokenService.generateGeneralPurposeToken(sale.get().getScannedserial(), CommandNames.CLEAR_LOAN, 1);
-			
+		// Generate full unlock for that device
+		// Check if its a direct sale and unlock the device
+		if (sale.get().getSaletype().equals(DIRECT_SALE)) {
+
+			// TODO: Give this to the queue to send email and SMS message to customer
+			final String token = tokenService.generateGeneralPurposeToken(sale.get().getScannedserial(),
+					CommandNames.CLEAR_LOAN, 1);
+
 			saleToken.setToken(token);
 			saleToken.setType(TokenTypes.OPEN);
 			saleTokenDao.save(saleToken);
-			
-			final Sale s =  saleDao.save(sale.get());
-		
+
+			final Sale s = saleDao.save(sale.get());
+
 			// Notify the user
-			
-			if(isSendDirectTokenMsg.equals("true")) {
-				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(user.get()
-						.getPrimaryphone()).content(String.format(directSaleTokenMsg, token)).build();
-				
-				rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
-				
-			//Move this to private m
-			if(user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
-				notificaton.setType(NotificationType.EMAIL);
-				notificaton.setSubject(directSaleTokenMsgSubj);
-				notificaton.setAddress(user.get().getEmail());
-				 
-					rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notificaton.toString());
-					
+
+			if (isSendDirectTokenMsg.equals("true")) {
+				final Notification notificaton = Notification.builder().type(NotificationType.SMS)
+						.address(user.get().getPrimaryphone()).content(String.format(directSaleTokenMsg, token))
+						.build();
+
+				rabbitTemplate.convertAndSend(notificationExchange, smsRoutingKey, notificaton.toString());
+
+				// Move this to private m
+				if (user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
+					notificaton.setType(NotificationType.EMAIL);
+					notificaton.setSubject(directSaleTokenMsgSubj);
+					notificaton.setAddress(user.get().getEmail());
+
+					rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
+
 				}
-				
+
 			}
-			return s;			
+			return s;
 		}
-		//set product status to sold
+		// set product status to sold
 		Optional<PayGoProduct> payGo = payGoRepo.findById(sale.get().getScannedserial());
-		if(!payGo.isPresent()) {
-			throw new RuntimeException("PayGo with serial number "+sale.get().getScannedserial()+" does not exist");
+		if (!payGo.isPresent()) {
+			throw new RuntimeException("PayGo with serial number " + sale.get().getScannedserial() + " does not exist");
 		}
-		
+
 		PayGoProduct prod = payGo.get();
-		
-		if(prod.getPayGoProductStatus() != PayGoProductStatus.SOLD) {
+
+		if (prod.getPayGoProductStatus() != PayGoProductStatus.SOLD) {
 			prod.setPayGoProductStatus(PayGoProductStatus.SOLD);
 			payGoRepo.save(prod);
-		}else {
-			throw new RuntimeException("PayGo with serial number "+prod.getTokenSerialNumber()+" is already sold");
+		} else {
+			throw new RuntimeException("PayGo with serial number " + prod.getTokenSerialNumber() + " is already sold");
 		}
-		
-		if(sale.get().isIsreviewed() == Boolean.FALSE) {
+
+		if (sale.get().isIsreviewed() == Boolean.FALSE) {
 			throw new RuntimeException("Transaction has not been reviewed");
 		}
-		//Process Leased tickets
+		// Process Leased tickets
 		final Optional<Lease> lease = leaseDao.findById(sale.get().getId());
-		
-		if(!lease.isPresent() || lease.get().isIsactivated() == Boolean.TRUE) {
+
+		if (!lease.isPresent() || lease.get().isIsactivated() == Boolean.TRUE) {
 			throw new SaleNotFoundException(saleId);
 		}
-		
-		
+
 		lease.get().setIsactivated(Boolean.TRUE);
-		
-		//Generate first token, 1 day token
-		final String token = tokenService.generatePaymentToken(sale.get().getScannedserial(), 1, String.valueOf(leaseFirstTokenDays));	
-		
+
+		// Generate first token, 1 day token
+		final String token = tokenService.generatePaymentToken(sale.get().getScannedserial(), 1,
+				String.valueOf(leaseFirstTokenDays));
+
 		saleToken.setType(TokenTypes.PAY);
 		saleToken.setTimes(1);
 		saleToken.setDays(leaseFirstTokenDays);
 		saleToken.setToken(token);
-		
+
 		TotalLeasePayments totalLeasePayments = new TotalLeasePayments();
 		totalLeasePayments.setId(ServiceUtils.getUUID());
 		totalLeasePayments.setTimes(1);
@@ -367,59 +371,60 @@ public class SaleServiceImpl implements SaleService {
 		totalLeasePayments.setNextpaymentdate(new Date());
 		totalLeasePayments.setTotalamountpaid(0);
 		totalLeasePayments.setTotalamountowed(lease.get().getTotalleasevalue() - lease.get().getInitialdeposit());
-		
+
 		saleTokenDao.save(saleToken);
 		leaseDao.save(lease.get());
 		totalLeaseRepayDao.save(totalLeasePayments);
-			
-		final Sale s = saleDao.save(sale.get());
-		
-		//Notify the user
-		final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(user.get()
-				.getPrimaryphone()).content(String.format(leaseTokenNewMsg, user.get().getFirstname(),user.get().getLastname())).build();
 
-		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey, notificaton.toString());
-		
-		//Move this to private method
-		if(user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
+		final Sale s = saleDao.save(sale.get());
+
+		// Notify the user
+		final Notification notificaton = Notification.builder().type(NotificationType.SMS)
+				.address(user.get().getPrimaryphone())
+				.content(String.format(leaseTokenNewMsg, user.get().getFirstname(), user.get().getLastname())).build();
+
+		rabbitTemplate.convertAndSend(notificationExchange, smsRoutingKey, notificaton.toString());
+
+		// Move this to private method
+		if (user.get().getEmail() != null && !user.get().getEmail().isEmpty()) {
 			notificaton.setType(NotificationType.EMAIL);
 			notificaton.setSubject(directSaleTokenMsgSubj);
 			notificaton.setAddress(user.get().getEmail());
-			
-			rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey, notificaton.toString());
-		}		
+
+			rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
+		}
 		return s;
 	}
 
 	@Override
 	public List<SaleModel> getAllSales(int page, int size, String sortby, Direction sortOrder) {
-		
+
 		List<SaleModel> saleModels = new ArrayList<>();
-	
-		final Pageable pageRequest = PageRequest.of(page, size,Sort.by(Direction.DESC,sortby));
+
+		final Pageable pageRequest = PageRequest.of(page, size, Sort.by(Direction.DESC, sortby));
 		Page<Sale> allsorted = saleDao.findAll(pageRequest);
-			
+
 		List<Sale> sales = allsorted.getContent();
-		
-		for(Sale object : sales) {
+
+		for (Sale object : sales) {
 			saleModels.add(convertToSaleModel(object));
 		}
-		
+
 		return saleModels;
 	}
 
 	@Override
 	public Page<Sale> getVerifiedLeaseSale(String agentId, int page, int count, String sortBy, Direction sortOrder) {
-		
-		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(sortOrder,sortBy));
+
+		final Pageable pageRequest = PageRequest.of(page, count, Sort.by(sortOrder, sortBy));
 		Page<Sale> allsorted = saleDao.findAllVerified(agentId, "Lease", pageRequest);
 		return allsorted;
 	}
 
 	@Override
 	public Page<Sale> getUnverifiedleaseSale(String agentId, int page, int count, String sortBy, Direction orderBy) {
-		
-		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderBy,sortBy));
+
+		final Pageable pageRequest = PageRequest.of(page, count, Sort.by(orderBy, sortBy));
 		Page<Sale> allsorted = saleDao.findAllUnverified(agentId, "Lease", pageRequest);
 		return allsorted;
 	}
@@ -427,8 +432,8 @@ public class SaleServiceImpl implements SaleService {
 	@Override
 	public Page<VLeaseSaleDetails> getAllLeaseSaleByReviewStatus(boolean reviewStatus, int page, int count,
 			String sortby, Direction orderby) {
-		
-		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
+
+		final Pageable pageRequest = PageRequest.of(page, count, Sort.by(orderby, sortby));
 		Page<VLeaseSaleDetails> reviewsales = lsdDao.findByisreviewed(reviewStatus, pageRequest);
 		return reviewsales;
 	}
@@ -442,7 +447,7 @@ public class SaleServiceImpl implements SaleService {
 	@Override
 	public Page<VLeaseSaleDetails> getAllLeaseSaleDetail(int page, int count, String sortby, Direction orderby) {
 
-		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
+		final Pageable pageRequest = PageRequest.of(page, count, Sort.by(orderby, sortby));
 		Page<VLeaseSaleDetails> reviewsales = lsdDao.findAll(pageRequest);
 		return reviewsales;
 	}
@@ -450,99 +455,104 @@ public class SaleServiceImpl implements SaleService {
 	@Override
 	public List<SaleModel> getAllSalesByAgentId(String agentid, int page, int count, String sortby, Direction orderby) {
 		List<SaleModel> saleModels = new ArrayList<>();
-		final Pageable pageRequest = PageRequest.of(page, count,Sort.by(orderby,sortby));
-		Page<Sale> sales = saleDao.findAllSaleByAgentId(agentid,pageRequest);
-		
+		final Pageable pageRequest = PageRequest.of(page, count, Sort.by(orderby, sortby));
+		Page<Sale> sales = saleDao.findAllSaleByAgentId(agentid, pageRequest);
+
 		List<Sale> salesList = sales.getContent();
-		
-		for(Sale object : salesList) {
+
+		for (Sale object : salesList) {
 			saleModels.add(convertToSaleModel(object));
 		}
-		
+
 		return saleModels;
 	}
-	
+
 	@Override
-	public Map<String, Integer> getCustomerSaleSums(String customerId){
-		
-		Optional<User> user = userDao.findById(customerId);		
-		if(!user.isPresent()) {
+	public Map<String, Integer> getCustomerSaleSums(String customerId) {
+
+		Optional<User> user = userDao.findById(customerId);
+		if (!user.isPresent()) {
+			throw new RuntimeException("Agent does not exist");
+		}
+
+		Map<String, Integer> result = new HashMap<>();
+
+		List<Sale> directSales = saleDao.findAllByCustomeridAndSaletype(customerId, "Direct");
+
+		if (!directSales.isEmpty()) {
+			result.put("DIRECT", directSales.size());
+		} else {
+			result.put("DIRECT", 0);
+		}
+
+		List<Sale> leaseSales = saleDao.findAllByCustomeridAndSaletype(customerId, "Lease");
+
+		if (!leaseSales.isEmpty()) {
+			result.put("LEASE", leaseSales.size());
+		} else {
+			result.put("LEASE", 0);
+		}
+
+		return result;
+	}
+
+	@Override
+	public Map<String, Integer> getAgentSaleSums(String agentId) {
+
+		int leaseSale = 0;
+		int directSale = 0;
+
+		Optional<User> user = userDao.findById(agentId);
+		if (!user.isPresent()) {
 			throw new RuntimeException("Agent does not exist");
 		}
 		
-		Map<String, Integer> result = new HashMap<>();
+		  List<Sale> sales = saleDao.findAllByAgentid(agentId);
+		  
+		  Map<String, Integer> result = new HashMap<>();
 		
-		List<Sale> directSales = saleDao.findAllByCustomeridAndSaletype(customerId, "Direct");
-		
-		if(!directSales.isEmpty()) {
-			result.put("DIRECT", directSales.size());
-		}else {
-			result.put("DIRECT", 0);
-		}
-		
-		List<Sale> leaseSales = saleDao.findAllByCustomeridAndSaletype(customerId, "Lease");
-		
-		if(!leaseSales.isEmpty()) {
-			result.put("LEASE", leaseSales.size());
-		}else {
-			result.put("LEASE", 0);
-		}		
-		
+		  List<Sale> directSales = saleDao.findAllByAgentidAndSaletype(agentId, "Direct");
+		  
+		  if(!directSales.isEmpty()) {
+			  result.put("DIRECT", directSales.size()); 
+		  }else { 
+			  result.put("DIRECT", 0); 
+		  }
+		  
+		  List<Sale> leaseSales = saleDao.findAllByAgentidAndSaletype(agentId, "Lease");
+		  
+		  if(!leaseSales.isEmpty()) { 
+			  result.put("LEASE", leaseSales.size()); 
+		  }else {
+			  result.put("LEASE", 0); 
+		  }
+		 
 		return result;
 	}
-	
-	@Override
-	public Map<String, Integer> getAgentSaleSums(String agentId){
-		
-		Optional<User> user = userDao.findById(agentId);		
-		if(!user.isPresent()) {
-			throw new RuntimeException("Aget does not exist");
-		}
-		
-		Map<String, Integer> result = new HashMap<>();
-		
-		List<Sale> directSales = saleDao.findAllByAgentidAndSaletype(agentId, "Direct");
-		
-		if(!directSales.isEmpty()) {
-			result.put("DIRECT", directSales.size());
-		}else {
-			result.put("DIRECT", 0);
-		}
-		
-		List<Sale> leaseSales = saleDao.findAllByAgentidAndSaletype(agentId, "Lease");
-		
-		if(!leaseSales.isEmpty()) {
-			result.put("LEASE", leaseSales.size());
-		}else {
-			result.put("LEASE", 0);
-		}
-		return result;
-	}
-	
+
 	public SaleModel convertToSaleModel(Sale sale) {
-		
+
 		SaleModel saleModel = new SaleModel();
-		
+
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
-		if(!agent.isPresent()){
+		if (!agent.isPresent()) {
 			throw new ItemNotFoundException(sale.getAgentid());
 		}
-		
+
 		agent.get().setProfilepath(azureOperations.getProfile(sale.getAgentid()));
-		
-		
+
 		Optional<CustomerMeta> customer = customerMetaRepository.findById(sale.getCustomerid());
-		if(!customer.isPresent()){
+		if (!customer.isPresent()) {
 			throw new ItemNotFoundException(sale.getCustomerid());
 		}
-		
+
 		customer.get().setProfilephotopath(azureOperations.getProfile(sale.getCustomerid()));
-		
+
 		Optional<Product> product = productDao.findById(sale.getProductid());
-		if(!product.isPresent()){
+		if (!product.isPresent()) {
 			throw new ItemNotFoundException(sale.getProductid());
 		}
-		
+
 		saleModel.setAgent(agent.get());
 		saleModel.setCustomer(customer.get());
 		saleModel.setProduct(product.get());
@@ -559,8 +569,29 @@ public class SaleServiceImpl implements SaleService {
 		saleModel.setSalestatus(sale.getSalestatus());
 		saleModel.setSaletype(sale.getSaletype());
 		saleModel.setScannedserial(sale.getScannedserial());
-		
+
 		return saleModel;
+	}
+
+	@Override
+	public List<SaleModel> mobileUserGetSales(String userId, int page, int count, String sortBy, Direction orderBy) {
+		
+		Optional<User> user = userDao.findById(userId);
+		List<SaleModel> result = new ArrayList<>();
+		
+		if(!user.isPresent()) {
+			throw new RuntimeException("user not found");
+		}
+		
+		String userType = user.get().getUsertype();
+		
+		if(userType.equals(UserType.AGENT.name())) {
+			result = getAllSales(page, count, sortBy, orderBy);
+		}else if(userType.equals(UserType.ADMIN.name())) {
+			result = getAllSalesByAgentId(userId, page, count, sortBy, orderBy);
+		}
+		// TODO Auto-generated method stub
+		return result;
 	}
 
 }

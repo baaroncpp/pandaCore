@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.fredastone.pandacore.entity.ApprovalReview;
-;
 
 @Repository
 public interface ApprovalReviewRepository extends CrudRepository<ApprovalReview, String>{

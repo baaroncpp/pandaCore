@@ -5,16 +5,13 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.transaction.Transactional;
-
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
 import com.fredastone.pandacore.constants.TokenTypes;
 import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeasePayment;
@@ -91,7 +88,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			+ "lastpaidamount = :lastpaidamount,totalamountpaid = :totalamountpaid,totalamountowed = :totalamountowed,residueamount = :residueamount,"
 			+ "times = :times WHERE leaseid = :leaseid";
 	
-	private final static  String LEASE_SELECT_QUERY = "SELECT id, iscompleted,isactivate FROM panda_core.t_lease WHERE id = :leaseid AND isactive = TRUE FOR UPDATE";
+	private final static  String LEASE_SELECT_QUERY = "SELECT id, iscompleted,isactivated FROM panda_core.t_lease WHERE id = :leaseid AND isactivated = TRUE FOR UPDATE";
 	
 	private final static String LEASE_UPDATE_QUERY = "UPDATE panda_core.t_lease SET iscompleted = TRUE,paymentcompletedon = now() WHERE id = :leaseid";
 
@@ -132,9 +129,9 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		//Last payment could be divided and 
 		//If last payment, take total owed, put rest in pool for refund
 		boolean isFinalPayment = Boolean.FALSE;
-		if(ttlpayments.getTotalamountowed() <= totalAmount)
+		if(ttlpayments.getTotalamountowed() <= totalAmount) {
 			isFinalPayment = Boolean.TRUE;
-			
+		}
 		
 		if(isFinalPayment)
 		{
@@ -172,9 +169,9 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		leasePaymentDao.save(lp);
 		
 		if(updateTotalPayments(financialInfo.get().getLeaseid(), totalAmount, totalAmount - residueAmount,
-				newOwedAmount, residueAmount,times) < 1)
+				newOwedAmount, residueAmount,times) < 1) {
 			throw new RuntimeException("Failed to update totalPayments");
-		
+		}
 		
 		//Place token on message queue for sending to customer
 		
@@ -318,7 +315,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			Lease l = new Lease();
 			l.setId(rs.getString("id"));
 			l.setIscompleted(rs.getBoolean("iscompleted"));
-			l.setIsactivated(rs.getBoolean("isactive"));
+			l.setIsactivated(rs.getBoolean("isactivated"));
 			
 			return l;
 			

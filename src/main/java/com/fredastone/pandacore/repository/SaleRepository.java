@@ -15,7 +15,6 @@ import com.fredastone.pandacore.entity.Sale;
 @Repository
 public interface SaleRepository extends PagingAndSortingRepository<Sale, String>{
 	
-	
 	@Query("Select s from Sale s where s.isreviewed = false and s.saletype = :saletype and salestatus = 1 and agentid = :agentid")
 	Page<Sale> findAllUnverified(@Param("agentid") String agentid,@Param("saletype") String saletype, Pageable pageable);
 
@@ -25,11 +24,21 @@ public interface SaleRepository extends PagingAndSortingRepository<Sale, String>
 
 	@Query("Select s from Sale s where agentid = :agentid")
 	Page<Sale> findAllSaleByAgentId(@Param("agentid") String agentid, Pageable pageable);
+	
+	List<Sale> findAllByAgentid(String agentid);
+	
+	List<Sale> findAllByCustomerid(String customerid);
 
 	Optional<Sale> findByScannedserial(String serial);
 	
-	@Query("Select s from Sale s where customerid = :customerid")
+	@Query("Select s from Sale s where s.customerid = :customerid")
 	List<Sale> findAllByCustomerid(@Param("customerid") String customerId, Pageable pageable);
-
+	
+	@Query("Select s from Sale s where s.customerid = :customerid and s.saletype = :saletype")
+	List<Sale> findAllByCustomeridAndSaletype(@Param("customerid")String customerid, @Param("saletype") String saletype);
+	
+	@Query("Select s from Sale s where s.agentid = :agentid and s.saletype = :saletype")
+	List<Sale> findAllByAgentidAndSaletype(@Param("agentid") String agentid, @Param("saletype")String saletype);
+	
 }
 

@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +19,7 @@ import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
+import com.fredastone.pandacore.models.ApprovalModel;
 import com.fredastone.pandacore.service.ApprovalService;
 import com.fredastone.security.JwtTokenUtil;
 
@@ -86,6 +86,21 @@ public class ApprovalsController {
 	    final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
 		return ResponseEntity.ok(approvalService.approveUser(approvalId, userid));
 				
+	}
+	
+	@RequestMapping(path = "capex/approve", method = RequestMethod.POST)
+	public ResponseEntity<?> approveCapex(@Valid @RequestBody ApprovalModel approvalModel, HttpServletRequest request){
+		final String approverId = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		System.out.println("user id"+ approverId);
+		approvalModel.setApproverId(approverId);
+		return ResponseEntity.ok(approvalService.approveCapex(approvalModel));
+	}
+	
+	@RequestMapping(path = "opex/approve", method = RequestMethod.POST)
+	public ResponseEntity<?> approveOpex(@Valid @RequestBody ApprovalModel approvalModel, HttpServletRequest request){
+		final String approverId = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		approvalModel.setApproverId(approverId);
+		return ResponseEntity.ok(approvalService.approveOpex(approvalModel));
 	}
 
 	@RequestMapping(path = "approvers/{service}", method = RequestMethod.GET)

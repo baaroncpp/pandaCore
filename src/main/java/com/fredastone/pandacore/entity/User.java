@@ -94,7 +94,7 @@ public class User implements java.io.Serializable {
 	private String primaryphone;
 	
 
-	@Column(name = "companyemail", nullable = false, length = 20)
+	@Column(name = "companyemail", nullable = false, length = 50)
 	private String companyemail;
 	
 	@Temporal(TemporalType.DATE)

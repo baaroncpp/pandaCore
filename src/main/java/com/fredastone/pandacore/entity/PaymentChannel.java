@@ -22,7 +22,6 @@ public class PaymentChannel implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@Id
-
 	@Column(name = "id", unique = true, nullable = false)
 	private short id;
 

@@ -1,11 +1,15 @@
 package com.fredastone.pandacore.service;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.models.LeaseSale;
+import com.fredastone.pandacore.models.SaleModel;
 
 public interface SaleService {
 	
@@ -21,6 +25,11 @@ public interface SaleService {
 	VLeaseSaleDetails getLeaseSaleDetail(String saleid);
 	Page<VLeaseSaleDetails> getAllLeaseSaleDetail(int page,int count,String sortby,Direction orderby);
 		
-	Page<Sale> getAllSales(int page,int count, String sortby,Direction sortOrder);
-	Page<Sale> getAllSalesByAgentId(String agentId,int page,int count,String sortBy,Direction orderBy);
+	List<SaleModel> getAllSales(int page,int count, String sortby,Direction sortOrder);
+	List<SaleModel> getAllSalesByAgentId(String agentId,int page,int count,String sortBy,Direction orderBy);
+	
+	List<SaleModel> mobileUserGetSales(String userId,int page,int count,String sortBy,Direction orderBy);
+	
+	public Map<String, Integer> getAgentSaleSums(String agentId);
+	public Map<String, Integer> getCustomerSaleSums(String customerId);
 }

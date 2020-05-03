@@ -10,6 +10,10 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +30,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fredastone.pandacore.constants.CustomerUploadType;
 import com.fredastone.pandacore.entity.CustomerMeta;
+import com.fredastone.pandacore.models.CustomerModel;
 import com.fredastone.pandacore.service.CustomerService;
 import com.microsoft.azure.storage.StorageException;
 
@@ -40,6 +45,11 @@ public class CustomerController {
 	public CustomerController(CustomerService customerService) {
 		this.customerService = customerService;
 		
+	}
+	
+	@RequestMapping(path="add/mobile",method = RequestMethod.POST)
+	public ResponseEntity<?> addMobileCustomer(@Valid @NotNull @RequestBody CustomerModel customerModel) throws InvalidKeyException, MalformedURLException{
+		return ResponseEntity.ok(customerService.addMobileCustomer(customerModel));
 	}
 	
 	@RequestMapping(path="add",method = RequestMethod.POST)
@@ -65,6 +75,15 @@ public class CustomerController {
 		return ResponseEntity.ok(customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType));
 
 	}
+    
+    @RequestMapping(path="get/all", params = {"page","size","sortby","sortorder" }, method = RequestMethod.GET)
+    public ResponseEntity<?> getAllCustomerMeta(@Valid @RequestParam("sortorder") Direction sortorder,
+									    		@Valid @RequestParam("sortby") String sortby,
+									    		@Valid @RequestParam("page") int page,
+									    		@RequestParam("size") int size){
+    	
+    	return ResponseEntity.ok(customerService.getAllCustomerMeta(page, size, sortby, sortorder));
+    }
 
 //	@GetMapping("/media/{id}")
 //	@ResponseBody

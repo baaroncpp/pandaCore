@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -7,30 +9,36 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.fredastone.pandacore.constants.RoleName;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
+import com.fredastone.pandacore.entity.Capex;
 import com.fredastone.pandacore.entity.EmployeeMeta;
+import com.fredastone.pandacore.entity.Opex;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
+import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.exception.SaleNotFoundException;
+import com.fredastone.pandacore.models.ApprovalModel;
 import com.fredastone.pandacore.models.Notification;
 import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ApprovalReviewRepository;
 import com.fredastone.pandacore.repository.ApproverRepository;
-import com.fredastone.pandacore.repository.ConfigRepository;
-import com.fredastone.pandacore.repository.CustomerMetaRepository;
+import com.fredastone.pandacore.repository.CapexRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
+import com.fredastone.pandacore.repository.OpexRepository;
 import com.fredastone.pandacore.repository.RoleRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.repository.VSaleApprovalReviewRepository;
 import com.fredastone.pandacore.service.ApprovalService;
+import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.pandacore.util.ServiceUtils;
 
 @Service
@@ -60,6 +68,12 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Value("{notification.message.saleapproval}")
 	private String saleApprovalMessage;
 	
+	@Value("{notification.message.capexapproval}")
+	private String capexApprovalMessage;
+	
+	@Value("{notification.message.opexapproval}")
+	private String opexApprovalMessage;
+	
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
@@ -69,11 +83,12 @@ public class ApprovalServiceImpl implements ApprovalService {
 	private EmployeeRepository employeeDao;
 	private AgentMetaRepository agentDao;
 	private VSaleApprovalReviewRepository saleReviewRepo;
-	private ConfigRepository configDao;
 	private RoleRepository roleRepository;
 	private UserRoleRepository userRoleRepository;
-	private CustomerMetaRepository customerMetaRepository;
 	private SaleRepository saleRepository;
+	private CapexRepository capexRepository;
+	private OpexRepository opexRepository;
+	private SaleService saleService;
 	
 	private static final String CUSTOMER_USER_TYPE = "customer";
 	private static final String EMPLOYEE_USER_TYPE = "employee";
@@ -82,28 +97,29 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Autowired
 	public ApprovalServiceImpl(
 			SaleRepository saleRepository,
-			CustomerMetaRepository customerMetaRepository,
 			UserRoleRepository userRoleRepository,
 			RoleRepository roleRepository,
 			ApprovalReviewRepository approvalReviewDao,
 			UserRepository userDao,
 			EmployeeRepository employeeDao,
 			AgentMetaRepository agentDao,
-			ConfigRepository configDao,
 			ApproverRepository approverDao,
-			VSaleApprovalReviewRepository saleReviewRepo) {
+			OpexRepository opexRepository,
+			CapexRepository capexRepository,
+			VSaleApprovalReviewRepository saleReviewRepo, SaleService saleService) {
 		
 		this.approvalReviewDao = approvalReviewDao;
 		this.userDao = userDao;
 		this.employeeDao = employeeDao;
 		this.agentDao = agentDao;
-		this.configDao = configDao;
 		this.approverDao = approverDao;
 		this.saleReviewRepo = saleReviewRepo;
 		this.roleRepository = roleRepository;
 		this.userRoleRepository = userRoleRepository;
-		this.customerMetaRepository = customerMetaRepository;
 		this.saleRepository = saleRepository;
+		this.capexRepository = capexRepository;
+		this.opexRepository = opexRepository;
+		this.saleService = saleService;
 	}
 	
 
@@ -247,76 +263,6 @@ public class ApprovalServiceImpl implements ApprovalService {
 		return userRole;
 	}
 
-/*
-	public UserRole approveUserRole(String approverId, String userRoleId) {
-		
-		Optional<UserRole> userRole = userRoleRepository.findById(userRoleId);
-		
-		if(!userRole.isPresent()) {
-			throw new ItemNotFoundException("");
-		}
-		
-		if(userRole.get().getIsActive()) {
-			throw new RuntimeException("Operation doesn't apply to this item");
-		}
-		
-		userRole.get().setIsActive(Boolean.TRUE);
-		
-		final Approver approver = Approver.builder()
-				.createdon(new Date())
-				.id(ServiceUtils.getUUID())
-				.itemapproved("role")
-				.itemid(String.valueOf(userRole.get().getId()))
-				.userid(approverId).build();
-				
-		
-		approverDao.save(approver);
-		
-		final ApprovalReview review = ApprovalReview.builder()
-				.createdon(new Date())
-				.itemid(String.valueOf(userRole.get().getId()))
-				.reviewtype(5)
-				.review("Approved").build();				
-		
-		this.addApprovalReview(review);
-		
-		return userRole.get();
-	}
-*/
-/*
-	@Override
-	public UserRole removeUserRole(String userRoleId, String approverId) {
-		
-		Optional<UserRole> userRole = userRoleRepository.findById(userRoleId);
-		
-		if(!userRole.isPresent()) {
-			throw new ItemNotFoundException(userRoleId);
-		}
-		
-		userRole.get().setIsActive(Boolean.FALSE);
-		userRoleRepository.save(userRole.get());
-		
-		final Approver approver = Approver.builder()
-				.createdon(new Date())
-				.id(ServiceUtils.getUUID())
-				.itemapproved("role")
-				.itemid(String.valueOf(userRole.get().getId()))
-				.userid(approverId).build();
-				
-		approverDao.save(approver);
-		
-		final ApprovalReview review = ApprovalReview.builder()
-				.createdon(new Date())
-				.itemid(String.valueOf(userRole.get().getId()))
-				.reviewtype(5)
-				.review("Role deactivated").build();				
-		
-		this.addApprovalReview(review);
-		
-		return userRole.get();
-	}
-*/	
-
 	@Override
 	public User deactivateUser(String userId, String approverId) {
 		
@@ -355,59 +301,170 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
 		
-		Optional<Sale> sale  = saleRepository.findById(saleId);
+		  Optional<Sale> sale = saleRepository.findById(saleId);
+		  
+		  if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
+		  
+		  if( sale.get().getSaletype().equals("Direct")) { 
+			  throw new RuntimeException("Sale does not qualify for this operation"); 
+		  }
+		  
+		 /* sale.get().setIsreviewed(Boolean.TRUE); sale.get().setSalestatus(saleStatus);
+		 * 
+		 * final ApprovalReview review = ApprovalReview.builder() .createdon(new Date())
+		 * .itemid(saleId) .reviewtype(6) .review(reviewDescription).build();
+		 * 
+		 * this.addApprovalReview(review);
+		 * 
+		 * final Approver approver = Approver.builder() .id(ServiceUtils.getUUID())
+		 * .createdon(new Date()) .userid(approverId) .itemapproved("SALE")
+		 * .itemid(saleId).build();
+		 * 
+		 * approverDao.save(approver);
+		 * 
+		 * //add notification Optional<User> agentUser =
+		 * userDao.findById(sale.get().getAgentid()); Optional<User> customerUser =
+		 * userDao.findById(sale.get().getCustomerid()); Optional<User> approverUser =
+		 * userDao.findById(approverId);
+		 * 
+		 * String agentName =
+		 * agentUser.get().getFirstname()+" "+agentUser.get().getLastname(); String
+		 * customerName =
+		 * customerUser.get().getFirstname()+" "+customerUser.get().getLastname();
+		 * String approverName =
+		 * approverUser.get().getFirstname()+" "+approverUser.get().getLastname();
+		 * 
+		 * if(!agentUser.isPresent()) { throw new
+		 * RuntimeException("Sale agent of ID: "+sale.get().getAgentid()
+		 * +" does not exist "); }
+		 * 
+		 * //notify sale approval Notification notify = Notification.builder()
+		 * .type(NotificationType.EMAIL) .subject("PANDA SOLAR SALE APPROVED")
+		 * .address(agentUser.get().getCompanyemail())
+		 * .content(String.format(saleApprovalMessage, agentName, customerName,
+		 * approverName)).build();
+		 * 
+		 * rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.
+		 * toString());
+		 */
+		return saleService.completeSale(saleId);
 		
-		if(!sale.isPresent()) {
-			throw new SaleNotFoundException(saleId);
+		//return saleRepository.save(sale.get());
+	}
+
+	@Transactional
+	@Override
+	public Capex approveCapex(ApprovalModel approvalModel) {
+		
+		Optional<Capex> capex = capexRepository.findById(approvalModel.getItemId());
+		Optional<User> approveUser = userDao.findById(approvalModel.getApproverId());
+		Optional<User> capexUser = userDao.findById(capex.get().getTEmployees().getUserid());
+		
+		if(!capex.isPresent()) {
+			throw new ItemNotFoundException(approvalModel.getItemId());
+		}else if(capex.get().getIsapproved() == Boolean.TRUE) {
+			throw new RuntimeException("Capex does not qualify for this operation");
 		}
 		
-		if( sale.get().getSaletype().equals("Direct") || sale.get().isIsreviewed() == Boolean.TRUE ) {
-			throw new RuntimeException("Sale doe not qualify for this operation");
+		if(!approveUser.isPresent()) {
+			throw new ItemNotFoundException(approvalModel.getApproverId());
 		}
 		
-		sale.get().setIsreviewed(Boolean.TRUE);
-		sale.get().setSalestatus(saleStatus);
+		capex.get().setApprovedon(new Date());
+		capex.get().setIsapproved(Boolean.TRUE);
 		
 		final ApprovalReview review = ApprovalReview.builder()
 				.createdon(new Date())
-				.itemid(saleId)
-				.reviewtype(6)
-				.review(reviewDescription).build();				
-		
-		this.addApprovalReview(review);
+				.itemid(approvalModel.getItemId())
+				.reviewtype(5)
+				.review(approvalModel.getDescription()).build();				
 		
 		final Approver approver = Approver.builder()
 				.id(ServiceUtils.getUUID())
 				.createdon(new Date())
-				.userid(approverId)
-				.itemapproved("SALE")
-				.itemid(saleId).build();
+				.userid(approvalModel.getApproverId())
+				.itemapproved("CAPEX")
+				.itemid(approvalModel.getItemId()).build();
 		
-		approverDao.save(approver);
+		String capexDate = dateToString(capex.get().getCreatedon());
+		String approverName = approveUser.get().getFirstname()+" "+approveUser.get().getLastname();
+		String employeeName = capexUser.get().getFirstname()+" "+capexUser.get().getLastname();
+		String capexType = capex.get().getTCapexType().getName();
 		
-		//add notification
-		Optional<User> agentUser = userDao.findById(sale.get().getAgentid());
-		Optional<User> customerUser = userDao.findById(sale.get().getCustomerid());
-		Optional<User> approverUser = userDao.findById(approverId);
-		
-		String agentName = agentUser.get().getFirstname()+" "+agentUser.get().getLastname();
-		String customerName = customerUser.get().getFirstname()+" "+customerUser.get().getLastname();
-		String approverName = approverUser.get().getFirstname()+" "+approverUser.get().getLastname();
-		
-		if(!agentUser.isPresent()) {
-			throw new RuntimeException("Sale agent of ID: "+sale.get().getAgentid()+" does not exist ");
-		}
-		
-		//notify sale approval
+		//notify capex approval
 		Notification notify = Notification.builder()
 				.type(NotificationType.EMAIL)
-				.subject("PANDA SOLAR SALE APPROVED")
-				.address(agentUser.get().getCompanyemail())
-				.content(String.format(saleApprovalMessage, agentName, customerName, approverName)).build();
+				.subject("PANDA SOLAR CAPEX APPROVED")
+				.address(capexUser.get().getCompanyemail())
+				.content(String.format(capexApprovalMessage, employeeName, capexDate, capexType, approverName)).build();
 		
 		rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.toString());
 		
-		return saleRepository.save(sale.get());
+		this.addApprovalReview(review);
+		approverDao.save(approver);
+		capexRepository.save(capex.get());
+		
+		return capex.get();
+	}
+
+	@Transactional
+	@Override
+	public Opex approveOpex(ApprovalModel approvalModel) {
+		
+		Optional<Opex> opex = opexRepository.findById(approvalModel.getItemId());
+		Optional<User> approverUser = userDao.findById(approvalModel.getApproverId());
+		Optional<User> empUser = userDao.findById(opex.get().getTEmployees().getUserid());
+		
+		if(!opex.isPresent()) {
+			throw new ItemNotFoundException(approvalModel.getItemId());
+		}else if(opex.get().getIsapproved() == Boolean.TRUE) {
+			throw new RuntimeException("Opex does not qualify for this operation");
+		}
+		
+		if(!approverUser.isPresent()) {
+			throw new ItemNotFoundException(approvalModel.getApproverId());
+		}
+		
+		opex.get().setIsapproved(Boolean.TRUE);
+		opex.get().setApprovedon(new Date());
+		
+		String approverName = approverUser.get().getLastname()+" "+approverUser.get().getFirstname();
+		String empName = empUser.get().getLastname()+" "+empUser.get().getFirstname();
+		String opexDate = dateToString(opex.get().getCreatedon());
+		String opexType = opex.get().getTOpexType().getName();
+		
+		final ApprovalReview review = ApprovalReview.builder()
+				.createdon(new Date())
+				.itemid(approvalModel.getItemId())
+				.reviewtype(7)
+				.review(approvalModel.getDescription()).build();				
+		
+		final Approver approver = Approver.builder()
+				.id(ServiceUtils.getUUID())
+				.createdon(new Date())
+				.userid(approvalModel.getApproverId())
+				.itemapproved("OPEX")
+				.itemid(approvalModel.getItemId()).build();
+		
+		//notify opex approval
+		Notification notify = Notification.builder()
+				.type(NotificationType.EMAIL)
+				.subject("PANDA SOLAR OPEX APPROVED")
+				.address(empUser.get().getCompanyemail())
+				.content(String.format(capexApprovalMessage, empName, opexDate, opexType, approverName)).build();
+		
+		rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.toString());
+		
+		this.addApprovalReview(review);
+		approverDao.save(approver);
+		opexRepository.save(opex.get());
+		
+		return null;
+	}
+	
+	private String dateToString(Date date) {
+		Format formatter = new SimpleDateFormat("dd MMMM yyyy");
+		return formatter.format(date);
 	}
 
 }

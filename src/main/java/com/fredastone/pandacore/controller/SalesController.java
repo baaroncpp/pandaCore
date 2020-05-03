@@ -1,13 +1,17 @@
 package com.fredastone.pandacore.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,11 +24,22 @@ import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.repository.VerificationRepository;
 import com.fredastone.pandacore.service.SaleService;
+import com.fredastone.security.JwtTokenUtil;
 
 @CrossOrigin("${crossoriginurl}")
 @RestController
 @RequestMapping("v1/sales")
 public class SalesController {
+	
+	@Value("${jwt.header}")
+    private String tokenHeader;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    @Qualifier("jwtUserDetailsService")
+    private UserDetailsService userDetailsService;
 
 	private SaleService saleService;
 	private VerificationRepository verificationRepo;
@@ -66,7 +81,6 @@ public class SalesController {
     	
     	return ResponseEntity.ok(saleService.getAllSales(page, size, sortby, sortorder));
     }
-    
     
     @RequestMapping(path="get/agent/{agentid}",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
     public ResponseEntity<?> getallbyagent(
@@ -184,10 +198,34 @@ public class SalesController {
     	return ResponseEntity.ok(verificationRepo.findAllVerified(agentid, pageRequest));
     }
     
-    
 	@RequestMapping(path="complete/{id}",method = RequestMethod.POST)
     public ResponseEntity<?> completeNewSale(@PathVariable("id") String sale) {
        return ResponseEntity.ok(saleService.completeSale(sale));
     }
 	
+	@RequestMapping(path="agent/salesum/{id}",method = RequestMethod.GET)
+	public ResponseEntity<?> getAgentSaleSum(@PathVariable("id") String id){
+		return ResponseEntity.ok(saleService.getAgentSaleSums(id));
+	}
+	
+	@RequestMapping(path="customer/salesum/{id}",method = RequestMethod.GET)
+	public ResponseEntity<?> getCustomerSaleSum(@PathVariable("id") String id){
+		return ResponseEntity.ok(saleService.getCustomerSaleSums(id));
+	}
+	
+	@RequestMapping(path="mobileuser",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
+	public ResponseEntity<?> mobileUserGetSales(
+			HttpServletRequest request,
+    		@Valid @RequestParam("sortorder") 
+    		Direction sortorder,
+    		@Valid @RequestParam("sortby") 
+    		String sortby,
+    		@Valid @RequestParam("page") 
+    		int page,
+    		@RequestParam("size") 
+			int size){
+		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		return ResponseEntity.ok(saleService.mobileUserGetSales(id, page, size, sortby, sortorder));
+	}
+		
 }

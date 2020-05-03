@@ -1,6 +1,7 @@
 package com.fredastone.pandacore.controller;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 
@@ -52,7 +53,7 @@ public class ProductController {
 
 	
 	@RequestMapping(path = "get", method = RequestMethod.GET)
-	public ResponseEntity<?> getAllProducts() {
+	public ResponseEntity<?> getAllProducts() throws InvalidKeyException, MalformedURLException {
 		return ResponseEntity.ok(productService.getAllProducts());
 	}
 

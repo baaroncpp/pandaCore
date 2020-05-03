@@ -27,8 +27,6 @@ import com.fredastone.security.JwtTokenUtil;
 import com.fredastone.security.JwtUser;
 import com.fredastone.security.service.JwtAuthenticationResponse;
 
-
-
 @RestController
 public class AuthenticationRestController {
 

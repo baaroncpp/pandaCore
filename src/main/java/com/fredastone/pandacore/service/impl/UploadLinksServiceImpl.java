@@ -41,7 +41,6 @@ public class UploadLinksServiceImpl implements UploadLinksService {
 		links.setHousephotopath(azureOperations.uploadHousePhotoPath(userId));
 
 		return links;
-	
 	}
 
 	@Override

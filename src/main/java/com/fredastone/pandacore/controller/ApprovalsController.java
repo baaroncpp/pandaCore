@@ -84,7 +84,8 @@ public class ApprovalsController {
 	public ResponseEntity<?> approveUser(@Valid @PathVariable("id") String approvalId,HttpServletRequest request){
 			
 	    final String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
-		return ResponseEntity.ok(approvalService.approveUser(approvalId, userid));
+		return ResponseEntity
+				.ok(approvalService.approveUser(approvalId, userid));
 				
 	}
 	

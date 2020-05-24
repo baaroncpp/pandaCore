@@ -161,5 +161,13 @@ public class UserController {
 	public ResponseEntity<?> resetPassword(@Valid @NotNull @RequestBody PasswordResetModel passwordResetModel) {
 		return ResponseEntity.ok(userService.passwordReset(passwordResetModel));
 	}
+	
+	@RequestMapping(path = "changepassword",params = {"old","new" }, method = RequestMethod.PUT)
+	public ResponseEntity<?> changeUserPassword(HttpServletRequest request,	
+    		@Valid @RequestParam("old") String oldPassword,
+    		@Valid @RequestParam("new") String newPassword){
+    	String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		return ResponseEntity.ok(userService.changePassword(id, oldPassword, newPassword));
+	}
     
 }

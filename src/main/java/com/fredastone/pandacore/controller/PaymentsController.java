@@ -1,6 +1,9 @@
 package com.fredastone.pandacore.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,10 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fredastone.pandacore.entity.LeasePayment;
 import com.fredastone.pandacore.service.LeasePaymentService;
+import com.fredastone.security.JwtTokenUtil;
 
 @RestController
 @RequestMapping("v1/payments")
 public class PaymentsController {
+	
+	@Value("${jwt.header}")
+    private String tokenHeader;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 	
 	LeasePaymentService leasePaymentService;
 	
@@ -37,6 +47,15 @@ public class PaymentsController {
     public ResponseEntity<?> getPaymentsByCustomer(@PathVariable("id") String id,
     		@RequestParam("direction") String direction,@RequestParam("page") int page,@RequestParam("size") int size){
     	return ResponseEntity.ok(leasePaymentService.getpaymentByCustomerId(size, page, direction, id));
+    }
+    
+    @RequestMapping(path="get/mobile",params = {"direction", "page","size" },method = RequestMethod.GET)
+    public ResponseEntity<?> getPaymentsByAgent(HttpServletRequest request,
+    		@RequestParam("direction") String direction,
+    		@RequestParam("page") int page,
+    		@RequestParam("size") int size){
+    	String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+    	return ResponseEntity.ok(leasePaymentService.getLeasePaymentsByAgentId(id, size, page, direction));
     }
     
     /*@RequestMapping(path="get/deviceserial/{serial}",method = RequestMethod.GET)

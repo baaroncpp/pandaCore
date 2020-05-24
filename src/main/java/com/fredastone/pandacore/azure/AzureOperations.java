@@ -39,8 +39,9 @@ public class AzureOperations implements IAzureOperations{
 	@Value("${pandacore.azure.access.minutes}")
 	private  int accessMinutes;
 		
-	@Value("${fileuploadfolder}")
-	private String fileuploadfolder;
+	/*
+	 * @Value("${fileuploadfolder}") private String fileuploadfolder;
+	 */
 	
 	@Value("${equipmentphotosfolder}")
 	private String equipmentPhotoFolder;
@@ -186,13 +187,13 @@ public class AzureOperations implements IAzureOperations{
 
 	@Override
 	public String uploadIdCopy(String userId) throws InvalidKeyException, MalformedURLException {
-		return createAzureAccessToken(profileUploadPath, getImagePath("idcopy",userId), Boolean.FALSE);
+		return createAzureAccessToken(idcopyUploadFolder, getImagePath("idcopy",userId), Boolean.FALSE);
 	}
 
 	@Override
 	public String getIdCopy(String userId) {
 		try {
-			return createAzureAccessToken(profileUploadPath, getImagePath("idcopy",userId), Boolean.TRUE);
+			return createAzureAccessToken(idcopyUploadFolder, getImagePath("idcopy",userId), Boolean.TRUE);
 		} catch (InvalidKeyException | MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

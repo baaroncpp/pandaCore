@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fredastone.pandacore.constants.RoleName;
+import com.fredastone.pandacore.constants.ServiceConstants;
+import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
@@ -41,6 +43,7 @@ import com.fredastone.pandacore.service.ApprovalService;
 import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.pandacore.util.ServiceUtils;
 
+@Transactional
 @Service
 public class ApprovalServiceImpl implements ApprovalService {
 	
@@ -190,6 +193,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 			this.addApprovalReview(review);
 			
 			agentDao.save(agentMeta.get());
+			
+			Optional<UserRole> ur = userRoleRepository.findByUserAndRole(user.get(), addDefaultUserRole(user.get()).getRole());
+			if(ur.isPresent()) {
+				throw new RuntimeException(user.get().getUsername()+ " already has the specified role");
+			}
 			userRoleRepository.save(addDefaultUserRole(user.get()));
 		}
 		
@@ -242,6 +250,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 		String userType = user.getUsertype();
 		UserRole userRole = new UserRole();
 		
+		userRole.setId(ServiceUtils.getUUID());
+		
 		switch(userType) {
 		case "CUSTOMER":
 			userRole.setRole(roleRepository.findByName(RoleName.ROLE_CUSTOMER).get());
@@ -253,12 +263,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 			userRole.setUser(user);
 			userRole.setCreatedon(new Date());
 			break;
-		/*case "EMPLOYEE":
+		case "EMPLOYEE":
 			userRole.setRole(roleRepository.findByName(RoleName.ROLE_EMPLOYEE).get());
 			userRole.setUser(user);
-			userRole.setIsActive(Boolean.TRUE);
 			userRole.setCreatedon(new Date());
-			break;*/
+			break;
 		}
 		return userRole;
 	}
@@ -300,14 +309,37 @@ public class ApprovalServiceImpl implements ApprovalService {
 
 	@Override
 	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
+		Optional<User> user = userDao.findById(approverId);
+		List<UserRole> userRoles = userRoleRepository.findAllByUser(user.get());
 		
-		  Optional<Sale> sale = saleRepository.findById(saleId);
+		String userType = user.get().getUsertype();
+		
+		if(userType.equals(UserType.EMPLOYEE.name())) {
+			
+			for(UserRole object : userRoles) {
+				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
+					
+					 Optional<Sale> sale = saleRepository.findById(saleId);
+					  
+					  if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
+					  
+					  if( sale.get().getSaletype().equals("Direct")) { 
+						  throw new RuntimeException("Sale does not qualify for this operation"); 
+					  }
+					  
+					  if( sale.get().getSalestatus() == (short) ServiceConstants.ACCEPTED_APPROVAL) { 
+						  throw new RuntimeException("Sale has already been approved"); 
+					  }
+					
+					  break;
+				}
+			}
+			
+		}else {
+			throw new RuntimeException("Not authorized for this OPERATION");
+		}
+		
 		  
-		  if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
-		  
-		  if( sale.get().getSaletype().equals("Direct")) { 
-			  throw new RuntimeException("Sale does not qualify for this operation"); 
-		  }
 		  
 		 /* sale.get().setIsreviewed(Boolean.TRUE); sale.get().setSalestatus(saleStatus);
 		 * 

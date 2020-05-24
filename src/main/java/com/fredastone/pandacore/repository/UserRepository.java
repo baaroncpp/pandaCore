@@ -1,5 +1,6 @@
 package com.fredastone.pandacore.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -27,6 +28,8 @@ public interface UserRepository extends CrudRepository<User, String>,PagingAndSo
     Page<User> findAllByisapproved(Pageable pageable, boolean approved);
 
     Page<User> findAllByusertype(Pageable pageable, String usertype);
+    
+    List<User> findAllByusertype(String usertype);
 
     Page<User> findAllByisactive(Pageable pageable, boolean isactive);
     

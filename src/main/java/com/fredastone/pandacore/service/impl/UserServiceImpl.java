@@ -2,6 +2,7 @@ package com.fredastone.pandacore.service.impl;
 
 import java.net.MalformedURLException;
 import java.security.InvalidKeyException;
+import java.util.Date;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +71,7 @@ public class UserServiceImpl implements UserService {
 		// TODO Auto-generated method stub
 		user.setId(ServiceUtils.getUUID());
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		user.setIsactive(Boolean.FALSE);
 		
 		if(user.getPrimaryphone() != null && !user.getPrimaryphone().isEmpty())
 		{
@@ -104,7 +106,7 @@ public class UserServiceImpl implements UserService {
 			
 			user.setConsentformpath(consentFormPath);
 			user.setHousephotopath(housePhotoPath);
-			break;
+			break;			
 		default:
 			break;
 			
@@ -253,21 +255,29 @@ public class UserServiceImpl implements UserService {
 	}
 	
 	@Override
-	public User changePassword(String userId, String oldPassword, String newPassword, String token) {
+	public User changePassword(String userId, String oldPassword, String newPassword) {
 		
 		Optional<User> user = userDao.findById(userId);
 		
 		if(!user.isPresent()) {
-			throw new ItemNotFoundException(userId);
+			throw new ItemNotFoundException(userId); 
 		}
 		String dbPassword = user.get().getPassword();
 		
-		if(dbPassword.equals(passwordEncoder.encode(newPassword))) {
-			throw new RuntimeException("Change new password");
+		
+		if(passwordEncoder.matches(newPassword, dbPassword)) {
+			throw new RuntimeException("Operation is invalid");
+		}
+		
+		if(!passwordEncoder.matches(oldPassword, dbPassword)) {
+			throw new RuntimeException("old password has no match");
 		}
 		
 		user.get().setPassword(passwordEncoder.encode(newPassword));
+		user.get().setPasswordreseton(new Date());
 		userDao.save(user.get());
+		
+		user.get().setPassword(null);
 		
 		return user.get();
 	}
@@ -296,13 +306,13 @@ public class UserServiceImpl implements UserService {
 			throw new RuntimeException("expired request, try again");
 		}
 		
-		Optional<PasswordResetToken> passewordResetToken = passwordResetTokenRepository.findByToken(token);
+		Optional<PasswordResetToken> passwordResetToken = passwordResetTokenRepository.findByToken(token);
 		
-		if(!passewordResetToken.isPresent()) {
+		if(!passwordResetToken.isPresent()) {
 			throw new RuntimeException("Item not found");
 		}
 		
-		User user = passewordResetToken.get().getUser();
+		User user = passwordResetToken.get().getUser();
 		
 		if(user != null) {
 			user.setPassword(passwordEncoder.encode(password));
@@ -311,7 +321,7 @@ public class UserServiceImpl implements UserService {
 			operationsStatusModel.setOperationName(Operations.PASSWORD_RESET.name());
 			operationsStatusModel.setOperationResult(OperationsResults.SUCCESS.name());
 			
-			passwordResetTokenRepository.delete(passewordResetToken.get());
+			passwordResetTokenRepository.delete(passwordResetToken.get());
 			/*
 			 * record system event
 			 * */

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.repository.VerificationRepository;
+import com.fredastone.pandacore.service.NotificationService;
 import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.security.JwtTokenUtil;
 
@@ -43,6 +44,9 @@ public class SalesController {
 
 	private SaleService saleService;
 	private VerificationRepository verificationRepo;
+	
+	@Autowired
+	private NotificationService notificationService;
 	
 	@Autowired
 	public SalesController(SaleService saleService,VerificationRepository verificationRepo) {
@@ -227,5 +231,14 @@ public class SalesController {
 		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
 		return ResponseEntity.ok(saleService.mobileUserGetSales(id, page, size, sortby, sortorder));
 	}
+	
+	//testing FCM notifications
+	@RequestMapping(path="fcm",method = RequestMethod.GET)
+	public ResponseEntity<?> testFCM(){
+		Sale sale = new Sale();
+		notificationService.approvedSaleNotification(sale);
+		return ResponseEntity.ok("");
+	}
+	
 		
 }

@@ -10,34 +10,34 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.fredastone.pandacore.entity.Lease;
+
+import com.fredastone.pandacore.constants.RoleName;
+import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.LeasePayment;
 import com.fredastone.pandacore.entity.Sale;
+import com.fredastone.pandacore.entity.User;
+import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
-import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeasePaymentRepository;
-import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
+import com.fredastone.pandacore.repository.UserRepository;
+import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.service.LeasePaymentService;
-import com.fredastone.pandacore.service.SaleService;
 
 @Service
 public class LeasePaymentServiceImpl implements LeasePaymentService {
 
 	private LeasePaymentRepository lpDao;
-	private LeaseRepository leaseReposotory;
 	private SaleRepository saleRepository;
+	private UserRepository userRepository;
+	private UserRoleRepository userRoleRepository;
 	
 	@Autowired
-	public LeasePaymentServiceImpl(LeasePaymentRepository lpDao,
-			LeaseOfferRepository leaseOfferRepository,
-			LeaseRepository leaseReposotory,
-			SaleRepository saleRepository,
-			SaleService saleService) {
-		
+	public LeasePaymentServiceImpl(UserRoleRepository userRoleRepository,LeasePaymentRepository lpDao, SaleRepository saleRepository,	UserRepository userRepository) {
 		this.lpDao = lpDao;
-		this.leaseReposotory = leaseReposotory;
 		this.saleRepository = saleRepository;
+		this.userRepository = userRepository;
+		this.userRoleRepository = userRoleRepository;
 	}
 	
 	@Override
@@ -170,28 +170,43 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		return leasePayments;
 	}
 
-/*	@Override
-	public List<LeasePayment> getLeasePaymentByDeviceSerial(String serial) {
+	@Transactional
+	@Override
+	public List<LeasePayment> getLeasePaymentsByAgentId(String agentId, int size, int page, String sortOrder) {
 		
-		Optional<Sale> sale = saleRepository.findByScannedserial(serial);
+		Optional<User> user = userRepository.findById(agentId);
+		List<LeasePayment> result = new ArrayList<>();
 		
-		if(!sale.isPresent()) {
-			throw new RuntimeException("No sale with serial number: "+serial);
+		if(!user.isPresent()) {
+			throw new ItemNotFoundException(agentId);
+		}	
+		
+		List<UserRole> userRoles = userRoleRepository.findAllByUser(user.get());
+		
+		String userType = user.get().getUsertype();
+		
+		if(userType.equals(UserType.EMPLOYEE.name())) {
+			
+			for(UserRole object : userRoles) {
+				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
+					result.addAll(getAllPayments(size, page, sortOrder).getContent());
+				}
+			}
+			
+		}else if(userType.equals(UserType.AGENT.name())){
+			
+			List<Sale> saleList = saleRepository.findAllByAgentid(agentId);
+			
+			for(Sale object : saleList) {
+				
+				List<LeasePayment> salePayments = lpDao.findAllByleaseid(object.getId());
+				
+				if(!salePayments.isEmpty()) {
+					result.addAll(salePayments);
+				}
+				
+			}
 		}
-		
-		Optional<Lease> lease = leaseReposotory.findById(sale.get().getId());
-		
-		if(!lease.isPresent()) {
-			throw new RuntimeException("No Lease is associated serial number: "+serial);
-		}
-		
-		List<LeasePayment> leasePayments = lpDao.findAllByleaseid(lease.get().getId());
-		
-		if(leasePayments.isEmpty()) {
-			throw new RuntimeException("No Payments for device with serial number: "+serial);
-		}
-		
-		return leasePayments;
+		return result;
 	}
-*/
 }

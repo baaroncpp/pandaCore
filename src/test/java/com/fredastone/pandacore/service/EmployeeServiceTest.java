@@ -29,67 +29,56 @@ import java.util.Optional;
 //@SpringBootTest
 public class EmployeeServiceTest {
 	
-	private EmployeeService employeeService;
-	private EmployeeRepository employeeDao;
-	private ApproverRepository approvalDao;
-	private ConfigRepository configDao;
-	private VEmployeeApprovalRepository vapprovalDao;
-	
-	@Before
-	public void before() {
-		
-		employeeDao = Mockito.mock(EmployeeRepository.class);
-		approvalDao = Mockito.mock(ApproverRepository.class);
-		configDao = Mockito.mock(ConfigRepository.class);
-		vapprovalDao = Mockito.mock(VEmployeeApprovalRepository.class);
-		
-		
-		Config ecConfig = new Config();
-		ecConfig.setName("EMPLOYEEAPPROVALCOUNT");
-		ecConfig.setValue("2");
-		
-		Config erconfig = new Config();
-		erconfig.setName("EMPLOYEEAPPROVALROLES");
-		erconfig.setValue("ADMIN,MANAGER");
-		
-		
-		when(configDao.findByName("EMPLOYEEAPPROVALCOUNT")).thenReturn(Optional.of(ecConfig));
-		when(configDao.findByName("EMPLOYEEAPPROVALROLES")).thenReturn(Optional.of(erconfig));
-		
-		
-		//this.employeeService = new EmployeeServiceImpl(employeeDao, approvalDao, configDao, vapprovalDao);
-		
-	}
-
-	@Test
-	public void testThatCanCreateNewEmployee() {
-		
-//		EmployeeMeta ep = new EmployeeMeta();
-//		ep.setCompanyemail("starnapho@gmail.com");
-//		ep.setCreateon(new Date());
-//		ep.setDateofbirth(new Date());
-//		ep.setFirstname("Naphlin");
-//		ep.setId("48848488484884848");
-//		ep.setIsapproved(Boolean.FALSE);
-//		ep.setIsterminated(Boolean.FALSE);
-//		ep.setLastname("Akena");
-//		ep.setMiddlename("");
-//		ep.setMobile("256777110054");
-//		ep.setPersonalemail("starnapho@gmail.com");
-//		ep.setPhone("256777110054");
-//		ep.setProfilepath("http://");
-//		
-//		when(employeeDao.save(ep)).thenReturn(ep);
-//		when(approvalDao.save(new Approval())).then(Answers.RETURNS_SELF);
-//		
-//		
-//		EmployeeMeta resp = this.employeeService.createEmployee(ep);
-//		Assert.assertNotNull(resp);
-//		Assert.assertEquals(resp, ep);
-		
-		TokenOperation op = new TokenOperation();
-		System.out.println(op.generateGeneralPurposeToken("168005009023004", CommandNames.DEMOLISH, 1));
-		
-	}
-	
+	/*
+	 * private EmployeeService employeeService; private EmployeeRepository
+	 * employeeDao; private ApproverRepository approvalDao; private ConfigRepository
+	 * configDao; private VEmployeeApprovalRepository vapprovalDao;
+	 * 
+	 * @Before public void before() {
+	 * 
+	 * employeeDao = Mockito.mock(EmployeeRepository.class); approvalDao =
+	 * Mockito.mock(ApproverRepository.class); configDao =
+	 * Mockito.mock(ConfigRepository.class); vapprovalDao =
+	 * Mockito.mock(VEmployeeApprovalRepository.class);
+	 * 
+	 * 
+	 * Config ecConfig = new Config(); ecConfig.setName("EMPLOYEEAPPROVALCOUNT");
+	 * ecConfig.setValue("2");
+	 * 
+	 * Config erconfig = new Config(); erconfig.setName("EMPLOYEEAPPROVALROLES");
+	 * erconfig.setValue("ADMIN,MANAGER");
+	 * 
+	 * 
+	 * when(configDao.findByName("EMPLOYEEAPPROVALCOUNT")).thenReturn(Optional.of(
+	 * ecConfig));
+	 * when(configDao.findByName("EMPLOYEEAPPROVALROLES")).thenReturn(Optional.of(
+	 * erconfig));
+	 * 
+	 * 
+	 * //this.employeeService = new EmployeeServiceImpl(employeeDao, approvalDao,
+	 * configDao, vapprovalDao);
+	 * 
+	 * }
+	 * 
+	 * @Test public void testThatCanCreateNewEmployee() {
+	 * 
+	 * // EmployeeMeta ep = new EmployeeMeta(); //
+	 * ep.setCompanyemail("starnapho@gmail.com"); // ep.setCreateon(new Date()); //
+	 * ep.setDateofbirth(new Date()); // ep.setFirstname("Naphlin"); //
+	 * ep.setId("48848488484884848"); // ep.setIsapproved(Boolean.FALSE); //
+	 * ep.setIsterminated(Boolean.FALSE); // ep.setLastname("Akena"); //
+	 * ep.setMiddlename(""); // ep.setMobile("256777110054"); //
+	 * ep.setPersonalemail("starnapho@gmail.com"); // ep.setPhone("256777110054");
+	 * // ep.setProfilepath("http://"); // //
+	 * when(employeeDao.save(ep)).thenReturn(ep); // when(approvalDao.save(new
+	 * Approval())).then(Answers.RETURNS_SELF); // // // EmployeeMeta resp =
+	 * this.employeeService.createEmployee(ep); // Assert.assertNotNull(resp); //
+	 * Assert.assertEquals(resp, ep);
+	 * 
+	 * TokenOperation op = new TokenOperation();
+	 * System.out.println(op.generateGeneralPurposeToken("168005009023004",
+	 * CommandNames.DEMOLISH, 1));
+	 * 
+	 * }
+	 */	
 }

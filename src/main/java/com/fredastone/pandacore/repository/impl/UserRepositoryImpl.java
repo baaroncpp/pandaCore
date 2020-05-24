@@ -31,7 +31,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 	
 	@Transactional
 	@Override
-	public LoginUser getLoginUser(String username) {
+	public LoginUser getLoginUser1(String username) {
 		Map<String,String> args = new HashMap<>();
 		args.put("loginuser", username);
 		

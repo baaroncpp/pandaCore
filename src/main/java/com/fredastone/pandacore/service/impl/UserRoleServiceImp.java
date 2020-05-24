@@ -51,6 +51,12 @@ public class UserRoleServiceImp implements UserRoleService {
 			role = r.get();
 		}
 		
+		Optional<UserRole> ur = userRoleRepository.findByUserAndRole(user.get(), r.get());
+		
+		if(ur.isPresent()) {
+			throw new RuntimeException(user.get().getId()+" already has the specified role");
+		}
+		
 		if(!userType.equals("CUSTOMER")) {
 			userRoleRepository.save(createUserRole(role, user.get()));
 			return createUserRole(role, user.get());			
@@ -66,7 +72,7 @@ public class UserRoleServiceImp implements UserRoleService {
 	}
 	
 	public UserRole createUserRole(Role role, User user) {
-		Optional<UserRole> userRole = userRoleRepository.findByUser(user);
+		//Optional<UserRole> userRole = userRoleRepository.findByUser(user);
 		
 		//if(userRole.isPresent()) {
 		//	throw new RuntimeException("User already has role : "+ role.getName().name());

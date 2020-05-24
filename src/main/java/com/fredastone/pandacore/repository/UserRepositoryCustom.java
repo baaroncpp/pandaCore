@@ -5,6 +5,6 @@ import com.fredastone.pandacore.entity.LoginUser;
 public interface UserRepositoryCustom {
 	
 	
-	LoginUser getLoginUser(String username);
+	LoginUser getLoginUser1(String username);
 	
 }

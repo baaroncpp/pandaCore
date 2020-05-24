@@ -25,7 +25,7 @@ public interface UserService {
 	Page<User> getAllByType(int page, int size, Direction direction, String sortby,UserType type);
 	
 	
-	User changePassword(String userId,String oldPassword,String newPassword,String token);
+	User changePassword(String userId,String oldPassword,String newPassword);
 	//void forgotPassword(String userId);
 	void updateLastLogon(String userId,String lastLogon);
 	

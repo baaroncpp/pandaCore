@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.PayGoProductStatus;
+import com.fredastone.pandacore.constants.RoleName;
 import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.constants.TokenTypes;
 import com.fredastone.pandacore.constants.UserType;
@@ -34,6 +35,7 @@ import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.TotalLeasePayments;
 import com.fredastone.pandacore.entity.User;
+import com.fredastone.pandacore.entity.UserRole;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.exception.AgentNotFoundException;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
@@ -56,6 +58,8 @@ import com.fredastone.pandacore.repository.SaleRollbackRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.repository.TotalLeasePaymentsRepository;
 import com.fredastone.pandacore.repository.UserRepository;
+import com.fredastone.pandacore.repository.UserRoleRepository;
+import com.fredastone.pandacore.service.NotificationService;
 import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.pandacore.util.ServiceUtils;
 import com.fredastone.pandasolar.token.CommandNames;
@@ -113,7 +117,9 @@ public class SaleServiceImpl implements SaleService {
 	private LeaseSaleDetailRepository lsdDao;
 	private CustomerMetaRepository customerMetaRepository;
 	private PayGoProductRepository payGoRepo;
+	private UserRoleRepository userRoleRepository;
 	private IAzureOperations azureOperations;
+	private NotificationService notificationService;
 
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
@@ -123,7 +129,8 @@ public class SaleServiceImpl implements SaleService {
 			SaleRepository saleDao, AgentMetaRepository agentDao, ProductsRepository productDao,
 			LeaseOfferRepository leaseOfferDao, LeaseRepository leaseDao, TokenRepository saleTokenDao,
 			TotalLeasePaymentsRepository totalLeaseRepayDao, UserRepository userDao, LeaseSaleDetailRepository lsdDao,
-			PayGoProductRepository payGoRepo, IAzureOperations azureOperations) {
+			PayGoProductRepository payGoRepo, IAzureOperations azureOperations, NotificationService notificationService,
+			UserRoleRepository userRoleRepository) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -138,6 +145,8 @@ public class SaleServiceImpl implements SaleService {
 		this.customerMetaRepository = customerMetaRepository;
 		this.payGoRepo = payGoRepo;
 		this.azureOperations = azureOperations;
+		this.notificationService = notificationService;
+		this.userRoleRepository = userRoleRepository;
 	}
 
 	@Transactional
@@ -173,7 +182,10 @@ public class SaleServiceImpl implements SaleService {
 		sale.setId(ServiceUtils.getUUID());
 		sale.setSaletype(DIRECT_SALE);
 
-		return saleDao.save(sale);
+		saleDao.save(sale);
+		notificationService.approveSaleNotification(sale);
+		
+		return sale;
 	}
 
 	@Transactional
@@ -192,6 +204,19 @@ public class SaleServiceImpl implements SaleService {
 		// Retrieve the product that is being sold
 		if (!product.getIsActive()) {
 			throw new ProductNotFoundException(product.getId());
+		}
+		
+		Optional<PayGoProduct> payGoProduct = payGoRepo.findById(scannedserial);
+		if(!payGoProduct.isPresent()) {
+			throw new ItemNotFoundException(scannedserial);
+		}
+		
+		if(payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.PENDING.name())) {
+			throw new RuntimeException("PayGo product is sold, Pending approval");
+		}
+		
+		if(payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.SOLD.name())) {
+			throw new RuntimeException("PayGo product is already sold");
 		}
 
 		// Get the agent making this sale
@@ -262,6 +287,11 @@ public class SaleServiceImpl implements SaleService {
 		sale = saleDao.save(sale);
 		lease = leaseDao.save(lease);
 
+		payGoProduct.get().setPayGoProductStatus(PayGoProductStatus.PENDING);
+		payGoRepo.save(payGoProduct.get());
+		
+		notificationService.approveSaleNotification(sale);
+		
 		return new LeaseSale(sale, lease);
 
 	}
@@ -326,6 +356,8 @@ public class SaleServiceImpl implements SaleService {
 				}
 
 			}
+			
+			notificationService.approvedSaleNotification(s);
 			return s;
 		}
 		// set product status to sold
@@ -577,21 +609,29 @@ public class SaleServiceImpl implements SaleService {
 	public List<SaleModel> mobileUserGetSales(String userId, int page, int count, String sortBy, Direction orderBy) {
 		
 		Optional<User> user = userDao.findById(userId);
-		List<SaleModel> result = new ArrayList<>();
+		//List<SaleModel> result = new ArrayList<>();
 		
 		if(!user.isPresent()) {
 			throw new RuntimeException("user not found");
 		}
 		
+		List<UserRole> userRoles = userRoleRepository.findAllByUser(user.get());
+				
 		String userType = user.get().getUsertype();
 		
-		if(userType.equals(UserType.AGENT.name())) {
-			result = getAllSales(page, count, sortBy, orderBy);
-		}else if(userType.equals(UserType.ADMIN.name())) {
-			result = getAllSalesByAgentId(userId, page, count, sortBy, orderBy);
+		if(userType.equals(UserType.EMPLOYEE.name())) {
+			
+			for(UserRole object : userRoles) {
+				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
+					return getAllSales(page, count, sortBy, orderBy);
+				}
+			}
+			
+		}else if(userType.equals(UserType.AGENT.name())) {
+			return getAllSalesByAgentId(userId, page, count, sortBy, orderBy);
 		}
 		// TODO Auto-generated method stub
-		return result;
+		return null;
 	}
 
 }

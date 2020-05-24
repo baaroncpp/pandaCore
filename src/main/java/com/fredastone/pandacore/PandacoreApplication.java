@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.client.RestTemplate;
 
 import com.fredastone.pandacore.azure.AzureOperations;
 import com.fredastone.pandacore.service.StorageService;
@@ -15,6 +16,11 @@ public class PandacoreApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(PandacoreApplication.class, args);
+	}
+	
+	@Bean
+	public RestTemplate getRestTemplate() {
+		return new RestTemplate();
 	}
 //
 //    @Bean

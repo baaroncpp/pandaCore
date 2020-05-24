@@ -12,6 +12,7 @@ public interface LeasePaymentService {
 	LeasePayment getPaymentById(String id);
 	Page<LeasePayment> getAllPayments(int size,int page,String sortOrder);
 	List<LeasePayment> getLeasePaymentsByLeaseId(String leaseid);
+	List<LeasePayment> getLeasePaymentsByAgentId(String agentId, int size, int page, String sortOrder);
 	//List<LeasePayment> getLeasePaymentByDeviceSerial(String serial);
 
 }

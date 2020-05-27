@@ -9,7 +9,7 @@ import com.fredastone.pandacore.models.PayGoProductModel;
 import com.fredastone.pandacore.models.StockProduct;
 
 public interface PayGoProductService {	
-	PayGoProduct addPayGoProduct(PayGoProductModel payGoProductModel);
+	PayGoProduct addPayGoProduct(String userId, PayGoProductModel payGoProductModel);
 	PayGoProduct getPayGoProduct(String serialToken);
 	PayGoProduct updatePayGoProduct(PayGoProduct payGoProduct);
 	PayGoProduct deletePayGoProduct(PayGoProduct payGoProduct);

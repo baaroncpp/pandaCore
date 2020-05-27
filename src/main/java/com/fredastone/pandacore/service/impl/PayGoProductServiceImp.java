@@ -10,12 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fredastone.pandacore.constants.PayGoProductStatus;
+import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.LeaseOffer;
 import com.fredastone.pandacore.entity.PayGoProduct;
+import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.models.PayGoProductModel;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.PayGoProductRepository;
+import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.PayGoProductService;
 import com.fredastone.pandacore.models.StockProduct;
 
@@ -24,15 +27,23 @@ public class PayGoProductServiceImp implements PayGoProductService {
 	
 	private PayGoProductRepository payGoProductRepository;
 	private LeaseOfferRepository leaseOfferRepository;
+	private UserRepository userRepository;
 	
 	@Autowired
-	public PayGoProductServiceImp(PayGoProductRepository payGoProductRepository, LeaseOfferRepository leaseOfferRepository) {
+	public PayGoProductServiceImp(UserRepository userRepository, PayGoProductRepository payGoProductRepository, LeaseOfferRepository leaseOfferRepository) {
 		this.payGoProductRepository = payGoProductRepository;
 		this.leaseOfferRepository = leaseOfferRepository;
+		this.userRepository = userRepository;
 	}
 
 	@Override
-	public PayGoProduct addPayGoProduct(PayGoProductModel payGoProductModel) {
+	public PayGoProduct addPayGoProduct(String userId, PayGoProductModel payGoProductModel) {
+		
+		Optional<User> user = userRepository.findById(userId);
+		
+		if(!user.get().getUsertype().equals(UserType.EMPLOYEE.name())) {
+			throw new RuntimeException("Not Authorized");
+		}
 		
 		Optional<LeaseOffer> leaseOffer = leaseOfferRepository.findById(payGoProductModel.getLeaseOfferid());
 		

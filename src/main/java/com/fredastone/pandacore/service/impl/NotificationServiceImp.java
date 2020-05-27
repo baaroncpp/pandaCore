@@ -8,11 +8,14 @@ import java.util.concurrent.ExecutionException;
 import org.apache.commons.logging.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.RoleName;
 import com.fredastone.pandacore.constants.UserType;
@@ -85,7 +88,7 @@ public class NotificationServiceImp implements NotificationService {
 			Optional<User> usr = userRepository.findById(user.getId());
 			List<UserRole> userRoles = userRoleRepository.findAllByUser(usr.get());
 			
-			if(userRoles.isEmpty()) {
+			if(!userRoles.isEmpty()) {
 				System.out.println(userRoles.size());
 				for(UserRole obj : userRoles) {
 					System.out.println(obj.getRole().getName().name());
@@ -106,7 +109,19 @@ public class NotificationServiceImp implements NotificationService {
 					    
 					    body.put("notification", notification);
 					    
-					    body.put("data", convertToSaleModel(sale));
+					    String jsonStr = "";
+					    ObjectMapper ob = new ObjectMapper();
+					    try {
+							jsonStr = ob.writeValueAsString(convertToSaleModel(sale));
+							
+						} catch (JsonProcessingException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					    
+						JSONObject dataJson = new JSONObject(jsonStr);
+					    
+					    body.put("data", dataJson);
 					    
 					    HttpEntity<String> request = new HttpEntity<>(body.toString());
 					    
@@ -156,7 +171,19 @@ public class NotificationServiceImp implements NotificationService {
 	    
 	    body.put("notification", notification);
 	    
-	    body.put("data", convertToSaleModel(sale.get()));
+	    String jsonStr = "";
+	    ObjectMapper obj = new ObjectMapper();
+	    try {
+			jsonStr = obj.writeValueAsString(payment);
+			
+		} catch (JsonProcessingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    
+		JSONObject dataJson = new JSONObject(jsonStr);
+	    
+	    body.put("data", dataJson);
 	    
 	    //Message message = new Message();
 	    
@@ -181,16 +208,15 @@ public class NotificationServiceImp implements NotificationService {
 	@Override
 	public void approvedSaleNotification(Sale sale) {
 		// TODO Auto-generated method stub
-		/*
-		 * Optional<AndroidTokens> androidToken =
-		 * androidTokenRepository.findById(sale.getAgentid());
-		 * 
-		 * if(!androidToken.isPresent()) { throw new
-		 * RuntimeException("Device not registered"); }
-		 */
+		
+		Optional<AndroidTokens> androidToken = androidTokenRepository.findById(sale.getAgentid());
+		 
+		if(!androidToken.isPresent()) { 
+			throw new RuntimeException("Device not registered"); 
+		}
 		
 		JSONObject body = new JSONObject();
-	    body.put("to", "dbjvspMxowY:APA91bFmjuqxaI1JVMH0sljLI3Fl3OotoBnAHbSukz5-gioaTp4ZwZsshDDAU0J3VN3nHoK398l1IdU4rmlubB9IMQRKClnwbzk1vyflZlXxCAwiYA1lDX8MYKTJxBN2cqnbds_I0kuT"/*androidToken.get().getToken()*/);
+	    body.put("to", androidToken.get().getToken());
 	    body.put("priority", "high");
 	    
 	    JSONObject notification = new JSONObject();
@@ -199,11 +225,22 @@ public class NotificationServiceImp implements NotificationService {
 	    
 	    body.put("notification", notification);
 	    
-	    SaleModel sm = new SaleModel();
+	    String jsonStr = "";
+	    ObjectMapper obj = new ObjectMapper();
+	    try {
+			jsonStr = obj.writeValueAsString(convertToSaleModel(sale));
+			
+		} catch (JsonProcessingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	    
-	    body.put("data", sm/*convertToSaleModel(sale)*/);
+		JSONObject dataJson = new JSONObject(jsonStr);
+	    body.put("data", dataJson);
 	    
 	    HttpEntity<String> request = new HttpEntity<>(body.toString());
+	    
+	    System.out.println(body.toString());
 	    
 	    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
 	    CompletableFuture.allOf(pushNotification).join();

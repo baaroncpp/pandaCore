@@ -5,13 +5,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.logging.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,7 +34,7 @@ import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.repository.UserRoleRepository;
 import com.fredastone.pandacore.service.NotificationService;
-import com.google.firebase.messaging.Message;
+import com.microsoft.azure.storage.core.Logger;
 
 @Service
 public class NotificationServiceImp implements NotificationService {
@@ -95,55 +91,55 @@ public class NotificationServiceImp implements NotificationService {
 					if(obj.getRole().getName().equals(RoleName.ROLE_MANAGER) || obj.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
 						
 						Optional<AndroidTokens> androidToken = androidTokenRepository.findById(user.getId());						
-						if(!androidToken.isPresent()) {
-							throw new RuntimeException("Device not registered");
-						}
-						
-						JSONObject body = new JSONObject();
-					    body.put("to", androidToken.get().getToken());
-					    body.put("priority", "high");
-					    
-					    JSONObject notification = new JSONObject();
-					    notification.put("title", "APPROVE SALE");
-					    notification.put("body", "APPROVE SALE");
-					    
-					    body.put("notification", notification);
-					    
-					    String jsonStr = "";
-					    ObjectMapper ob = new ObjectMapper();
-					    try {
-							jsonStr = ob.writeValueAsString(convertToSaleModel(sale));
+						if(androidToken.isPresent()) {
 							
-						} catch (JsonProcessingException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					    
-						JSONObject dataJson = new JSONObject(jsonStr);
-					    
-					    body.put("data", dataJson);
-					    
-					    HttpEntity<String> request = new HttpEntity<>(body.toString());
-					    
-					    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
-					    CompletableFuture.allOf(pushNotification).join();
-					 
-					    try {
-							String firebaseResponse = pushNotification.get();
-							System.out.println(firebaseResponse);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					    break;
+							JSONObject body = new JSONObject();
+						    body.put("to", androidToken.get().getToken());
+						    body.put("priority", "high");
+						    
+						    JSONObject notification = new JSONObject();
+						    notification.put("title", "APPROVE SALE");
+						    notification.put("body", "APPROVE SALE");
+						    
+						    body.put("notification", notification);
+						    
+						    String jsonStr = "";
+						    ObjectMapper ob = new ObjectMapper();
+						    try {
+								jsonStr = ob.writeValueAsString(convertToSaleModel(sale));
+								
+							} catch (JsonProcessingException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						    
+							JSONObject dataJson = new JSONObject(jsonStr);
+						    
+						    body.put("data", dataJson);
+						    
+						    HttpEntity<String> request = new HttpEntity<>(body.toString());
+						    
+						    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
+						    CompletableFuture.allOf(pushNotification).join();
+						 
+						    try {
+								String firebaseResponse = pushNotification.get();
+								System.out.println(firebaseResponse);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (ExecutionException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						    break;
+						}else {
+							System.out.println("Device not registered: FCM");
+						}											
 					}
 				}
 			}
 		}
-
 	}
 
 	@Override
@@ -157,104 +153,105 @@ public class NotificationServiceImp implements NotificationService {
 		
 		Optional<AndroidTokens> androidToken = androidTokenRepository.findById(sale.get().getAgentid());
 		
-		if(!androidToken.isPresent()) {
-			throw new RuntimeException("Device not registered");
-		}
-		
-		JSONObject body = new JSONObject();
-	    body.put("to", androidToken.get().getToken());
-	    body.put("priority", "high");
-	    
-	    JSONObject notification = new JSONObject();
-	    notification.put("title", "PAYMENT");
-	    notification.put("body", "Lease Payment");
-	    
-	    body.put("notification", notification);
-	    
-	    String jsonStr = "";
-	    ObjectMapper obj = new ObjectMapper();
-	    try {
-			jsonStr = obj.writeValueAsString(payment);
+		if(androidToken.isPresent()) {
 			
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			JSONObject body = new JSONObject();
+		    body.put("to", androidToken.get().getToken());
+		    body.put("priority", "high");
+		    
+		    JSONObject notification = new JSONObject();
+		    notification.put("title", "PAYMENT");
+		    notification.put("body", "Lease Payment");
+		    
+		    body.put("notification", notification);
+		    
+		    String jsonStr = "";
+		    ObjectMapper obj = new ObjectMapper();
+		    try {
+				jsonStr = obj.writeValueAsString(payment);
+				
+			} catch (JsonProcessingException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		    
+			JSONObject dataJson = new JSONObject(jsonStr);
+		    
+		    body.put("data", dataJson);
+		    
+		    //Message message = new Message();
+		    
+		    HttpEntity<String> request = new HttpEntity<>(body.toString());
+		    
+		    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
+		    CompletableFuture.allOf(pushNotification).join();
+		 
+		    try {
+		      String firebaseResponse = pushNotification.get();
+		      System.out.println(firebaseResponse);
+		      //return new ResponseEntity<>(firebaseResponse, HttpStatus.OK);
+		    } catch (InterruptedException e) {
+		      e.printStackTrace();
+		    } catch (ExecutionException e) {
+		      e.printStackTrace();
+		    }
+		}else {
+			System.out.println("Device not registered: FCM");
 		}
-	    
-		JSONObject dataJson = new JSONObject(jsonStr);
-	    
-	    body.put("data", dataJson);
-	    
-	    //Message message = new Message();
-	    
-	    HttpEntity<String> request = new HttpEntity<>(body.toString());
-	    
-	    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
-	    CompletableFuture.allOf(pushNotification).join();
-	 
-	    try {
-	      String firebaseResponse = pushNotification.get();
-	      System.out.println(firebaseResponse);
-	      //return new ResponseEntity<>(firebaseResponse, HttpStatus.OK);
-	    } catch (InterruptedException e) {
-	      e.printStackTrace();
-	    } catch (ExecutionException e) {
-	      e.printStackTrace();
-	    }
-	 
 	    //return new ResponseEntity<>("Push Notification ERROR!", HttpStatus.BAD_REQUEST);
 	}
 
 	@Override
 	public void approvedSaleNotification(Sale sale) {
-		// TODO Auto-generated method stub
 		
 		Optional<AndroidTokens> androidToken = androidTokenRepository.findById(sale.getAgentid());
 		 
-		if(!androidToken.isPresent()) { 
-			throw new RuntimeException("Device not registered"); 
+		if(androidToken.isPresent()) { 
+			JSONObject body = new JSONObject();
+		    body.put("to", androidToken.get().getToken());
+		    body.put("priority", "high");
+		    
+		    JSONObject notification = new JSONObject();
+		    notification.put("title", "SALE APPROVED");
+		    notification.put("body", "SALE APPROVED");
+		    
+		    body.put("notification", notification);
+		    
+		    String jsonStr = "";
+		    ObjectMapper obj = new ObjectMapper();
+		    try {
+				jsonStr = obj.writeValueAsString(convertToSaleModel(sale));
+				
+			} catch (JsonProcessingException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		    
+			JSONObject dataJson = new JSONObject(jsonStr);
+		    body.put("data", dataJson);
+		    
+		    HttpEntity<String> request = new HttpEntity<>(body.toString());
+		    
+		    System.out.println(body.toString());
+		    
+		    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
+		    CompletableFuture.allOf(pushNotification).join();
+		 
+		    try {
+				String firebaseResponse = pushNotification.get();
+				System.out.println(firebaseResponse);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}else {
+			System.out.println("Device not registered: FCM");
 		}
 		
-		JSONObject body = new JSONObject();
-	    body.put("to", androidToken.get().getToken());
-	    body.put("priority", "high");
-	    
-	    JSONObject notification = new JSONObject();
-	    notification.put("title", "SALE APPROVED");
-	    notification.put("body", "SALE APPROVED");
-	    
-	    body.put("notification", notification);
-	    
-	    String jsonStr = "";
-	    ObjectMapper obj = new ObjectMapper();
-	    try {
-			jsonStr = obj.writeValueAsString(convertToSaleModel(sale));
-			
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	    
-		JSONObject dataJson = new JSONObject(jsonStr);
-	    body.put("data", dataJson);
-	    
-	    HttpEntity<String> request = new HttpEntity<>(body.toString());
-	    
-	    System.out.println(body.toString());
-	    
-	    CompletableFuture<String> pushNotification = androidPushNotificationService.send(request);
-	    CompletableFuture.allOf(pushNotification).join();
-	 
-	    try {
-			String firebaseResponse = pushNotification.get();
-			System.out.println(firebaseResponse);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	public SaleModel convertToSaleModel(Sale sale) {

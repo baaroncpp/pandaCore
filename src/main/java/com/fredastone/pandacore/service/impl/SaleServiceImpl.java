@@ -425,6 +425,8 @@ public class SaleServiceImpl implements SaleService {
 
 			rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
 		}
+		
+		notificationService.approvedSaleNotification(s);
 		return s;
 	}
 

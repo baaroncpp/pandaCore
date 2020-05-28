@@ -154,8 +154,9 @@ public class UserServiceImpl implements UserService {
 	public User getUserById(String id) {
 		Optional<User> user = userDao.findById(id);
 		
-		if(!user.isPresent())
+		if(!user.isPresent()) {
 			throw new ItemNotFoundException(id);
+		}
 		
 		user.get().setPassword(null);
 		return user.get();

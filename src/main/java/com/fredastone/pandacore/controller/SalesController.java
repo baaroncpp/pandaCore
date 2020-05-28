@@ -56,21 +56,25 @@ public class SalesController {
 	}
 	
 	@RequestMapping(path="add/direct",method = RequestMethod.POST)
-    public ResponseEntity<?> postNewDirectSale(@RequestBody Sale sale) {
-		
+    public ResponseEntity<?> postNewDirectSale(HttpServletRequest request, @RequestBody Sale sale) {
+		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		sale.setAgentid(id);
 		return ResponseEntity.ok(saleService.recoredNewDirectSale(sale));
 		
     }
 	
-	@RequestMapping(path="add/lease",params = {"leaseoffer","agentid","customerid","cordlat","cordlong","deviceserial"},method = RequestMethod.POST)
-    public ResponseEntity<?> postNewLeaseSale(@RequestParam("leaseoffer") int leaseId,
-    		@RequestParam("agentid") String agentid,
+	@RequestMapping(path="add/lease",params = {"leaseoffer","customerid","cordlat","cordlong","deviceserial"},method = RequestMethod.POST)
+    public ResponseEntity<?> postNewLeaseSale(HttpServletRequest request,
+    		@RequestParam("leaseoffer") int leaseId,
+    		//@RequestParam("agentid") String agentid,
     		@RequestParam("customerid") String customerid,
     		@RequestParam("cordlat") float cord_lat,
     		@RequestParam("cordlong") float cord_long,
     		@RequestParam("deviceserial") String deviceserial) {
 		
-		return ResponseEntity.ok(saleService.recoredNewLeaseSale(leaseId,agentid,customerid,cord_lat,cord_long,deviceserial));
+		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		
+		return ResponseEntity.ok(saleService.recoredNewLeaseSale(leaseId, id,customerid,cord_lat,cord_long,deviceserial));
     }
 	
     @RequestMapping(path="get/allsales",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)

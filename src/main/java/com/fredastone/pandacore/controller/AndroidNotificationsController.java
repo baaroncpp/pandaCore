@@ -50,7 +50,7 @@ public class AndroidNotificationsController {
 	 * }
 	 */
 	
-	@RequestMapping(path="/token/{token}",method = RequestMethod.POST)
+	@RequestMapping(path="/fcm/{token}",method = RequestMethod.POST)
 	public ResponseEntity<?> registerAndroidDeviceToken(HttpServletRequest request, @PathVariable("token") String deviceToken){
 		
 		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));

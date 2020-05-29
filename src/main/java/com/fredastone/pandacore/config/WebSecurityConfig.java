@@ -78,9 +78,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				//.antMatchers("/v1/approvals/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER")
 				.antMatchers("/v1/installation/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER","ROLE_ENGINEER")
 				
-				//.antMatchers("/").permitAll();
+				//.antMatchers("/v1/android").permitAll()
 
-			    .antMatchers("/token/**").permitAll().antMatchers("/swagger*").permitAll().anyRequest().authenticated();
+			    .antMatchers("/token/**").permitAll().antMatchers("swagger*").permitAll().anyRequest().authenticated();
 
 		httpSecurity.addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class).headers()
 				.frameOptions().sameOrigin() // required to set for H2 else H2 Console will be blank.

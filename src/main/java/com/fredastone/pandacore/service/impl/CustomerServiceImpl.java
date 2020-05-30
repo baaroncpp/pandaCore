@@ -313,7 +313,7 @@ public class CustomerServiceImpl implements CustomerService {
 			object.setHousephotopath(azureOperations.getHousePhotoPath(object.getIdnumber()));
 			result.add(object);
 		}
-		// TODO Auto-generated method stub
+		
 		return result;
 	}
 

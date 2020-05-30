@@ -154,7 +154,7 @@ public class SaleServiceImpl implements SaleService {
 	public Sale recoredNewDirectSale(Sale sale) {
 
 		// Retrieve the product that is being sold
-		//Optional<Product> product = productDao.findById(sale.getProductid());
+		// Optional<Product> product = productDao.findById(sale.getProductid());
 		Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
 
 		if (!product.isPresent() || !product.get().getIsActive()) {
@@ -184,7 +184,7 @@ public class SaleServiceImpl implements SaleService {
 
 		saleDao.save(sale);
 		notificationService.approveSaleNotification(sale);
-		
+
 		return sale;
 	}
 
@@ -205,28 +205,38 @@ public class SaleServiceImpl implements SaleService {
 		if (!product.getIsActive()) {
 			throw new ProductNotFoundException(product.getId());
 		}
-		
+
 		Optional<PayGoProduct> payGoProduct = payGoRepo.findById(scannedserial);
-		if(!payGoProduct.isPresent()) {
+		if (!payGoProduct.isPresent()) {
 			throw new ItemNotFoundException(scannedserial);
 		}
-		
-		if(payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.PENDING.name())) {
+
+		if (payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.PENDING.name())) {
 			throw new RuntimeException("PayGo product is sold, Pending approval");
 		}
-		
-		if(payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.SOLD.name())) {
+
+		if (payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.SOLD.name())) {
 			throw new RuntimeException("PayGo product is already sold");
 		}
 
-		// Get the agent making this sale
+		// Get the agent or employee making this sale
 		Optional<AgentMeta> agent = agentDao.findById(agentid);
+		//Optional<User> saleUser = userDao.findById(agentid);
 
+		/*
+		 * if (!saleUser.isPresent() ||
+		 * !saleUser.get().getUsertype().equals(UserType.AGENT.name()) ||
+		 * !saleUser.get().getUsertype().equals(UserType.EMPLOYEE.name()) ||
+		 * !saleUser.get().isIsactive()) { throw new
+		 * AgentNotFoundException(saleUser.get().getId()); }
+		 */
+		
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
-			throw new AgentNotFoundException(agent.get().getUserid());
+			throw new AgentNotFoundException(agent.get().getUserid()); 
 		}
-
+				
 		Optional<CustomerMeta> customerMeta = customerMetaRepository.findById(customerid);
+		
 
 		if (!customerMeta.isPresent()) {
 			throw new RuntimeException("Customer of ID :" + customerid + " does not exist");
@@ -289,9 +299,9 @@ public class SaleServiceImpl implements SaleService {
 
 		payGoProduct.get().setPayGoProductStatus(PayGoProductStatus.PENDING);
 		payGoRepo.save(payGoProduct.get());
-		
+
 		notificationService.approveSaleNotification(sale);
-		
+
 		return new LeaseSale(sale, lease);
 
 	}
@@ -356,7 +366,7 @@ public class SaleServiceImpl implements SaleService {
 				}
 
 			}
-			
+
 			notificationService.approvedSaleNotification(s);
 			return s;
 		}
@@ -425,7 +435,7 @@ public class SaleServiceImpl implements SaleService {
 
 			rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
 		}
-		
+
 		notificationService.approvedSaleNotification(s);
 		return s;
 	}
@@ -540,27 +550,27 @@ public class SaleServiceImpl implements SaleService {
 		if (!user.isPresent()) {
 			throw new RuntimeException("Agent does not exist");
 		}
-		
-		  List<Sale> sales = saleDao.findAllByAgentid(agentId);
-		  
-		  Map<String, Integer> result = new HashMap<>();
-		
-		  List<Sale> directSales = saleDao.findAllByAgentidAndSaletype(agentId, "Direct");
-		  
-		  if(!directSales.isEmpty()) {
-			  result.put("DIRECT", directSales.size()); 
-		  }else { 
-			  result.put("DIRECT", 0); 
-		  }
-		  
-		  List<Sale> leaseSales = saleDao.findAllByAgentidAndSaletype(agentId, "Lease");
-		  
-		  if(!leaseSales.isEmpty()) { 
-			  result.put("LEASE", leaseSales.size()); 
-		  }else {
-			  result.put("LEASE", 0); 
-		  }
-		 
+
+		List<Sale> sales = saleDao.findAllByAgentid(agentId);
+
+		Map<String, Integer> result = new HashMap<>();
+
+		List<Sale> directSales = saleDao.findAllByAgentidAndSaletype(agentId, "Direct");
+
+		if (!directSales.isEmpty()) {
+			result.put("DIRECT", directSales.size());
+		} else {
+			result.put("DIRECT", 0);
+		}
+
+		List<Sale> leaseSales = saleDao.findAllByAgentidAndSaletype(agentId, "Lease");
+
+		if (!leaseSales.isEmpty()) {
+			result.put("LEASE", leaseSales.size());
+		} else {
+			result.put("LEASE", 0);
+		}
+
 		return result;
 	}
 
@@ -609,27 +619,32 @@ public class SaleServiceImpl implements SaleService {
 
 	@Override
 	public List<SaleModel> mobileUserGetSales(String userId, int page, int count, String sortBy, Direction orderBy) {
-		
+
 		Optional<User> user = userDao.findById(userId);
-		//List<SaleModel> result = new ArrayList<>();
-		
-		if(!user.isPresent()) {
+		// List<SaleModel> result = new ArrayList<>();
+
+		if (!user.isPresent()) {
 			throw new RuntimeException("user not found");
 		}
-		
+
 		List<UserRole> userRoles = userRoleRepository.findAllByUser(user.get());
-				
+
 		String userType = user.get().getUsertype();
-		
-		if(userType.equals(UserType.EMPLOYEE.name())) {
-			
-			for(UserRole object : userRoles) {
-				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
+
+		if (userType.equals(UserType.EMPLOYEE.name())) {
+
+			for (UserRole object : userRoles) {
+				if (object.getRole().getName().equals(RoleName.ROLE_MANAGER)
+						|| object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)
+						|| object.getRole().getName().equals(RoleName.ROLE_MARKETING)
+						|| object.getRole().getName().equals(RoleName.ROLE_FINANCE)) {
 					return getAllSales(page, count, sortBy, orderBy);
+				} else {
+					throw new RuntimeException("Permission denied, contact Admin");
 				}
 			}
-			
-		}else if(userType.equals(UserType.AGENT.name())) {
+
+		} else if (userType.equals(UserType.AGENT.name())) {
 			return getAllSalesByAgentId(userId, page, count, sortBy, orderBy);
 		}
 		// TODO Auto-generated method stub

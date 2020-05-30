@@ -624,8 +624,10 @@ public class SaleServiceImpl implements SaleService {
 		if(userType.equals(UserType.EMPLOYEE.name())) {
 			
 			for(UserRole object : userRoles) {
-				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
+				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_MARKETING) || object.getRole().getName().equals(RoleName.ROLE_FINANCE)) {
 					return getAllSales(page, count, sortBy, orderBy);
+				}else {
+					throw new RuntimeException("Permission denied, contact Admin");
 				}
 			}
 			

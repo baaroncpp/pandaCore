@@ -158,7 +158,10 @@ public class UserServiceImpl implements UserService {
 			throw new ItemNotFoundException(id);
 		}
 		
+		String profilePath = azureOperations.getProfile(user.get().getId()); 
+		
 		user.get().setPassword(null);
+		user.get().setProfilepath(profilePath);
 		return user.get();
 	}
 

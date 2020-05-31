@@ -87,7 +87,7 @@ public class ProductsServiceImpl implements ProductsService {
 		List<Product> result = new ArrayList<>();
 		
 		for(Product object : productDao.findAll()) {
-			object.setThumbnail(azureOperations.getProductPicture(object.getId()));
+			object.setThumbnail(azureOperations.uploadProuctPicture(object.getId()));
 			result.add(object);
 		}		
 		return result;

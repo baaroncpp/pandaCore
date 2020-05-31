@@ -299,7 +299,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 
 	@Override
-	public List<CustomerMeta> getAllCustomerMeta(int page,int size,String sortBy,Direction sortOrder) {
+	public List<CustomerMeta> getAllCustomerMeta(int page,int size,String sortBy,Direction sortOrder) throws InvalidKeyException, MalformedURLException {
 		
 		final org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size,Sort.by(sortOrder,sortBy));
 		Page<CustomerMeta> custMeta = customerMetaDao.findAll(pageable);
@@ -307,10 +307,10 @@ public class CustomerServiceImpl implements CustomerService {
 		List<CustomerMeta> result = new ArrayList<>();
 		
 		for(CustomerMeta object : custMeta) {
-			object.setProfilephotopath(azureOperations.getProfile(object.getIdnumber()));
-			object.setConsentformpath(azureOperations.getCustConsent(object.getIdnumber()));
-			object.setIdcopypath(azureOperations.getIdCopy(object.getIdnumber()));
-			object.setHousephotopath(azureOperations.getHousePhotoPath(object.getIdnumber()));
+			object.setProfilephotopath(azureOperations.uploadProfile(object.getIdnumber()));
+			object.setConsentformpath(azureOperations.uploadCustConsent(object.getIdnumber()));
+			object.setIdcopypath(azureOperations.uploadIdCopy(object.getIdnumber()));
+			object.setHousephotopath(azureOperations.uploadHousePhotoPath(object.getIdnumber()));
 			result.add(object);
 		}
 		

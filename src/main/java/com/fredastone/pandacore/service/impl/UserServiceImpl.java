@@ -158,7 +158,13 @@ public class UserServiceImpl implements UserService {
 			throw new ItemNotFoundException(id);
 		}
 		
-		String profilePath = azureOperations.getProfile(user.get().getId()); 
+		String profilePath = "";
+		try {
+			profilePath = azureOperations.uploadProfile(user.get().getId());
+		} catch (InvalidKeyException | MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 		
 		user.get().setPassword(null);
 		user.get().setProfilepath(profilePath);

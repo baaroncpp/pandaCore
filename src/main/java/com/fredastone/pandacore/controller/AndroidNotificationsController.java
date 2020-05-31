@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +49,7 @@ public class AndroidNotificationsController {
 	 * }
 	 */
 	
-	@RequestMapping(path="/fcm/{token}",method = RequestMethod.POST)
+	@RequestMapping(path="fcm/{token}",method = RequestMethod.POST)
 	public ResponseEntity<?> registerAndroidDeviceToken(HttpServletRequest request, @PathVariable("token") String deviceToken){
 		
 		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));

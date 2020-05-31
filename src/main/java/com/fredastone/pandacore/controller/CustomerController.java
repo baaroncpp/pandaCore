@@ -80,7 +80,7 @@ public class CustomerController {
     public ResponseEntity<?> getAllCustomerMeta(@Valid @RequestParam("sortorder") Direction sortorder,
 									    		@Valid @RequestParam("sortby") String sortby,
 									    		@Valid @RequestParam("page") int page,
-									    		@RequestParam("size") int size){
+									    		@RequestParam("size") int size) throws InvalidKeyException, MalformedURLException{
     	
     	return ResponseEntity.ok(customerService.getAllCustomerMeta(page, size, sortby, sortorder));
     }

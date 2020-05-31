@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.net.MalformedURLException;
+import java.security.InvalidKeyException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -583,14 +585,24 @@ public class SaleServiceImpl implements SaleService {
 			throw new ItemNotFoundException(sale.getAgentid());
 		}
 
-		agent.get().setProfilepath(azureOperations.getProfile(sale.getAgentid()));
+		try {
+			agent.get().setProfilepath(azureOperations.uploadProfile(sale.getAgentid()));
+		} catch (InvalidKeyException | MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		Optional<CustomerMeta> customer = customerMetaRepository.findById(sale.getCustomerid());
 		if (!customer.isPresent()) {
 			throw new ItemNotFoundException(sale.getCustomerid());
 		}
 
-		customer.get().setProfilephotopath(azureOperations.getProfile(sale.getCustomerid()));
+		try {
+			customer.get().setProfilephotopath(azureOperations.uploadProfile(sale.getCustomerid()));
+		} catch (InvalidKeyException | MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		Optional<Product> product = productDao.findById(sale.getProductid());
 		if (!product.isPresent()) {

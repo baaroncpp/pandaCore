@@ -1,6 +1,5 @@
 package com.fredastone.pandacore.service;
 
-import java.awt.print.Pageable;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -8,7 +7,6 @@ import java.security.InvalidKeyException;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -25,7 +23,7 @@ public interface CustomerService {
 	CustomerMeta updateCustomerMeta(CustomerMeta customerMeta);
 	Optional<User> getCustomer(String id);
 	CustomerMeta getCustomerMeta(String id);
-	List<CustomerMeta> getAllCustomerMeta(int page, int count, String sortBy, Direction sortOrder);
+	List<CustomerMeta> getAllCustomerMeta(int page, int count, String sortBy, Direction sortOrder)throws InvalidKeyException, MalformedURLException;
 
 	//Page<User> getAllActiveCustomers(boolean status,int size,int page);
 	

@@ -307,10 +307,10 @@ public class CustomerServiceImpl implements CustomerService {
 		List<CustomerMeta> result = new ArrayList<>();
 		
 		for(CustomerMeta object : custMeta) {
-			object.setProfilephotopath(azureOperations.uploadProfile(object.getIdnumber()));
-			object.setConsentformpath(azureOperations.uploadCustConsent(object.getIdnumber()));
-			object.setIdcopypath(azureOperations.uploadIdCopy(object.getIdnumber()));
-			object.setHousephotopath(azureOperations.uploadHousePhotoPath(object.getIdnumber()));
+			object.setProfilephotopath(azureOperations.uploadProfile(object.getUserid()));
+			object.setConsentformpath(azureOperations.uploadCustConsent(object.getUserid()));
+			object.setIdcopypath(azureOperations.uploadIdCopy(object.getUserid()));
+			object.setHousephotopath(azureOperations.uploadHousePhotoPath(object.getUserid()));
 			result.add(object);
 		}
 		

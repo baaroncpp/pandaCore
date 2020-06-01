@@ -61,4 +61,9 @@ public class TokensController {
 		return ResponseEntity.ok(info);
 	}
 	
+	@RequestMapping(path = "paymenttoken/{leasePaymentId}", method = RequestMethod.GET)
+	public ResponseEntity<?> getTokenByLeasePayment(@PathVariable("leasePaymentId") String leasePaymentId){
+		return ResponseEntity.ok(tokenService.getTokenByPaymentReference(leasePaymentId));
+	}
+	
 }

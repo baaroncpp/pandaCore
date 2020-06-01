@@ -167,7 +167,7 @@ public class SaleServiceImpl implements SaleService {
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
 
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
-			throw new AgentNotFoundException(sale.getAgentid());
+			throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
 		}
 
 		final float agentCommissionRate = (float) agent.get().getAgentcommissionrate() / 100;
@@ -185,7 +185,7 @@ public class SaleServiceImpl implements SaleService {
 		sale.setSaletype(DIRECT_SALE);
 
 		saleDao.save(sale);
-		notificationService.approveSaleNotification(sale);
+		//notificationService.approveSaleNotification(sale);
 
 		return sale;
 	}
@@ -234,7 +234,7 @@ public class SaleServiceImpl implements SaleService {
 		 */
 		
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
-			throw new AgentNotFoundException(agent.get().getUserid()); 
+			throw new AgentNotFoundException(agent.get().getUserid()+ " NON AGENT"); 
 		}
 				
 		Optional<CustomerMeta> customerMeta = customerMetaRepository.findById(customerid);
@@ -302,7 +302,7 @@ public class SaleServiceImpl implements SaleService {
 		payGoProduct.get().setPayGoProductStatus(PayGoProductStatus.PENDING);
 		payGoRepo.save(payGoProduct.get());
 
-		notificationService.approveSaleNotification(sale);
+		//notificationService.approveSaleNotification(sale);
 
 		return new LeaseSale(sale, lease);
 
@@ -369,7 +369,7 @@ public class SaleServiceImpl implements SaleService {
 
 			}
 
-			notificationService.approvedSaleNotification(s);
+			//notificationService.approvedSaleNotification(s);
 			return s;
 		}
 		// set product status to sold
@@ -438,7 +438,7 @@ public class SaleServiceImpl implements SaleService {
 			rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
 		}
 
-		notificationService.approvedSaleNotification(s);
+		//notificationService.approvedSaleNotification(s);
 		return s;
 	}
 

@@ -1,15 +1,22 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fredastone.pandacore.entity.LeasePayment;
+import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
 import com.fredastone.pandacore.models.BuyToken;
 import com.fredastone.pandacore.repository.BuyTokenRepository;
 import com.fredastone.pandacore.repository.CustomerFinanceInfoRepository;
+import com.fredastone.pandacore.repository.LeasePaymentRepository;
+import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.service.TokenService;
 
@@ -20,14 +27,18 @@ public class TokenServiceImpl implements TokenService{
 	private BuyTokenRepository buyTokenRepo;
 	private CustomerFinanceInfoRepository customerFinanceDao;
 	private TokenRepository tokenRepository;
-	
+	private SaleRepository saleRepository;
+	private LeasePaymentRepository leasePaymentRepository;
+ 	
 	@Autowired
-	public TokenServiceImpl(TokenRepository tokenRepository, CustomerFinanceInfoRepository customerfinanceDao, BuyTokenRepository buyTokenRepo) {
+	public TokenServiceImpl(LeasePaymentRepository leasePaymentRepository, SaleRepository saleRepository, TokenRepository tokenRepository, CustomerFinanceInfoRepository customerfinanceDao, BuyTokenRepository buyTokenRepo) {
 		// TODO Auto-generated constructor stub
 
 		this.customerFinanceDao = customerfinanceDao;
 		this.buyTokenRepo = buyTokenRepo;
 		this.tokenRepository = tokenRepository;
+		this.saleRepository = saleRepository;
+		this.leasePaymentRepository = leasePaymentRepository;
 	}
 
 	@Override
@@ -80,6 +91,27 @@ public class TokenServiceImpl implements TokenService{
 		}
 		
 		return info.get(); 
+	}
+
+	@Override
+	public List<Token> getDeviceTokensBySerialNumber(String serialNumber) {
+		// TODO Auto-generated method stub
+		List<Token> result = new ArrayList<>();
+		Optional<Sale> sale = saleRepository.findByScannedserial(serialNumber);
+		if(!sale.isPresent()) {
+			throw new RuntimeException("Sale with serial Number: "+serialNumber+" doesn't exist");
+		}
+		
+		List<LeasePayment> leasePayments = leasePaymentRepository.findAllByleaseid(sale.get().getId());
+		
+		for(LeasePayment object : leasePayments) {
+			Optional<Token> token = tokenRepository.findById(object.getId());
+			if(token.isPresent()) {
+				result.add(token.get());
+			}
+		}
+		
+		return result;
 	}
 
 }

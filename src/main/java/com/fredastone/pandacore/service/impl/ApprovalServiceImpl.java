@@ -17,6 +17,7 @@ import com.fredastone.pandacore.entity.AgentMeta;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.Capex;
+import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.EmployeeMeta;
 import com.fredastone.pandacore.entity.Opex;
 import com.fredastone.pandacore.entity.Sale;
@@ -32,6 +33,7 @@ import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ApprovalReviewRepository;
 import com.fredastone.pandacore.repository.ApproverRepository;
 import com.fredastone.pandacore.repository.CapexRepository;
+import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.EmployeeRepository;
 import com.fredastone.pandacore.repository.OpexRepository;
 import com.fredastone.pandacore.repository.RoleRepository;
@@ -92,6 +94,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 	private CapexRepository capexRepository;
 	private OpexRepository opexRepository;
 	private SaleService saleService;
+	private CustomerMetaRepository customerMetaRepository;
 	
 	private static final String CUSTOMER_USER_TYPE = "customer";
 	private static final String EMPLOYEE_USER_TYPE = "employee";
@@ -109,7 +112,9 @@ public class ApprovalServiceImpl implements ApprovalService {
 			ApproverRepository approverDao,
 			OpexRepository opexRepository,
 			CapexRepository capexRepository,
-			VSaleApprovalReviewRepository saleReviewRepo, SaleService saleService) {
+			VSaleApprovalReviewRepository saleReviewRepo, 
+			SaleService saleService,
+			CustomerMetaRepository customerMetaRepository) {
 		
 		this.approvalReviewDao = approvalReviewDao;
 		this.userDao = userDao;
@@ -123,6 +128,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		this.capexRepository = capexRepository;
 		this.opexRepository = opexRepository;
 		this.saleService = saleService;
+		this.customerMetaRepository = customerMetaRepository;
 	}
 	
 
@@ -133,9 +139,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 		if(!user.isPresent())
 			throw new RuntimeException("User with id "+userId+" not found in system");
 		
-		if(user.get().isIsapproved() || user.get().getUsertype().toLowerCase().equals(CUSTOMER_USER_TYPE))
-			throw new RuntimeException("Operation is not supported for user with id "+userId);
-
+		/*
+		 * if(user.get().isIsapproved() ||
+		 * user.get().getUsertype().toLowerCase().equals(CUSTOMER_USER_TYPE)) throw new
+		 * RuntimeException("Operation is not supported for user with id "+userId);
+		 */
 		
 		user.get().setIsapproved(Boolean.TRUE);
 		user.get().setIsactive(Boolean.TRUE);
@@ -155,7 +163,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 			
 		}
 		
-		/*if(user.get().getUsertype().toLowerCase().equals(CUSTOMER_USER_TYPE)) {
+		if(user.get().getUsertype().toLowerCase().equals(CUSTOMER_USER_TYPE)) {
 			Optional<CustomerMeta> customerMeta = customerMetaRepository.findById(user.get().getId());
 			if(!customerMeta.isPresent()) {
 				throw new RuntimeException("No Agent additonal info found");
@@ -170,9 +178,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 			
 			this.addApprovalReview(review);
 			
-			agentDao.save(agentMeta.get());
-			userRoleRepository.save(addNApproveDefaultUserRole(user.get()));
-		}*/
+			customerMeta.get().setUser(user.get());
+			customerMetaRepository.save(customerMeta.get());
+			//agentDao.save(agentMeta.get());
+			//userRoleRepository.save(addNApproveDefaultUserRole(user.get()));
+		}
 		
 		if(user.get().getUsertype().toLowerCase().equals(AGENT_USER_TYPE)) {
 			Optional<AgentMeta> agentMeta = this.agentDao.findById(userId);

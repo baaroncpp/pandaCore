@@ -66,4 +66,9 @@ public class TokensController {
 		return ResponseEntity.ok(tokenService.getTokenByPaymentReference(leasePaymentId));
 	}
 	
+	@RequestMapping(path = "payments/{serial}", method = RequestMethod.GET)
+	public ResponseEntity<?> getTokenBySerialNumber(@PathVariable("serial") String serial){
+		return ResponseEntity.ok(tokenService.getDeviceTokensBySerialNumber(serial));
+	}
+	
 }

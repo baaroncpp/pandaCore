@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.service;
 
+import java.util.List;
+
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
 import com.fredastone.pandacore.models.BuyToken;
@@ -13,5 +15,6 @@ public interface TokenService {
 	Token getTokenByPaymentReference(String paymentReference);
 	Token invalidateToken(String token);
 	Token resendToken(String paymentReference);
+	List<Token> getDeviceTokensBySerialNumber(String serialNumber);
 
 }

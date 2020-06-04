@@ -207,8 +207,9 @@ public class SalesController {
     }
     
 	@RequestMapping(path="complete/{id}",method = RequestMethod.POST)
-    public ResponseEntity<?> completeNewSale(@PathVariable("id") String sale) {
-       return ResponseEntity.ok(saleService.completeSale(sale));
+    public ResponseEntity<?> completeNewSale(@PathVariable("id") String sale, HttpServletRequest request) {
+		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+       return ResponseEntity.ok(saleService.completeSale(sale, id));
     }
 	
 	@RequestMapping(path="agent/salesum/{id}",method = RequestMethod.GET)

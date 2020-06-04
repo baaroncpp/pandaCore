@@ -65,8 +65,6 @@ public class TokenGenerator {
 		return finalToken;
 			
 	}
-
-	
 	
 	private static boolean checkDaysSupported(String days) {
 		final int mdays = Integer.valueOf(days);

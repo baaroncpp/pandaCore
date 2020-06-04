@@ -320,18 +320,21 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
 		Optional<User> user = userDao.findById(approverId);
-		List<UserRole> userRoles = userRoleRepository.findAllByUser(user.get());
+		
 		
 		String userType = user.get().getUsertype();
+		List<UserRole> userRoles = userRoleRepository.findAllByUser(user.get());
 		
-		if(userType.equals(UserType.EMPLOYEE.name())) {
+		System.out.println(userRoles.size());
+		
+		if(userType.equals(UserType.EMPLOYEE.name()) && !userRoles.isEmpty()) {
 			
 			for(UserRole object : userRoles) {
 				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
 					
 					 Optional<Sale> sale = saleRepository.findById(saleId);
 					  
-					  if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
+					 if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
 					  
 					  if( sale.get().getSaletype().equals("Direct")) { 
 						  throw new RuntimeException("Sale does not qualify for this operation"); 
@@ -340,8 +343,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 					  if( sale.get().getSalestatus() == (short) ServiceConstants.ACCEPTED_APPROVAL) { 
 						  throw new RuntimeException("Sale has already been approved"); 
 					  }
-					
-					  break;
+					  
+					  return saleService.completeSale(saleId, approverId);
 				}
 			}
 			
@@ -389,7 +392,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 		 * rabbitTemplate.convertAndSend(notificationExchange,emailRoutingKey,notify.
 		 * toString());
 		 */
-		return saleService.completeSale(saleId);
+		//return saleService.completeSale(saleId);
+		throw new RuntimeException("Not authorized for this OPERATION 2");
 		
 		//return saleRepository.save(sale.get());
 	}

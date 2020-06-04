@@ -159,6 +159,45 @@ public class SaleServiceImpl implements SaleService {
 		this.approverDao = approverDao;
 		this.approvalReviewDao = approvalReviewDao;
 	}
+	
+	public Sale noPaygoSale(Sale sale) {
+		
+		// Retrieve the product that is being sold
+		// Optional<Product> product = productDao.findById(sale.getProductid());
+		Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
+
+		if (!product.isPresent() || !product.get().getIsActive()) {
+			throw new ProductNotFoundException(sale.getProductid());
+		}
+
+		// Get the agent making this sale
+		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
+
+		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
+			throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
+		}
+
+		final float agentCommissionRate = (float) agent.get().getAgentcommissionrate() / 100;
+
+		// Get the total amount to be paid
+		float totalAmount = product.get().getUnitcostselling() * sale.getQuantity();
+		float agentCommission = totalAmount * agentCommissionRate;
+
+		sale.setAgentcommission(agentCommission);
+		sale.setAmount(totalAmount);
+		sale.setSalestatus((short) ServiceConstants.PENDING_APPROVAL);
+		sale.setProductid(product.get().getId());
+
+		sale.setId(ServiceUtils.getUUID());
+		sale.setSaletype(DIRECT_SALE);
+		sale.setIsreviewed(Boolean.TRUE);
+		sale.setSalestatus((short) ServiceConstants.ACCEPTED_APPROVAL);
+		sale.setCompletedon(new Date());
+
+		saleDao.save(sale);
+		
+		return null;
+	}
 
 	@Transactional
 	@Override
@@ -194,7 +233,7 @@ public class SaleServiceImpl implements SaleService {
 		sale.setSaletype(DIRECT_SALE);
 
 		saleDao.save(sale);
-		notificationService.approveSaleNotification(sale);
+		//notificationService.approveSaleNotification(sale);
 
 		return sale;
 	}

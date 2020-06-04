@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fredastone.pandacore.azure.IAzureOperations;
 import com.fredastone.pandacore.constants.RoleName;
 import com.fredastone.pandacore.constants.UserType;
@@ -105,19 +106,26 @@ public class NotificationServiceImp implements NotificationService {
 							    
 							    body.put("notification", notification);
 							    
-							    String jsonStr = "";
-							    ObjectMapper ob = new ObjectMapper();
-							    try {
-									jsonStr = ob.writeValueAsString(convertToSaleModel(sale));
-									
+							    //String jsonStr = "";
+							    //ObjectMapper ob = new ObjectMapper();
+							    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+							    String json = null;
+								try {
+									json = ow.writeValueAsString(convertToSaleModel(sale));
 								} catch (JsonProcessingException e1) {
 									// TODO Auto-generated catch block
 									e1.printStackTrace();
 								}
+								/*
+								 * try { jsonStr = ob.writeValueAsString(convertToSaleModel(sale));
+								 * 
+								 * } catch (JsonProcessingException e1) { // TODO Auto-generated catch block
+								 * e1.printStackTrace(); }
+								 */
 							    
-								JSONObject dataJson = new JSONObject(jsonStr);
+								//JSONObject dataJson = new JSONObject(jsonStr);
 							    
-							    body.put("data", dataJson);
+							    body.put("data", json);
 							    
 							    HttpEntity<String> request = new HttpEntity<>(body.toString());
 							    

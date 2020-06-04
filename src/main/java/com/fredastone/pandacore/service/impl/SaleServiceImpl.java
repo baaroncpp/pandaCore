@@ -28,6 +28,8 @@ import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.constants.TokenTypes;
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.AgentMeta;
+import com.fredastone.pandacore.entity.ApprovalReview;
+import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeaseOffer;
@@ -49,6 +51,8 @@ import com.fredastone.pandacore.models.Notification;
 import com.fredastone.pandacore.models.Notification.NotificationType;
 import com.fredastone.pandacore.models.SaleModel;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
+import com.fredastone.pandacore.repository.ApprovalReviewRepository;
+import com.fredastone.pandacore.repository.ApproverRepository;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
@@ -61,6 +65,7 @@ import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.repository.TotalLeasePaymentsRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.repository.UserRoleRepository;
+import com.fredastone.pandacore.service.ApprovalService;
 import com.fredastone.pandacore.service.NotificationService;
 import com.fredastone.pandacore.service.SaleService;
 import com.fredastone.pandacore.util.ServiceUtils;
@@ -122,6 +127,8 @@ public class SaleServiceImpl implements SaleService {
 	private UserRoleRepository userRoleRepository;
 	private IAzureOperations azureOperations;
 	private NotificationService notificationService;
+	private ApproverRepository approverDao;
+	private ApprovalReviewRepository approvalReviewDao;
 
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
@@ -132,7 +139,7 @@ public class SaleServiceImpl implements SaleService {
 			LeaseOfferRepository leaseOfferDao, LeaseRepository leaseDao, TokenRepository saleTokenDao,
 			TotalLeasePaymentsRepository totalLeaseRepayDao, UserRepository userDao, LeaseSaleDetailRepository lsdDao,
 			PayGoProductRepository payGoRepo, IAzureOperations azureOperations, NotificationService notificationService,
-			UserRoleRepository userRoleRepository) {
+			UserRoleRepository userRoleRepository, ApproverRepository approverDao, ApprovalReviewRepository approvalReviewDao) {
 		// TODO Auto-generated constructor stub
 		this.rollbackDao = rollbackDao;
 		this.saleDao = saleDao;
@@ -149,6 +156,8 @@ public class SaleServiceImpl implements SaleService {
 		this.azureOperations = azureOperations;
 		this.notificationService = notificationService;
 		this.userRoleRepository = userRoleRepository;
+		this.approverDao = approverDao;
+		this.approvalReviewDao = approvalReviewDao;
 	}
 
 	@Transactional
@@ -185,7 +194,7 @@ public class SaleServiceImpl implements SaleService {
 		sale.setSaletype(DIRECT_SALE);
 
 		saleDao.save(sale);
-		//notificationService.approveSaleNotification(sale);
+		notificationService.approveSaleNotification(sale);
 
 		return sale;
 	}
@@ -302,7 +311,7 @@ public class SaleServiceImpl implements SaleService {
 		payGoProduct.get().setPayGoProductStatus(PayGoProductStatus.PENDING);
 		payGoRepo.save(payGoProduct.get());
 
-		//notificationService.approveSaleNotification(sale);
+		notificationService.approveSaleNotification(sale);
 
 		return new LeaseSale(sale, lease);
 
@@ -316,12 +325,45 @@ public class SaleServiceImpl implements SaleService {
 
 	@Transactional
 	@Override
-	public Sale completeSale(String saleId) {
+	public Sale completeSale(String saleId, String approverId) {
 
 		// Locate the sale that should be completed and verify that is in pending state
 		Optional<Sale> sale = saleDao.findById(saleId);
 		final TokenOperation tokenService = new TokenOperation();
-
+		
+		Optional<CustomerMeta> customer = customerMetaRepository.findById(sale.get().getCustomerid());
+		if(!customer.isPresent()) {
+			throw new RuntimeException("Customer Not Found");
+		}
+		
+		User customerUser = customer.get().getUser();
+		
+		if(!customerUser.isIsactive() || !customerUser.isIsapproved()) {
+			customerUser.setIsactive(Boolean.TRUE);
+			customerUser.setIsapproved(Boolean.TRUE);
+			
+			final ApprovalReview review = ApprovalReview.builder()
+					.createdon(new Date())
+					.itemid(customerUser.getId())
+					.reviewtype(2)
+					.review("Approved").build();	
+			
+			final Approver approver = Approver.builder()
+					.id(ServiceUtils.getUUID())
+					.createdon(new Date())
+					.userid(approverId)
+					.itemapproved("customer")
+					.itemid(customerUser.getId()).build();
+			
+			review.setId(ServiceUtils.getUUID());
+			approvalReviewDao.save(review);
+			approverDao.save(approver);
+		
+			
+			customer.get().setUser(customerUser);
+			customerMetaRepository.save(customer.get());
+		}
+		//
 		if (!sale.isPresent() || sale.get().getSalestatus() != ServiceConstants.PENDING_APPROVAL) {
 			throw new SaleNotFoundException(saleId);
 		}
@@ -369,7 +411,7 @@ public class SaleServiceImpl implements SaleService {
 
 			}
 
-			//notificationService.approvedSaleNotification(s);
+			notificationService.approvedSaleNotification(s);
 			return s;
 		}
 		// set product status to sold
@@ -438,7 +480,7 @@ public class SaleServiceImpl implements SaleService {
 			rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
 		}
 
-		//notificationService.approvedSaleNotification(s);
+		notificationService.approvedSaleNotification(s);
 		return s;
 	}
 

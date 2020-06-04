@@ -19,6 +19,8 @@ import com.fredastone.pandacore.repository.LeasePaymentRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.service.TokenService;
+import com.fredastone.pandasolar.token.CommandNames;
+import com.fredastone.pandasolar.token.TokenOperation;
 
 @Service
 public class TokenServiceImpl implements TokenService{
@@ -29,9 +31,11 @@ public class TokenServiceImpl implements TokenService{
 	private TokenRepository tokenRepository;
 	private SaleRepository saleRepository;
 	private LeasePaymentRepository leasePaymentRepository;
+	private TokenOperation tokenOperation;
  	
 	@Autowired
-	public TokenServiceImpl(LeasePaymentRepository leasePaymentRepository, SaleRepository saleRepository, TokenRepository tokenRepository, CustomerFinanceInfoRepository customerfinanceDao, BuyTokenRepository buyTokenRepo) {
+	public TokenServiceImpl(LeasePaymentRepository leasePaymentRepository, SaleRepository saleRepository, TokenRepository tokenRepository, 
+			CustomerFinanceInfoRepository customerfinanceDao, BuyTokenRepository buyTokenRepo) {
 		// TODO Auto-generated constructor stub
 
 		this.customerFinanceDao = customerfinanceDao;
@@ -112,6 +116,13 @@ public class TokenServiceImpl implements TokenService{
 		}
 		
 		return result;
+	}
+
+	@Override
+	public String resetDeviceToken(String serialNumber) {
+		// TODO Auto-generated method stub
+		tokenOperation = new TokenOperation();
+		return tokenOperation.generateGeneralPurposeToken(serialNumber, CommandNames.RESET, 1);
 	}
 
 }

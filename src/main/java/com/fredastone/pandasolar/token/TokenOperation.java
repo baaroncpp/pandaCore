@@ -20,7 +20,7 @@ public class TokenOperation {
 		case UNLOCK:			
 			token = TokenGenerator.generateToken("1", CommandNames.UNLOCK, times, deviceSerial);
 			break;
-			// Unlock device after loan is cleard
+			// Unlock device after loan is cleared
 		case CLEAR_LOAN:
 			token = TokenGenerator.generateToken("1", CommandNames.CLEAR_LOAN, times, deviceSerial);
 			break;

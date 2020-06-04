@@ -209,4 +209,10 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 		}
 		return result;
 	}
+
+	@Override
+	public List<LeasePayment> getPaymentsByDeviceSerial(String serialNumber) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

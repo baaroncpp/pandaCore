@@ -16,7 +16,7 @@ public interface SaleService {
 	Sale recoredNewDirectSale(Sale sale);
 	LeaseSale recoredNewLeaseSale(int leaseId,String agentid,String customerid,float cord_lat,float cord_long,String scanneddeviceid);
 	
-	Sale completeSale(String saleId);
+	Sale completeSale(String saleId, String approverId);
 	Sale rollbackSale(String saleId);
 	Page<Sale> getVerifiedLeaseSale(String agentId,int page,int count,String sortBy,Direction sortOrder);
 	Page<Sale> getUnverifiedleaseSale(String agentId,int page,int count,String sortBy,Direction orderBy);

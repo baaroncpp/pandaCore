@@ -71,4 +71,9 @@ public class TokensController {
 		return ResponseEntity.ok(tokenService.getDeviceTokensBySerialNumber(serial));
 	}
 	
+	@RequestMapping(path = "reset/{serial}", method = RequestMethod.GET)
+	public ResponseEntity<?> getResetToken(@PathVariable("serial") String serialNumber){
+		return ResponseEntity.ok(tokenService.resetDeviceToken(serialNumber));
+	}
+	
 }

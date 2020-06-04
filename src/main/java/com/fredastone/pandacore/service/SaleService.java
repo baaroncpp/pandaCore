@@ -13,6 +13,7 @@ import com.fredastone.pandacore.models.SaleModel;
 
 public interface SaleService {
 	
+	Sale noPaygoSale(Sale sale);
 	Sale recoredNewDirectSale(Sale sale);
 	LeaseSale recoredNewLeaseSale(int leaseId,String agentid,String customerid,float cord_lat,float cord_long,String scanneddeviceid);
 	

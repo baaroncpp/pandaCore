@@ -105,9 +105,7 @@ public class NotificationServiceImp implements NotificationService {
 							    notification.put("body", "APPROVE SALE");
 							    
 							    body.put("notification", notification);
-							    
-							    //String jsonStr = "";
-							    //ObjectMapper ob = new ObjectMapper();
+							  
 							    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 							    String json = null;
 								try {
@@ -116,14 +114,6 @@ public class NotificationServiceImp implements NotificationService {
 									// TODO Auto-generated catch block
 									e1.printStackTrace();
 								}
-								/*
-								 * try { jsonStr = ob.writeValueAsString(convertToSaleModel(sale));
-								 * 
-								 * } catch (JsonProcessingException e1) { // TODO Auto-generated catch block
-								 * e1.printStackTrace(); }
-								 */
-							    
-								//JSONObject dataJson = new JSONObject(jsonStr);
 							    
 							    body.put("data", json);
 							    

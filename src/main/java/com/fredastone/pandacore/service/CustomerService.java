@@ -27,7 +27,7 @@ public interface CustomerService {
 
 	//Page<User> getAllActiveCustomers(boolean status,int size,int page);
 	
-	FileResponse uploadMetaInfo(MultipartFile file,  RedirectAttributes redirectAttributes,String customerId,CustomerUploadType customerUploadType) throws InvalidKeyException, MalformedURLException, URISyntaxException, IOException, StorageException;
+	FileResponse uploadMetaInfo(String id, MultipartFile file,  RedirectAttributes redirectAttributes,String customerId,CustomerUploadType customerUploadType) throws InvalidKeyException, MalformedURLException, URISyntaxException, IOException, StorageException;
 	
 	Resource getUploadedMetaInfo(String customerId,CustomerUploadType uploadType);
 	

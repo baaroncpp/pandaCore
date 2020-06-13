@@ -3,6 +3,7 @@ package com.fredastone.pandacore.repository.impl;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.transaction.Transactional;
@@ -29,6 +30,7 @@ import com.fredastone.pandacore.repository.BuyTokenRepository;
 import com.fredastone.pandacore.repository.CustomerFinanceInfoRepository;
 import com.fredastone.pandacore.repository.LeasePaymentExtraRepository;
 import com.fredastone.pandacore.repository.LeasePaymentRepository;
+import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.util.ServiceUtils;
 import com.fredastone.pandasolar.token.CommandNames;
@@ -72,6 +74,9 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
     private TokenRepository tokenRespository;
 	
 	@Autowired
+	private LeaseRepository leaseRepository;
+	
+	@Autowired
 	private NamedParameterJdbcTemplate jdbcTemplate;
 	
 	private TokenOperation tokenOperation;
@@ -106,6 +111,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 		if(!financialInfo.isPresent())
 			throw new PaymentDetailsNotFoundException("Failed to find financial info for device serial "+paymentRequest.getDeviceserial());
 		
+		
 		Map<String,Object> args = new HashMap<>();
 		args.put("leaseid", financialInfo.get().getLeaseid());
 		
@@ -117,80 +123,131 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			throw new PaymentDetailsNotFoundException("Failed to find entry for total payments, check that sale is approved for device serial "+paymentRequest.getDeviceserial());
 		}
 		
-		final float totalAmount = ttlpayments.getResidueamount() + paymentRequest.getAmount();
-		
-		//Check that amount meets daily minimum allowed amount
-		if(totalAmount < financialInfo.get().getDailypayment())
-		{
-			throw new LowTransactionValueException("The amount is less than the daily allowed minimum limit");
-		}
-		
-		//Check if this is last payment
-		//Last payment could be divided and 
-		//If last payment, take total owed, put rest in pool for refund
-		boolean isFinalPayment = Boolean.FALSE;
-		if(ttlpayments.getTotalamountowed() <= totalAmount) {
-			isFinalPayment = Boolean.TRUE;
-		}
-		
-		if(isFinalPayment)
-		{
+		//
+		if(ttlpayments.getTotalamountpaid() == 0) {
 			
+			Optional<Lease> leaseSale = leaseRepository.findById(financialInfo.get().getLeaseid());
+			if(!leaseSale.isPresent()) {
+				throw new RuntimeException("Failed to find Lease sale, check that sale is approved for device serial "+paymentRequest.getDeviceserial());
+			}
+			
+			if(leaseSale.get().getInitialdeposit() > paymentRequest.getAmount()) {
+				throw new LowTransactionValueException("The amount is less than the initial loan deposit");
+			}
+			
+			final float residueAmount = paymentRequest.getAmount()%leaseSale.get().getInitialdeposit();
+			
+			//final int totalDays = (int)((totalAmount - residueAmount)/financialInfo.get().getDailypayment());
+			
+			final float newOwedAmount = leaseSale.get().getTotalleasevalue() - paymentRequest.getAmount();
+			
+			if(updateTotalPayments(financialInfo.get().getLeaseid(), paymentRequest.getAmount(), paymentRequest.getAmount() - residueAmount,
+					newOwedAmount, residueAmount,ttlpayments.getTimes()+1) < 1) {
+				throw new RuntimeException("Failed to update totalPayments");
+			}
+			
+			final String paymentToken = getPaymentToken(financialInfo.get().getDeviceserial(), ttlpayments.getTimes()+1, 1);
+			
+			//Check if we have to get payment token or unlock the device
 			final LeasePayment lp = getCompletedLeasePayment(paymentRequest,financialInfo.get());
+			
+			final int times =  ttlpayments.getTimes()+1;
 			
 			leasePaymentDao.save(lp);
 			
+			//TODO Place message on queue here
 			
-			final String clearPaymentToken = completeLeaseAndUnlockDevice
-					(ttlpayments.getLastpaidamount(), 
-						ttlpayments.getTotalamountpaid(), 
-						totalAmount - ttlpayments.getTotalamountowed(),
-						ttlpayments.getTimes(), 
-						financialInfo.get().getLeaseid(), 
-						financialInfo.get().getDeviceserial());
+			final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
+					.content(String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getLastname()+" ") +
+									financialInfo.get().getLastname(),
+									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken)
+							).build();
 			
-			return recordToken(TokenTypes.OPEN, clearPaymentToken, 0, ttlpayments.getTimes(),lp.getId() );
+			rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
 			
-			//Need to place token on message queue here
-							
+			int totalDays = leaseSale.get().getTotalleaseperiod();
+			
+			return recordToken(TokenTypes.PAY, paymentToken, 1, times,lp.getId() );
+			//return null;
+		}else{
+			
+			final float totalAmount = ttlpayments.getResidueamount() + paymentRequest.getAmount();
+			
+			//Check that amount meets daily minimum allowed amount
+			if(totalAmount < financialInfo.get().getDailypayment())
+			{
+				throw new LowTransactionValueException("The amount is less than the daily allowed minimum limit");
+			}
+			
+			//Check if this is last payment
+			//Last payment could be divided and 
+			//If last payment, take total owed, put rest in pool for refund
+			boolean isFinalPayment = Boolean.FALSE;
+			if(ttlpayments.getTotalamountowed() <= totalAmount) {
+				isFinalPayment = Boolean.TRUE;
+			}
+			
+			if(isFinalPayment)
+			{
+				
+				final LeasePayment lp = getCompletedLeasePayment(paymentRequest,financialInfo.get());
+				
+				leasePaymentDao.save(lp);
+				
+				
+				final String clearPaymentToken = completeLeaseAndUnlockDevice
+						(ttlpayments.getLastpaidamount(), 
+							ttlpayments.getTotalamountpaid(), 
+							totalAmount - ttlpayments.getTotalamountowed(),
+							ttlpayments.getTimes(), 
+							financialInfo.get().getLeaseid(), 
+							financialInfo.get().getDeviceserial());
+				
+				return recordToken(TokenTypes.OPEN, clearPaymentToken, 0, ttlpayments.getTimes(),lp.getId() );
+				
+				//Need to place token on message queue here
+								
+			}
+			
+			final float residueAmount = totalAmount%financialInfo.get().getDailypayment();
+			
+			final int totalDays = (int)((totalAmount - residueAmount)/financialInfo.get().getDailypayment());
+			
+			final float newOwedAmount = ttlpayments.getTotalamountowed() - totalAmount - residueAmount;
+			
+			//Check if we have to get payment token or unlock the device
+			final LeasePayment lp = getCompletedLeasePayment(paymentRequest,financialInfo.get());
+			
+			final int times =  ttlpayments.getTimes()+1;
+			
+			leasePaymentDao.save(lp);
+			
+			if(updateTotalPayments(financialInfo.get().getLeaseid(), totalAmount, totalAmount - residueAmount,
+					newOwedAmount, residueAmount,times) < 1) {
+				throw new RuntimeException("Failed to update totalPayments");
+			}
+			
+			//Place token on message queue for sending to customer
+			
+			final String paymentToken = getPaymentToken(financialInfo.get().getDeviceserial(), times, totalDays);
+			
+
+			//TODO Place message on queue here
+			
+			final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
+					.content(
+							String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+									financialInfo.get().getLastname(),
+									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken)
+							).build();
+			
+			rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+
+			return recordToken(TokenTypes.PAY, paymentToken,totalDays, times,lp.getId() );
+		
+			
 		}
 		
-		final float residueAmount = totalAmount%financialInfo.get().getDailypayment();
-		
-		final int totalDays = (int)((totalAmount - residueAmount)/financialInfo.get().getDailypayment());
-		
-		final float newOwedAmount = ttlpayments.getTotalamountowed() - totalAmount - residueAmount;
-		
-		//Check if we have to get payment token or unlock the device
-		final LeasePayment lp = getCompletedLeasePayment(paymentRequest,financialInfo.get());
-		
-		final int times =  ttlpayments.getTimes()+1;
-		
-		leasePaymentDao.save(lp);
-		
-		if(updateTotalPayments(financialInfo.get().getLeaseid(), totalAmount, totalAmount - residueAmount,
-				newOwedAmount, residueAmount,times) < 1) {
-			throw new RuntimeException("Failed to update totalPayments");
-		}
-		
-		//Place token on message queue for sending to customer
-		
-		final String paymentToken = getPaymentToken(financialInfo.get().getDeviceserial(), times, totalDays);
-		
-
-		//TODO Place message on queue here
-		
-		final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
-				.content(
-						String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
-								financialInfo.get().getLastname(),
-								paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken)
-						).build();
-		
-		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
-
-		return recordToken(TokenTypes.PAY, paymentToken,totalDays, times,lp.getId() );
-	
 		
 	}
 
@@ -215,7 +272,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 				
 	}
 	
-	private Token recordToken(TokenTypes tokenType,String token, int days, int times,String paymentid) {
+	private Token recordToken(TokenTypes tokenType,String token, int days, int times, String paymentid) {
 		
 		Token t = new Token();
 		t.setToken(token);

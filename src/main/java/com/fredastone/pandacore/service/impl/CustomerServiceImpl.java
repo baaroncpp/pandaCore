@@ -145,9 +145,10 @@ public class CustomerServiceImpl implements CustomerService {
 
 	
 	@Override
-	public FileResponse uploadMetaInfo(MultipartFile file, RedirectAttributes redirectAttributes, String customerId,
+	public FileResponse uploadMetaInfo(String id, MultipartFile file, RedirectAttributes redirectAttributes, String customerId,
 			CustomerUploadType uploadType) throws InvalidKeyException, URISyntaxException, IOException, StorageException {
 		// TODO Auto-generated method stub
+		
 		Optional<CustomerMeta> pd = customerMetaDao.findById(customerId);
 
 		final CustomerMeta meta;
@@ -162,6 +163,12 @@ public class CustomerServiceImpl implements CustomerService {
 			
 		}else {
 			meta = pd.get();
+		}
+		
+		Optional<User> user = userDao.findById(id);
+		
+		if(pd.get().getUser().isIsactive() && pd.get().getUser().isIsapproved() && user.get().getUsertype().equals(UserType.AGENT.name())) {
+			throw new RuntimeException("Customer has already been approved, cannot be modify");
 		}
 			
 		String finalFileName = null;
@@ -239,6 +246,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 		if (!pd.isPresent())
 			throw new ItemNotFoundException(customerId);
+		
 
 		switch (uploadType) {
 		case PROFILE:

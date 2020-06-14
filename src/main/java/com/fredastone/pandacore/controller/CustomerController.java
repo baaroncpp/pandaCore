@@ -5,10 +5,12 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,12 +34,18 @@ import com.fredastone.pandacore.constants.CustomerUploadType;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.models.CustomerModel;
 import com.fredastone.pandacore.service.CustomerService;
+import com.fredastone.security.JwtTokenUtil;
 import com.microsoft.azure.storage.StorageException;
 
 @RestController
 @RequestMapping("v1/customermeta")
 public class CustomerController {
 
+	@Value("${jwt.header}")
+    private String tokenHeader;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 	
 	private CustomerService customerService;
 	
@@ -69,10 +77,12 @@ public class CustomerController {
     }
 	
     @PostMapping(value = "/uploads/{id}")
-	public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
+	public ResponseEntity<?> handleFileUpload(HttpServletRequest request, @RequestParam("file") MultipartFile file,
 			RedirectAttributes redirectAttributes, @PathVariable("id") String id, @RequestParam("uploadType") CustomerUploadType uploadType) throws InvalidKeyException, MalformedURLException, URISyntaxException, IOException, StorageException {
 
-		return ResponseEntity.ok(customerService.uploadMetaInfo(file, redirectAttributes, id, uploadType));
+    	String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+    	
+		return ResponseEntity.ok(customerService.uploadMetaInfo(userid, file, redirectAttributes, id, uploadType));
 
 	}
     

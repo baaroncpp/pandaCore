@@ -77,6 +77,13 @@ public class SalesController {
 		return ResponseEntity.ok(saleService.recoredNewLeaseSale(leaseId, id,customerid,cord_lat,cord_long,deviceserial));
     }
 	
+	@RequestMapping(path="add/nonpaygo",method = RequestMethod.POST)
+	public ResponseEntity<?> postNewNonPayGoSale(HttpServletRequest request, @RequestBody Sale sale){
+		String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		sale.setAgentid(id);
+		return ResponseEntity.ok(saleService.noPaygoSale(sale));
+	}
+	
     @RequestMapping(path="get/allsales",params = {"page","size","sortby","sortorder" },method = RequestMethod.GET)
     public ResponseEntity<?> getAllSales(
     		@Valid @RequestParam("sortorder") 

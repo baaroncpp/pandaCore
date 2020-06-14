@@ -105,10 +105,13 @@ public class SaleServiceImpl implements SaleService {
 
 	@Value("${notification.message.leasetokensubject}")
 	private String leaseTokenNewSubj;
+	
+	@Value("${notification.message.leaseapprovednewmessage}")
+	private String leaseSaleApprovedMsg;
 
 	@Value("${leasefirsttokendays}")
 	private int leaseFirstTokenDays;
-
+	
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
@@ -132,6 +135,7 @@ public class SaleServiceImpl implements SaleService {
 
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
+	private static final String NON_PAYGO_SALE = "Nonpaygo";
 
 	@Autowired
 	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,
@@ -164,15 +168,13 @@ public class SaleServiceImpl implements SaleService {
 		
 		// Retrieve the product that is being sold
 		// Optional<Product> product = productDao.findById(sale.getProductid());
-		Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
-
+		Optional<Product> product = productDao.findById(sale.getProductid());
 		if (!product.isPresent() || !product.get().getIsActive()) {
 			throw new ProductNotFoundException(sale.getProductid());
 		}
 
 		// Get the agent making this sale
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
-
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
 			throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
 		}
@@ -196,7 +198,7 @@ public class SaleServiceImpl implements SaleService {
 
 		saleDao.save(sale);
 		
-		return null;
+		return sale;
 	}
 
 	@Transactional
@@ -205,10 +207,22 @@ public class SaleServiceImpl implements SaleService {
 
 		// Retrieve the product that is being sold
 		// Optional<Product> product = productDao.findById(sale.getProductid());
-		Optional<Product> product = productDao.findBySerialNumber(sale.getScannedserial());
-
+		Optional<Product> product = productDao.findById(sale.getProductid());
 		if (!product.isPresent() || !product.get().getIsActive()) {
 			throw new ProductNotFoundException(sale.getProductid());
+		}
+		
+		Optional<PayGoProduct> payGoProduct = payGoRepo.findById(sale.getScannedserial());
+		if (!payGoProduct.isPresent()) {
+			throw new ItemNotFoundException(sale.getScannedserial());
+		}
+
+		if (payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.PENDING.name())) {
+			throw new RuntimeException("PayGo product is sold, Pending approval");
+		}
+
+		if (payGoProduct.get().getPayGoProductStatus().name().equals(PayGoProductStatus.SOLD.name())) {
+			throw new RuntimeException("PayGo product is already sold");
 		}
 
 		// Get the agent making this sale
@@ -233,6 +247,10 @@ public class SaleServiceImpl implements SaleService {
 		sale.setSaletype(DIRECT_SALE);
 
 		saleDao.save(sale);
+		
+		payGoProduct.get().setPayGoProductStatus(PayGoProductStatus.PENDING);
+		payGoRepo.save(payGoProduct.get());
+
 		//notificationService.approveSaleNotification(sale);
 
 		return sale;
@@ -449,8 +467,10 @@ public class SaleServiceImpl implements SaleService {
 				}
 
 			}
+			
+			System.out.println("Direct sale: "+token);
 
-			notificationService.approvedSaleNotification(s);
+			//notificationService.approvedSaleNotification(s);
 			return s;
 		}
 		// set product status to sold
@@ -484,10 +504,10 @@ public class SaleServiceImpl implements SaleService {
 		final String token = tokenService.generatePaymentToken(sale.get().getScannedserial(), 1,
 				String.valueOf(leaseFirstTokenDays));
 
-		saleToken.setType(TokenTypes.PAY);
-		saleToken.setTimes(1);
-		saleToken.setDays(leaseFirstTokenDays);
-		saleToken.setToken(token);
+		/*
+		 * saleToken.setType(TokenTypes.PAY); saleToken.setTimes(1);
+		 * saleToken.setDays(leaseFirstTokenDays); saleToken.setToken(token);
+		 */
 
 		TotalLeasePayments totalLeasePayments = new TotalLeasePayments();
 		totalLeasePayments.setId(ServiceUtils.getUUID());
@@ -495,19 +515,25 @@ public class SaleServiceImpl implements SaleService {
 		totalLeasePayments.setLeaseid(lease.get().getId());
 		totalLeasePayments.setNextpaymentdate(new Date());
 		totalLeasePayments.setTotalamountpaid(0);
-		totalLeasePayments.setTotalamountowed(lease.get().getTotalleasevalue() - lease.get().getInitialdeposit());
+		//totalLeasePayments.setTotalamountowed(lease.get().getTotalleasevalue() - lease.get().getInitialdeposit());
+		totalLeasePayments.setTotalamountowed(lease.get().getTotalleasevalue());
 
-		saleTokenDao.save(saleToken);
+		//saleTokenDao.save(saleToken);
 		leaseDao.save(lease.get());
 		totalLeaseRepayDao.save(totalLeasePayments);
 
 		final Sale s = saleDao.save(sale.get());
 
 		// Notify the user
-		final Notification notificaton = Notification.builder().type(NotificationType.SMS)
+		/*final Notification notificaton = Notification.builder().type(NotificationType.SMS)
 				.address(user.get().getPrimaryphone())
 				.content(String.format(leaseTokenNewMsg, user.get().getFirstname(), user.get().getLastname())).build();
+*/
+		final Notification notificaton = Notification.builder().type(NotificationType.SMS)
+				.address(user.get().getPrimaryphone())
+				.content(String.format(leaseSaleApprovedMsg, user.get().getFirstname(), user.get().getLastname())).build();
 
+		
 		rabbitTemplate.convertAndSend(notificationExchange, smsRoutingKey, notificaton.toString());
 
 		// Move this to private method

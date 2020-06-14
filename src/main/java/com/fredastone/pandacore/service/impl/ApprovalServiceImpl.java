@@ -317,7 +317,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 		return user.get();
 	}
 
-	@Override
+	@Override//modified to approve both lease and direct paygo sales
 	public Sale approveLeaseSale(String approverId, String saleId, String reviewDescription, short saleStatus) {
 		Optional<User> user = userDao.findById(approverId);
 		
@@ -336,9 +336,10 @@ public class ApprovalServiceImpl implements ApprovalService {
 					  
 					 if(!sale.isPresent()) { throw new SaleNotFoundException(saleId); }
 					  
-					  if( sale.get().getSaletype().equals("Direct")) { 
-						  throw new RuntimeException("Sale does not qualify for this operation"); 
-					  }
+					/*
+					 * if( sale.get().getSaletype().equals("Direct")) { throw new
+					 * RuntimeException("Sale does not qualify for this operation"); }
+					 */
 					  
 					  if( sale.get().getSalestatus() == (short) ServiceConstants.ACCEPTED_APPROVAL) { 
 						  throw new RuntimeException("Sale has already been approved"); 

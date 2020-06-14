@@ -368,7 +368,7 @@ public class SaleServiceImpl implements SaleService {
 		payGoProduct.get().setPayGoProductStatus(PayGoProductStatus.PENDING);
 		payGoRepo.save(payGoProduct.get());
 
-		//notificationService.approveSaleNotification(sale);
+		notificationService.approveSaleNotification(sale);
 
 		return new LeaseSale(sale, lease);
 
@@ -545,7 +545,7 @@ public class SaleServiceImpl implements SaleService {
 			rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, notificaton.toString());
 		}
 
-		//notificationService.approvedSaleNotification(s);
+		notificationService.approvedSaleNotification(s);
 		return s;
 	}
 

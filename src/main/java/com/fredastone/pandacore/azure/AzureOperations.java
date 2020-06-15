@@ -64,7 +64,7 @@ public class AzureOperations implements IAzureOperations{
 	@Value("${profilephotosFolder}")
 	private String profileUploadPath;
 	
-	@Value("{idcopyphotofolder}")
+	@Value("${idcopyphotofolder}")
 	private String idcopyUploadFolder;
 	
 	private static final String IMAGE_SUFFIX = ".png";
@@ -189,6 +189,15 @@ public class AzureOperations implements IAzureOperations{
 	public String uploadIdCopy(String userId) throws InvalidKeyException, MalformedURLException {
 		return createAzureAccessToken(idcopyUploadFolder, getImagePath("idcopy",userId), Boolean.FALSE);
 	}
+	
+	/*
+	 * public String uploadCustConsent(String customerId) throws
+	 * InvalidKeyException, MalformedURLException {
+	 * 
+	 * return createAzureAccessToken(customerUploadFolder,
+	 * getImagePath("consent",customerId), Boolean.FALSE); }
+	 */
+
 
 	@Override
 	public String getIdCopy(String userId) {

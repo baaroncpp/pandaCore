@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fredastone.pandacore.constants.ServiceConstants;
 import com.fredastone.pandacore.entity.ApprovalReview;
 import com.fredastone.pandacore.entity.Approver;
+import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.VSaleApprovalReview;
 import com.fredastone.pandacore.models.ApprovalModel;
 import com.fredastone.pandacore.service.ApprovalService;
@@ -60,6 +61,7 @@ public class ApprovalsController {
 				
 	}
 	
+	//API approves both lease and direct paygo sales
 	@RequestMapping(path = "sale/approve/{id}", method = RequestMethod.POST)
 	public ResponseEntity<?> approveLeaseSale(@Valid @PathVariable("id") String saleId, 
 			@RequestParam("approvestatus") String approvestatus,
@@ -67,17 +69,23 @@ public class ApprovalsController {
 			HttpServletRequest request){
 		
 		final String userId = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+		Sale sale = new Sale();
 		
 		switch (approvestatus) {	
-			case APPROVED:
-				approvalService.approveLeaseSale(userId, saleId, reviewdescription, (short) ServiceConstants.ACCEPTED_APPROVAL);
-				break;
+			case APPROVED:				
+				sale =  approvalService.approveLeaseSale(userId, saleId, reviewdescription, (short) ServiceConstants.ACCEPTED_APPROVAL);
+				return ResponseEntity.ok(sale);
+				//break;
 			case REJECTED:
-				approvalService.approveLeaseSale(userId, saleId, reviewdescription, (short) ServiceConstants.REJECTED_APPROVAL);
-				break;			
+				sale = approvalService.approveLeaseSale(userId, saleId, reviewdescription, (short) ServiceConstants.REJECTED_APPROVAL);
+				return ResponseEntity.ok(sale);
+				//break;		
+				
+			default:
+				return null;
 		}
 		
-		return null;
+		//return ResponseEntity.ok(sale);
 	}
 	
 	@RequestMapping(path = "user/approve/{id}", method = RequestMethod.PUT)

@@ -150,7 +150,12 @@ public class CustomerServiceImpl implements CustomerService {
 		// TODO Auto-generated method stub
 		
 		Optional<CustomerMeta> pd = customerMetaDao.findById(customerId);
-
+		Optional<User> actionUser = userDao.findById(id);
+		
+		if(pd.get().getUser().isIsactive() && pd.get().getUser().isIsapproved() && actionUser.get().getUsertype().equals(UserType.AGENT.name())) {
+			throw new RuntimeException("Customer has already been approved, cannot be modify");
+		}
+		
 		final CustomerMeta meta;
 		if (!pd.isPresent()) {
 			
@@ -163,12 +168,6 @@ public class CustomerServiceImpl implements CustomerService {
 			
 		}else {
 			meta = pd.get();
-		}
-		
-		Optional<User> user = userDao.findById(id);
-		
-		if(pd.get().getUser().isIsactive() && pd.get().getUser().isIsapproved() && user.get().getUsertype().equals(UserType.AGENT.name())) {
-			throw new RuntimeException("Customer has already been approved, cannot be modify");
 		}
 			
 		String finalFileName = null;

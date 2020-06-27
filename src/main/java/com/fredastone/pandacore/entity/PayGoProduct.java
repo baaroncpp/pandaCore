@@ -21,6 +21,9 @@ import lombok.Setter;
 public class PayGoProduct {
 	
 	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	private String id;
+
 	@Column(name = "product_serialtoken", unique = true, nullable = false)
 	private String tokenSerialNumber;
 	

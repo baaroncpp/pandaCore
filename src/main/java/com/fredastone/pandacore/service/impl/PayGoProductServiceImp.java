@@ -20,6 +20,7 @@ import com.fredastone.pandacore.repository.LeaseOfferRepository;
 import com.fredastone.pandacore.repository.PayGoProductRepository;
 import com.fredastone.pandacore.repository.UserRepository;
 import com.fredastone.pandacore.service.PayGoProductService;
+import com.fredastone.pandacore.util.ServiceUtils;
 import com.fredastone.pandacore.models.StockProduct;
 
 @Service
@@ -51,8 +52,7 @@ public class PayGoProductServiceImp implements PayGoProductService {
 			throw new ItemNotFoundException(String.valueOf(payGoProductModel.getLeaseOfferid()));
 		}
 		
-		Optional<PayGoProduct> payGo = payGoProductRepository.findById(payGoProductModel.getTokenSerialNumber());
-		
+		Optional<PayGoProduct> payGo = payGoProductRepository.findBytokenSerialNumber(payGoProductModel.getTokenSerialNumber());		
 		if(payGo.isPresent()){
 			throw new RuntimeException("PayGo product with serial number "+payGoProductModel.getTokenSerialNumber()+" already exists");
 		}
@@ -61,6 +61,7 @@ public class PayGoProductServiceImp implements PayGoProductService {
 		payGoProduct.setTokenSerialNumber(payGoProductModel.getTokenSerialNumber());
 		payGoProduct.setLeaseOffer(leaseOffer.get());
 		payGoProduct.setPayGoProductStatus(PayGoProductStatus.AVAILABLE);
+		payGoProduct.setId(ServiceUtils.getUUID());
 		
 		payGoProductRepository.save(payGoProduct);
 		
@@ -70,7 +71,7 @@ public class PayGoProductServiceImp implements PayGoProductService {
 	@Override
 	public PayGoProduct updatePayGoProduct(PayGoProduct payGoProduct) {
 		
-		Optional<PayGoProduct> payGoProd = payGoProductRepository.findById(payGoProduct.getTokenSerialNumber());
+		Optional<PayGoProduct> payGoProd = payGoProductRepository.findById(payGoProduct.getId());
 		
 		if(!payGoProd.isPresent()) {
 			throw new RuntimeException("Product with serial number "+payGoProduct.getTokenSerialNumber()+" does not exist");
@@ -98,7 +99,7 @@ public class PayGoProductServiceImp implements PayGoProductService {
 
 	@Override
 	public boolean isPayGoPayGoProductAvailable(String tokenSerialNumber) {
-		Optional<PayGoProduct> payGoProduct = payGoProductRepository.findById(tokenSerialNumber);
+		Optional<PayGoProduct> payGoProduct = payGoProductRepository.findBytokenSerialNumber(tokenSerialNumber);
 		
 		if(!payGoProduct.isPresent()) {
 			return false;
@@ -112,7 +113,7 @@ public class PayGoProductServiceImp implements PayGoProductService {
 	@Override
 	public PayGoProduct getPayGoProduct(String serialToken) {
 		
-		Optional<PayGoProduct> payGoProduct = payGoProductRepository.findById(serialToken);
+		Optional<PayGoProduct> payGoProduct = payGoProductRepository.findBytokenSerialNumber(serialToken);
 		
 		if(!payGoProduct.isPresent()) {
 			throw new ItemNotFoundException(serialToken);

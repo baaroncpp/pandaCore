@@ -1,17 +1,15 @@
 package com.fredastone.pandacore;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 
-import com.fredastone.pandacore.azure.AzureOperations;
-import com.fredastone.pandacore.service.StorageService;
-
 @SpringBootApplication
 @EnableTransactionManagement
+@EnableScheduling
 public class PandacoreApplication {
 
 	public static void main(String[] args) {

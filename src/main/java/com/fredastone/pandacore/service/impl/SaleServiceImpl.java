@@ -33,13 +33,17 @@ import com.fredastone.pandacore.entity.Approver;
 import com.fredastone.pandacore.entity.CustomerMeta;
 import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeaseOffer;
+import com.fredastone.pandacore.entity.LeasePaymentExtra;
 import com.fredastone.pandacore.entity.PayGoProduct;
 import com.fredastone.pandacore.entity.Product;
 import com.fredastone.pandacore.entity.Sale;
+import com.fredastone.pandacore.entity.SaleRollBackRefund;
+import com.fredastone.pandacore.entity.SaleRollback;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.TotalLeasePayments;
 import com.fredastone.pandacore.entity.User;
 import com.fredastone.pandacore.entity.UserRole;
+import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
 import com.fredastone.pandacore.entity.VLeaseSaleDetails;
 import com.fredastone.pandacore.exception.AgentNotFoundException;
 import com.fredastone.pandacore.exception.ItemNotFoundException;
@@ -53,13 +57,16 @@ import com.fredastone.pandacore.models.SaleModel;
 import com.fredastone.pandacore.repository.AgentMetaRepository;
 import com.fredastone.pandacore.repository.ApprovalReviewRepository;
 import com.fredastone.pandacore.repository.ApproverRepository;
+import com.fredastone.pandacore.repository.CustomerFinanceInfoRepository;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.LeaseOfferRepository;
+import com.fredastone.pandacore.repository.LeasePaymentExtraRepository;
 import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.LeaseSaleDetailRepository;
 import com.fredastone.pandacore.repository.PayGoProductRepository;
 import com.fredastone.pandacore.repository.ProductsRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
+import com.fredastone.pandacore.repository.SaleRollbackRefundRepository;
 import com.fredastone.pandacore.repository.SaleRollbackRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.repository.TotalLeasePaymentsRepository;
@@ -132,14 +139,19 @@ public class SaleServiceImpl implements SaleService {
 	private NotificationService notificationService;
 	private ApproverRepository approverDao;
 	private ApprovalReviewRepository approvalReviewDao;
+	private SaleRollbackRefundRepository refundRepository;
+	private LeasePaymentExtraRepository paymentExtraRepo;
 
 	private static final String LEASE_SALE = "Lease";
 	private static final String DIRECT_SALE = "Direct";
 	private static final String NON_PAYGO_SALE = "Nonpaygo";
+	
+	@Autowired
+	private CustomerFinanceInfoRepository financialInfoDao;
 
 	@Autowired
-	public SaleServiceImpl(CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,
-			SaleRepository saleDao, AgentMetaRepository agentDao, ProductsRepository productDao,
+	public SaleServiceImpl(SaleRollbackRefundRepository refundRepository, CustomerMetaRepository customerMetaRepository, SaleRollbackRepository rollbackDao,
+			LeasePaymentExtraRepository paymentExtraRepo, SaleRepository saleDao, AgentMetaRepository agentDao, ProductsRepository productDao,
 			LeaseOfferRepository leaseOfferDao, LeaseRepository leaseDao, TokenRepository saleTokenDao,
 			TotalLeasePaymentsRepository totalLeaseRepayDao, UserRepository userDao, LeaseSaleDetailRepository lsdDao,
 			PayGoProductRepository payGoRepo, IAzureOperations azureOperations, NotificationService notificationService,
@@ -162,6 +174,8 @@ public class SaleServiceImpl implements SaleService {
 		this.userRoleRepository = userRoleRepository;
 		this.approverDao = approverDao;
 		this.approvalReviewDao = approvalReviewDao;
+		this.refundRepository = refundRepository;
+		this.paymentExtraRepo = paymentExtraRepo;
 	}
 	
 	public Sale noPaygoSale(Sale sale) {
@@ -176,7 +190,8 @@ public class SaleServiceImpl implements SaleService {
 		// Get the agent making this sale
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
-			throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
+			//throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
+			throw new RuntimeException("Cannot make SALE, NOT AN AGENT");
 		}
 
 		final float agentCommissionRate = (float) agent.get().getAgentcommissionrate() / 100;
@@ -191,10 +206,11 @@ public class SaleServiceImpl implements SaleService {
 		sale.setProductid(product.get().getId());
 
 		sale.setId(ServiceUtils.getUUID());
-		sale.setSaletype(DIRECT_SALE);
+		sale.setSaletype(NON_PAYGO_SALE);
 		sale.setIsreviewed(Boolean.TRUE);
 		sale.setSalestatus((short) ServiceConstants.ACCEPTED_APPROVAL);
 		sale.setCompletedon(new Date());
+	
 
 		saleDao.save(sale);
 		
@@ -212,7 +228,7 @@ public class SaleServiceImpl implements SaleService {
 			throw new ProductNotFoundException(sale.getProductid());
 		}
 		
-		Optional<PayGoProduct> payGoProduct = payGoRepo.findById(sale.getScannedserial());
+		Optional<PayGoProduct> payGoProduct = payGoRepo.findBytokenSerialNumber(sale.getScannedserial());
 		if (!payGoProduct.isPresent()) {
 			throw new ItemNotFoundException(sale.getScannedserial());
 		}
@@ -229,7 +245,8 @@ public class SaleServiceImpl implements SaleService {
 		Optional<AgentMeta> agent = agentDao.findById(sale.getAgentid());
 
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
-			throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
+			//throw new AgentNotFoundException(sale.getAgentid()+ " NON AGENT");
+			throw new RuntimeException("Not Authorized, Not AGENT");
 		}
 
 		final float agentCommissionRate = (float) agent.get().getAgentcommissionrate() / 100;
@@ -274,7 +291,7 @@ public class SaleServiceImpl implements SaleService {
 			throw new ProductNotFoundException(product.getId());
 		}
 
-		Optional<PayGoProduct> payGoProduct = payGoRepo.findById(scannedserial);
+		Optional<PayGoProduct> payGoProduct = payGoRepo.findBytokenSerialNumber(scannedserial);
 		if (!payGoProduct.isPresent()) {
 			throw new ItemNotFoundException(scannedserial);
 		}
@@ -300,7 +317,8 @@ public class SaleServiceImpl implements SaleService {
 		 */
 		
 		if (!agent.isPresent() || !agent.get().isIsactive() || agent.get().isIsdeactivated()) {
-			throw new AgentNotFoundException(agent.get().getUserid()+ " NON AGENT"); 
+			//throw new AgentNotFoundException(agent.get().getUserid()+ " NON AGENT"); 
+			throw new RuntimeException("Not Authorized, Not AGENT");
 		}
 				
 		Optional<CustomerMeta> customerMeta = customerMetaRepository.findById(customerid);
@@ -375,8 +393,158 @@ public class SaleServiceImpl implements SaleService {
 	}
 
 	@Override
-	public Sale rollbackSale(String saleId) {
+	public SaleRollback rollbackSale(String saleId, String description) {
+		
 		// TODO Auto-generated method stub
+		Optional<Sale> sale = saleDao.findById(saleId);		
+		if(!sale.isPresent()) {
+			throw new RuntimeException("Sale with id : "+saleId+", not found");
+		}
+		
+		if(sale.get().getSalestatus() != ServiceConstants.ACCEPTED_APPROVAL) {
+			throw new RuntimeException("Sale not approved");
+		}
+		
+		Optional<SaleRollback> saleRollBack = rollbackDao.findBysale(sale.get());
+		if(saleRollBack.isPresent()) {
+			throw new RuntimeException("Sale already RolledBack");
+		}
+		
+		String saleType = sale.get().getSaletype();
+        if(saleType.equals(DIRECT_SALE)) {
+			
+			Optional<PayGoProduct> paygo = payGoRepo.findBytokenSerialNumber(sale.get().getScannedserial());			
+			if(!paygo.isPresent()) {
+				throw new RuntimeException("paygo with serialNumber: "+sale.get().getScannedserial()+" not found");
+			}
+			
+			if(paygo.get().getPayGoProductStatus().equals(PayGoProductStatus.PENDING)) {
+				throw new RuntimeException("paygo with serialNumber: "+sale.get().getScannedserial()+" is pending approval, cannot be rolled back");
+			}
+			
+			if(paygo.get().getPayGoProductStatus().equals(PayGoProductStatus.AVAILABLE)) {
+				throw new RuntimeException("paygo with serialNumber: "+sale.get().getScannedserial()+" not sold");
+			}
+			//return paygo product to stock
+			paygo.get().setPayGoProductStatus(PayGoProductStatus.AVAILABLE);
+			sale.get().setSalestatus((short) ServiceConstants.ROLLBACK);
+			sale.get().setIsreviewed(Boolean.FALSE);
+			
+			saleDao.save(sale.get());
+			
+			SaleRollback saleRollback = new SaleRollback();
+			saleRollback.setCreatedon(new Date());
+			saleRollback.setId(ServiceUtils.getUUID());
+			saleRollback.setSale(sale.get());
+			saleRollback.setDescription(description);
+			
+			//record amount to be refunded
+			SaleRollBackRefund saleRollbackRefund = new SaleRollBackRefund();
+			saleRollbackRefund.setId(ServiceUtils.getUUID());
+			saleRollbackRefund.setCreatedon(new Date());
+			saleRollbackRefund.setAmount(sale.get().getAmount());
+			saleRollbackRefund.setSaleRollback(saleRollback);
+			saleRollbackRefund.setIspaid(Boolean.FALSE);
+			
+			
+			payGoRepo.save(paygo.get()); 
+			saleDao.save(sale.get());
+			rollbackDao.save(saleRollback);
+			refundRepository.save(saleRollbackRefund);
+			
+			return saleRollback;
+		}
+		
+		if(saleType.equals(LEASE_SALE)) {
+			
+			Optional<PayGoProduct> paygo = payGoRepo.findBytokenSerialNumber(sale.get().getScannedserial());			
+			if(!paygo.isPresent()) {
+				throw new RuntimeException("paygo with serialNumber: "+sale.get().getScannedserial()+" not found");
+			}
+			
+			if(paygo.get().getPayGoProductStatus().equals(PayGoProductStatus.PENDING)) {
+				throw new RuntimeException("paygo with serialNumber: "+sale.get().getScannedserial()+" is pending approval");
+			}
+			
+			if(paygo.get().getPayGoProductStatus().equals(PayGoProductStatus.AVAILABLE)) {
+				throw new RuntimeException("paygo with serialNumber: "+sale.get().getScannedserial()+" not sold");
+			}
+			
+			//Optional<VCustomerFinanceInfo> vCustomerFinanceInfo = financialInfoDao.findBydeviceserial(sale.get().getScannedserial());
+			
+			Optional<TotalLeasePayments> totalLeasePayments = totalLeaseRepayDao.findByleaseid(sale.get().getId());
+			if(!totalLeasePayments.isPresent()) {
+				throw new RuntimeException("Sale not approved, cannot be rolled back");
+			}
+			
+			Optional<Lease> lease = leaseDao.findById(sale.get().getId());
+			lease.get().setIsactivated(Boolean.FALSE);
+			lease.get().setIscompleted(Boolean.TRUE);//on roll back complete the sale
+			
+			sale.get().setSalestatus((short) ServiceConstants.ROLLBACK);
+			sale.get().setIsreviewed(Boolean.FALSE);
+			
+			//get amount to be refunded to customer
+			float refund = totalLeasePayments.get().getTotalamountpaid();
+			
+			Optional<LeasePaymentExtra> paymentExtra = paymentExtraRepo.findByleaseid(sale.get().getId());
+			if(paymentExtra.isPresent() && paymentExtra.get().isIsrefunded()) {
+				refund = refund + paymentExtra.get().getAmount();
+			}
+			
+			saleDao.save(sale.get());	
+			
+			SaleRollback saleRollBack2 = new SaleRollback();
+			saleRollBack2.setCreatedon(new Date());
+			saleRollBack2.setId(ServiceUtils.getUUID());
+			saleRollBack2.setSale(sale.get());
+			saleRollBack2.setDescription(description);
+			
+			//record amount to be refunded
+			SaleRollBackRefund saleRollbackRefund2 = new SaleRollBackRefund();
+			saleRollbackRefund2.setId(ServiceUtils.getUUID());
+			saleRollbackRefund2.setCreatedon(new Date());
+			saleRollbackRefund2.setAmount(refund);
+			saleRollbackRefund2.setSaleRollback(saleRollBack2);
+			saleRollbackRefund2.setIspaid(Boolean.FALSE);
+			//return paygo product to stock
+			paygo.get().setPayGoProductStatus(PayGoProductStatus.AVAILABLE);
+			
+									
+			payGoRepo.save(paygo.get()); 
+			leaseDao.save(lease.get());					
+			rollbackDao.save(saleRollBack2);			
+			refundRepository.save(saleRollbackRefund2);
+		
+			return saleRollBack2;
+		}
+		
+		if(saleType.equals(NON_PAYGO_SALE)) {
+			
+			sale.get().setSalestatus((short) ServiceConstants.ROLLBACK);
+			sale.get().setIsreviewed(Boolean.FALSE);
+			
+			SaleRollback saleRollback3 = new SaleRollback();
+			saleRollback3.setCreatedon(new Date());
+			saleRollback3.setId(ServiceUtils.getUUID());
+			saleRollback3.setSale(sale.get());
+			saleRollback3.setDescription(description);
+			
+			//record amount to be refunded
+			SaleRollBackRefund saleRollbackRefund3 = new SaleRollBackRefund();
+			saleRollbackRefund3.setId(ServiceUtils.getUUID());
+			saleRollbackRefund3.setCreatedon(new Date());
+			saleRollbackRefund3.setAmount(sale.get().getAmount());
+			saleRollbackRefund3.setSaleRollback(saleRollback3);
+			saleRollbackRefund3.setIspaid(Boolean.FALSE);
+			
+			saleDao.save(sale.get());
+			rollbackDao.save(saleRollback3);
+			refundRepository.save(saleRollbackRefund3);
+			
+			return saleRollback3;
+		}
+		
 		return null;
 	}
 
@@ -436,6 +604,21 @@ public class SaleServiceImpl implements SaleService {
 		// Generate full unlock for that device
 		// Check if its a direct sale and unlock the device
 		if (sale.get().getSaletype().equals(DIRECT_SALE)) {
+			
+			// set product status to sold
+			Optional<PayGoProduct> payGo = payGoRepo.findBytokenSerialNumber(sale.get().getScannedserial());
+			if (!payGo.isPresent()) {
+				throw new RuntimeException("PayGo with serial number " + sale.get().getScannedserial() + " does not exist");
+			}
+
+			PayGoProduct prod = payGo.get();
+
+			if (prod.getPayGoProductStatus() != PayGoProductStatus.SOLD) {
+				prod.setPayGoProductStatus(PayGoProductStatus.SOLD);
+				payGoRepo.save(prod);
+			} else {
+				throw new RuntimeException("PayGo with serial number " + prod.getTokenSerialNumber() + " is already sold");
+			}
 
 			// TODO: Give this to the queue to send email and SMS message to customer
 			final String token = tokenService.generateGeneralPurposeToken(sale.get().getScannedserial(),
@@ -470,11 +653,11 @@ public class SaleServiceImpl implements SaleService {
 			
 			System.out.println("Direct sale: "+token);
 
-			//notificationService.approvedSaleNotification(s);
+			notificationService.approvedSaleNotification(s);
 			return s;
 		}
 		// set product status to sold
-		Optional<PayGoProduct> payGo = payGoRepo.findById(sale.get().getScannedserial());
+		Optional<PayGoProduct> payGo = payGoRepo.findBytokenSerialNumber(sale.get().getScannedserial());
 		if (!payGo.isPresent()) {
 			throw new RuntimeException("PayGo with serial number " + sale.get().getScannedserial() + " does not exist");
 		}
@@ -560,7 +743,10 @@ public class SaleServiceImpl implements SaleService {
 		List<Sale> sales = allsorted.getContent();
 
 		for (Sale object : sales) {
-			saleModels.add(convertToSaleModel(object));
+			if(object.getSalestatus() != ServiceConstants.ROLLBACK) {
+				saleModels.add(convertToSaleModel(object));
+			}
+			
 		}
 
 		return saleModels;
@@ -614,7 +800,9 @@ public class SaleServiceImpl implements SaleService {
 		List<Sale> salesList = sales.getContent();
 
 		for (Sale object : salesList) {
-			saleModels.add(convertToSaleModel(object));
+			if(object.getSalestatus() != ServiceConstants.ROLLBACK) {
+				saleModels.add(convertToSaleModel(object));
+			}			
 		}
 
 		return saleModels;
@@ -769,5 +957,30 @@ public class SaleServiceImpl implements SaleService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public SaleRollBackRefund makeSaleRollBackRefund(String id) {
+		
+		Optional<SaleRollBackRefund> refund = refundRepository.findById(id);
+		if(!refund.isPresent()) {
+			throw new RuntimeException("SaleRefund with id: "+id+" not found");
+		}
+		
+		if(refund.get().isIspaid() == Boolean.TRUE) {
+			throw new RuntimeException("SaleRefund has already been made");
+		}
+		
+		refund.get().setRepaidon(new Date());
+		refund.get().setIspaid(Boolean.TRUE);
+		
+		refundRepository.save(refund.get());
+		
+		return refund.get();
+	}
 
+	@Override
+	public Iterable<SaleRollBackRefund> getAllSaleRefunds() {
+		// TODO Auto-generated method stub
+		return refundRepository.findAll();
+	}
 }

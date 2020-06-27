@@ -1,6 +1,7 @@
 package com.fredastone.pandacore.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -18,4 +19,7 @@ public interface PayGoProductRepository extends CrudRepository<PayGoProduct, Str
 	Long countByPayGoProductStatusAndLeaseOffer(@Param("payGoProductStatus")PayGoProductStatus payGoProductStatus, @Param("leaseoffer")LeaseOffer leaseoffer);
 	
 	List<PayGoProduct> findAllByLeaseOffer(LeaseOffer leaseOffer);
+	
+	Optional<PayGoProduct> findBytokenSerialNumber(String tokenSerialNumber);
+	
 }

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fredastone.pandacore.constants.UserType;
 import com.fredastone.pandacore.entity.User;
+import com.fredastone.pandacore.mail.EmailService;
 import com.fredastone.pandacore.models.PasswordResetModel;
 import com.fredastone.pandacore.service.UserService;
 import com.fredastone.security.JwtTokenUtil;
@@ -45,6 +46,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private EmailService emailService;
     
     private static final String ALL_APPROVED_PATH = "approved";
     private static final String ALL_NOT_APPROVED_PATH = "notapproved";
@@ -168,6 +172,18 @@ public class UserController {
     		@Valid @RequestParam("new") String newPassword){
     	String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
 		return ResponseEntity.ok(userService.changePassword(id, oldPassword, newPassword));
+	}
+	
+	@RequestMapping(path = "email/test", method = RequestMethod.GET)
+	public ResponseEntity<?> sendMail(){
+		
+		User user = new User();
+		user.setEmail("baaronlubega1@gmail.com");
+		user.setFirstname("Aaron");
+		user.setLastname("bkaaron");
+		
+		emailService.emailVarification("3534634474nbe", user);
+		return null;
 	}
     
 }

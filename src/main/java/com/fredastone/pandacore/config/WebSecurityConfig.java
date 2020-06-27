@@ -78,7 +78,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				//.antMatchers("/v1/approvals/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER")
 				.antMatchers("/v1/installation/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER","ROLE_ENGINEER")
 				
-				//.antMatchers("/v1/android").permitAll()
+				//.antMatchers("/v1/user/get/androiduser").permitAll()
 
 			    .antMatchers("/token/**").permitAll().antMatchers("swagger*").permitAll().anyRequest().authenticated();
 

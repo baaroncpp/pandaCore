@@ -53,7 +53,16 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 	
 	@Value("${notification.smsnotification}")
 	private String smsMessage;
-
+	
+	@Value("${notification.sms.lowdailypayment.notification}")
+	private String smsMessageLowDailyPayment;
+	
+	@Value("${notification.sms.lowinitialpayment.notification}")
+	private String smsMessageLowInitialPayment;
+	
+	@Value("${notification.sms.loancleared.notification}")
+	private String smsMessageLoanCleared;
+	
 //	@Value("${notification.routing.email.key}")
 //	private String emailRoutingKey;
 //	
@@ -132,16 +141,26 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			}
 			
 			if(leaseSale.get().getInitialdeposit() > paymentRequest.getAmount()) {
+				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
+						.content(
+								String.format(smsMessageLowInitialPayment, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+										financialInfo.get().getLastname(), leaseSale.get().getInitialdeposit())
+								).build();
+				
+				rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+				
 				throw new LowTransactionValueException("The amount is less than the initial loan deposit");
 			}
 			
 			final float residueAmount = paymentRequest.getAmount()%leaseSale.get().getInitialdeposit();
 			
+			final float ammountPaid = ttlpayments.getTotalamountpaid() + paymentRequest.getAmount();
+			
 			//final int totalDays = (int)((totalAmount - residueAmount)/financialInfo.get().getDailypayment());
 			
 			final float newOwedAmount = leaseSale.get().getTotalleasevalue() - paymentRequest.getAmount();
 			
-			if(updateTotalPayments(financialInfo.get().getLeaseid(), paymentRequest.getAmount(), paymentRequest.getAmount() - residueAmount,
+			if(updateTotalPayments(financialInfo.get().getLeaseid(), paymentRequest.getAmount(), ammountPaid - residueAmount,
 					newOwedAmount, residueAmount,ttlpayments.getTimes()+1) < 1) {
 				throw new RuntimeException("Failed to update totalPayments");
 			}
@@ -160,7 +179,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
 					.content(String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getLastname()+" ") +
 									financialInfo.get().getLastname(),
-									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken)
+									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken, newOwedAmount)
 							).build();
 			
 			rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
@@ -174,8 +193,16 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			final float totalAmount = ttlpayments.getResidueamount() + paymentRequest.getAmount();
 			
 			//Check that amount meets daily minimum allowed amount
-			if(totalAmount < financialInfo.get().getDailypayment())
-			{
+			if(totalAmount < financialInfo.get().getDailypayment())	{
+				
+				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
+						.content(
+								String.format(smsMessageLowDailyPayment, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+										financialInfo.get().getLastname(), financialInfo.get().getDailypayment())
+								).build();
+				
+				rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+				
 				throw new LowTransactionValueException("The amount is less than the daily allowed minimum limit");
 			}
 			
@@ -203,10 +230,19 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 							financialInfo.get().getLeaseid(), 
 							financialInfo.get().getDeviceserial());
 				
+				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
+						.content(
+								String.format(smsMessageLoanCleared, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+										financialInfo.get().getLastname(),
+										paymentRequest.getAmount(), paymentRequest.getDeviceserial(), clearPaymentToken)
+								).build();
+				
+				rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
+				
 				return recordToken(TokenTypes.OPEN, clearPaymentToken, 0, ttlpayments.getTimes(),lp.getId() );
 				
 				//Need to place token on message queue here
-								
+												
 			}
 			
 			final float residueAmount = totalAmount%financialInfo.get().getDailypayment();
@@ -238,7 +274,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 					.content(
 							String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
 									financialInfo.get().getLastname(),
-									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken)
+									paymentRequest.getAmount(), paymentRequest.getDeviceserial(), paymentToken, newOwedAmount)
 							).build();
 			
 			rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());

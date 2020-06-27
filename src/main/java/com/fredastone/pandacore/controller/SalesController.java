@@ -244,6 +244,22 @@ public class SalesController {
 		return ResponseEntity.ok(saleService.mobileUserGetSales(id, page, size, sortby, sortorder));
 	}
 	
+	@RequestMapping(path="salerollback/{id}",method = RequestMethod.GET)
+	public ResponseEntity<?> saleRollBack(@PathVariable("id") String id, @Valid @RequestParam("description")
+	String description){
+		return ResponseEntity.ok(saleService.rollbackSale(id, description));
+	}
+	
+	@RequestMapping(path="salerollback/refund/{id}",method = RequestMethod.GET)
+	public ResponseEntity<?> makeSaleRefund(@PathVariable("id") String id){		
+		return ResponseEntity.ok(saleService.makeSaleRollBackRefund(id));
+	}
+	
+	@RequestMapping(path="getall/refunds",method = RequestMethod.GET)
+	public ResponseEntity<?> getAllSaleRefunds(){
+		return ResponseEntity.ok(saleService.getAllSaleRefunds());
+	}
+			
 	//testing FCM notifications
 	@RequestMapping(path="fcm",method = RequestMethod.GET)
 	public ResponseEntity<?> testFCM(){
@@ -252,5 +268,5 @@ public class SalesController {
 		return ResponseEntity.ok("");
 	}
 	
-		
+	
 }

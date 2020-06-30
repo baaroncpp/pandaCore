@@ -343,7 +343,7 @@ public class SaleServiceImpl implements SaleService {
 		// Get mark up on sale
 		final float markup = product.getUnitcostselling() * ((float) leaseOffer.get().getPercentlease() / 100);
 
-		float totalAmount = product.getUnitcostselling() + markup + agentCommission;
+		float totalAmount = product.getUnitcostselling() + markup;
 
 		// Get the daily payment to be made
 		final float dailypayment = (float) (totalAmount - leaseOffer.get().getIntialdeposit())

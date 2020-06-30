@@ -36,7 +36,7 @@ public class LeaseOfferController {
     }
     
 
-	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
+	//@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
     @RequestMapping(path="update",method = RequestMethod.PUT)
     public ResponseEntity<?> updateLeaseOffer(@Valid @Required @RequestBody LeaseOfferModel leaseOffer) {
         return ResponseEntity.ok(loService.updateLeaseOffer(leaseOffer));
@@ -56,4 +56,12 @@ public class LeaseOfferController {
     public ResponseEntity<?> getByLeaseOfferId(@Valid @Required @PathVariable int id) {
         return ResponseEntity.ok(loService.getLeaseOffer(id));
     }
+    
+    @RequestMapping(path="test",method = RequestMethod.GET)
+    public ResponseEntity<?> test() {
+    	LeaseOfferModel lm = new LeaseOfferModel();
+        return ResponseEntity.ok(lm);
+    }
+    
+    
 }

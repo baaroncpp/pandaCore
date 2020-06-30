@@ -44,7 +44,7 @@ public class ProductController {
 		return ResponseEntity.ok(productService.addProduct(product));
 	}
 
-	@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
+	//@Secured({"ROLE_MANAGER,ROLE_MARKETING,ROLE_FINANCE"})
 	@RequestMapping(path = "update", method = RequestMethod.PUT)
 	public ResponseEntity<?> updateProduct(@RequestBody Product product) {
 

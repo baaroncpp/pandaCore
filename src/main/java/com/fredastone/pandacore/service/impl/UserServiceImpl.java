@@ -159,8 +159,10 @@ public class UserServiceImpl implements UserService {
 		}
 		
 		String profilePath = "";
+		String contractpath = "";
 		try {
 			profilePath = azureOperations.uploadProfile(user.get().getId());
+			contractpath = azureOperations.uploadAgentContract(user.get().getId());
 		} catch (InvalidKeyException | MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -168,6 +170,7 @@ public class UserServiceImpl implements UserService {
 		
 		user.get().setPassword(null);
 		user.get().setProfilepath(profilePath);
+		user.get().setContractpath(contractpath);
 		return user.get();
 	}
 

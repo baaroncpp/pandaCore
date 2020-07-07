@@ -7,7 +7,9 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fredastone.pandacore.constants.PayGoProductStatus;
 import com.fredastone.pandacore.entity.LeasePayment;
+import com.fredastone.pandacore.entity.PayGoProduct;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
@@ -16,6 +18,7 @@ import com.fredastone.pandacore.models.BuyToken;
 import com.fredastone.pandacore.repository.BuyTokenRepository;
 import com.fredastone.pandacore.repository.CustomerFinanceInfoRepository;
 import com.fredastone.pandacore.repository.LeasePaymentRepository;
+import com.fredastone.pandacore.repository.PayGoProductRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.TokenRepository;
 import com.fredastone.pandacore.service.TokenService;
@@ -32,9 +35,10 @@ public class TokenServiceImpl implements TokenService{
 	private SaleRepository saleRepository;
 	private LeasePaymentRepository leasePaymentRepository;
 	private TokenOperation tokenOperation;
+	private PayGoProductRepository payGoProductRepo;
  	
 	@Autowired
-	public TokenServiceImpl(LeasePaymentRepository leasePaymentRepository, SaleRepository saleRepository, TokenRepository tokenRepository, 
+	public TokenServiceImpl(PayGoProductRepository payGoProductRepo, LeasePaymentRepository leasePaymentRepository, SaleRepository saleRepository, TokenRepository tokenRepository, 
 			CustomerFinanceInfoRepository customerfinanceDao, BuyTokenRepository buyTokenRepo) {
 		// TODO Auto-generated constructor stub
 
@@ -43,6 +47,7 @@ public class TokenServiceImpl implements TokenService{
 		this.tokenRepository = tokenRepository;
 		this.saleRepository = saleRepository;
 		this.leasePaymentRepository = leasePaymentRepository;
+		this.payGoProductRepo = payGoProductRepo;
 	}
 
 	@Override
@@ -121,6 +126,16 @@ public class TokenServiceImpl implements TokenService{
 	@Override
 	public String resetDeviceToken(String serialNumber) {
 		// TODO Auto-generated method stub
+		
+		Optional<PayGoProduct> payGoProduct = payGoProductRepo.findBytokenSerialNumber(serialNumber);
+		if(!payGoProduct.isPresent()) {
+			throw new RuntimeException("Device with serialNumber: "+serialNumber+" not found");
+		}
+		
+		if(payGoProduct.get().getPayGoProductStatus().equals(PayGoProductStatus.AVAILABLE)) {
+			throw new RuntimeException("Device not sold");
+		}
+		
 		tokenOperation = new TokenOperation();
 		return tokenOperation.generateGeneralPurposeToken(serialNumber, CommandNames.RESET, 1);
 	}

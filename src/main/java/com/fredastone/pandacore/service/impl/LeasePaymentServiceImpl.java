@@ -189,7 +189,22 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 			
 			for(UserRole object : userRoles) {
 				if(object.getRole().getName().equals(RoleName.ROLE_MANAGER) || object.getRole().getName().equals(RoleName.ROLE_SENIOR_MANAGER)) {
-					result.addAll(getAllPayments(size, page, sortOrder).getContent());
+					//result.addAll(getAllPayments(size, page, sortOrder).getContent());
+					
+					for(LeasePayment obj : getAllPayments(size, page, sortOrder).getContent()) {
+						Optional<Sale> sale = saleRepository.findById(obj.getLeaseid());
+						
+						if(sale.isPresent()) {
+							Optional<User> customer = userRepository.findById(sale.get().getCustomerid());
+							
+							if(customer.isPresent()) {
+								obj.setPayeename(customer.get().getFirstname()+" "+customer.get().getLastname());
+								result.add(obj);
+							}
+						}						
+						
+					}
+					break;
 				}
 			}
 			
@@ -202,7 +217,14 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 				List<LeasePayment> salePayments = lpDao.findAllByleaseid(object.getId());
 				
 				if(!salePayments.isEmpty()) {
-					result.addAll(salePayments);
+					
+					for(LeasePayment obj : salePayments) {
+						Optional<Sale> sale = saleRepository.findById(obj.getLeaseid());
+						Optional<User> customer = userRepository.findById(sale.get().getCustomerid());
+						obj.setPayeename(customer.get().getFirstname()+" "+customer.get().getLastname());
+						result.add(obj);
+					}
+					//result.addAll(salePayments);
 				}
 				
 			}

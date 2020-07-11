@@ -8,12 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fredastone.pandacore.entity.CustomerMeta;
+import com.fredastone.pandacore.entity.Lease;
 import com.fredastone.pandacore.entity.LeasePayment;
 import com.fredastone.pandacore.entity.Sale;
 import com.fredastone.pandacore.entity.TotalLeasePayments;
 import com.fredastone.pandacore.models.SaleStatisticsModel;
 import com.fredastone.pandacore.repository.CustomerMetaRepository;
 import com.fredastone.pandacore.repository.LeasePaymentRepository;
+import com.fredastone.pandacore.repository.LeaseRepository;
 import com.fredastone.pandacore.repository.SaleRepository;
 import com.fredastone.pandacore.repository.TotalLeasePaymentsRepository;
 
@@ -25,13 +27,15 @@ public class SaleReport implements SaleReportInterface{
 	private SaleRepository saleRepo;
 	private LeasePaymentRepository paymentRepo;
 	private TotalLeasePaymentsRepository totalLeasePaymentRepository;
+	private LeaseRepository leaseRepository;
 	
 	@Autowired
-	public SaleReport(CustomerMetaRepository customerRepo, SaleRepository saleRepo, LeasePaymentRepository paymentRepo, TotalLeasePaymentsRepository totalLeasePaymentRepository) {
+	public SaleReport(LeaseRepository leaseRepository, CustomerMetaRepository customerRepo, SaleRepository saleRepo, LeasePaymentRepository paymentRepo, TotalLeasePaymentsRepository totalLeasePaymentRepository) {
 		this.customerRepo = customerRepo;
 		this.saleRepo = saleRepo;
 		this.paymentRepo = paymentRepo;
 		this.totalLeasePaymentRepository = totalLeasePaymentRepository;
+		this.leaseRepository = leaseRepository;
 	}
 	
 	public SaleStatisticsModel getSaleStatistics(String leaseid) {
@@ -40,6 +44,8 @@ public class SaleReport implements SaleReportInterface{
 		if(!sale.isPresent()) {
 			throw new RuntimeException("Sale not found");
 		}
+		
+		Optional<Lease> lease = leaseRepository.findById(leaseid);
 		
 		Optional<CustomerMeta> customer = customerRepo.findById(sale.get().getCustomerid());
 		if(!customer.isPresent()) {
@@ -58,6 +64,7 @@ public class SaleReport implements SaleReportInterface{
 		ssm.setPayments(leasePayments);
 		ssm.setSale(sale.get());
 		ssm.setTotalLeasePayments(tlp.get());
+		ssm.setLease(lease.get());
 		
 		return ssm;
 	}

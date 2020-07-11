@@ -143,7 +143,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			if(leaseSale.get().getInitialdeposit() > paymentRequest.getAmount()) {
 				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
 						.content(
-								String.format(smsMessageLowInitialPayment, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+								String.format(smsMessageLowInitialPayment, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : ""+" ") +
 										financialInfo.get().getLastname(), leaseSale.get().getInitialdeposit())
 								).build();
 				
@@ -177,10 +177,9 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			//TODO Place message on queue here
 			
 			final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
-					.content(String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getLastname()+" ") +
+					.content(String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : ""+" ") +
 									financialInfo.get().getLastname(),
-									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken, newOwedAmount)
-							).build();
+									paymentRequest.getAmount(),paymentRequest.getDeviceserial(),paymentToken, newOwedAmount)).build();
 			
 			rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());
 			
@@ -197,7 +196,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 				
 				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
 						.content(
-								String.format(smsMessageLowDailyPayment, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+								String.format(smsMessageLowDailyPayment, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : ""+" ") +
 										financialInfo.get().getLastname(), financialInfo.get().getDailypayment())
 								).build();
 				
@@ -231,8 +230,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 							financialInfo.get().getDeviceserial());
 				
 				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
-						.content(
-								String.format(smsMessageLoanCleared, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+						.content(String.format(smsMessageLoanCleared, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : ""+" ") +
 										financialInfo.get().getLastname(),
 										paymentRequest.getAmount(), paymentRequest.getDeviceserial(), clearPaymentToken)
 								).build();
@@ -272,7 +270,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			
 			final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
 					.content(
-							String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : financialInfo.get().getMiddlename()+" ") +
+							String.format(smsMessage, financialInfo.get().getFirstname()+" "+(financialInfo.get().getMiddlename() == null ? "" : ""+" ") +
 									financialInfo.get().getLastname(),
 									paymentRequest.getAmount(), paymentRequest.getDeviceserial(), paymentToken, newOwedAmount)
 							).build();

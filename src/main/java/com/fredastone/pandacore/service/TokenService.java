@@ -14,7 +14,7 @@ public interface TokenService {
 	Token getToken(String tokenId);
 	Token getTokenByPaymentReference(String paymentReference);
 	Token invalidateToken(String token);
-	Token resendToken(String paymentReference);
+	Token resendToken(String paymentReference, String userid);
 	List<Token> getDeviceTokensBySerialNumber(String serialNumber);
 	String resetDeviceToken(String serialNumber);
 

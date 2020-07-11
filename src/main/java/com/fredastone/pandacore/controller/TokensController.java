@@ -1,6 +1,9 @@
 package com.fredastone.pandacore.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,12 +16,19 @@ import com.fredastone.pandacore.entity.Token;
 import com.fredastone.pandacore.entity.VCustomerFinanceInfo;
 import com.fredastone.pandacore.models.BuyToken;
 import com.fredastone.pandacore.service.TokenService;
+import com.fredastone.security.JwtTokenUtil;
 
 @RestController
 @RequestMapping("v1/tokens")
 public class TokensController {
+	
+	@Value("${jwt.header}")
+    private String tokenHeader;
 
-	TokenService tokenService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+	private TokenService tokenService;
 
 	@Autowired
 	public TokensController(TokenService tokenService) {
@@ -75,5 +85,12 @@ public class TokensController {
 	public ResponseEntity<?> getResetToken(@PathVariable("serial") String serialNumber){
 		return ResponseEntity.ok(tokenService.resetDeviceToken(serialNumber));
 	}
+	
+	@RequestMapping(path = "resend/{id}", method = RequestMethod.GET)
+	public ResponseEntity<?> resendToken(HttpServletRequest request, @PathVariable("id") String id){
+    	String userid = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+    	
+    	return ResponseEntity.ok(tokenService.resendToken(id, userid));
+    }
 	
 }

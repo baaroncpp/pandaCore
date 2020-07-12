@@ -58,11 +58,6 @@ public class PaymentsController {
     	return ResponseEntity.ok(leasePaymentService.getLeasePaymentsByAgentId(id, size, page, direction));
     }
     
-    /*@RequestMapping(path="get/deviceserial/{serial}",method = RequestMethod.GET)
-    public ResponseEntity<?> getPaymentsBySerial(@PathVariable("serial") String serial){
-    	return ResponseEntity.ok(leasePaymentService.getLeasePaymentByDeviceSerial(serial));
-    }*/
-    
     @RequestMapping(path="update/leasepayment/{id}",method = RequestMethod.GET)
     public ResponseEntity<?> updateLeasePayment(@PathVariable("id") String id, @RequestBody LeasePayment leasePayment){
     	return ResponseEntity.ok(leasePaymentService.updateLeasePayment(leasePayment));

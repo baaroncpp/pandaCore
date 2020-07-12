@@ -1,6 +1,7 @@
 package com.fredastone.pandacore.service.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -236,5 +237,32 @@ public class LeasePaymentServiceImpl implements LeasePaymentService {
 	public List<LeasePayment> getPaymentsByDeviceSerial(String serialNumber) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Integer getTodayLeasePaymentCount(String userid) {
+		// TODO Auto-generated method stub		
+		int count = 0;
+		Optional<User> user = userRepository.findById(userid);
+		if(!user.isPresent()) {
+			throw new RuntimeException("User not found");
+		}
+		
+		if(user.get().getUsertype().equals(UserType.EMPLOYEE.name())) {
+			return lpDao.findAllBycreatedon(new Date()).size();
+		}else {					
+			List<LeasePayment> lp = lpDao.findAllBycreatedon(new Date());				
+			if(!lp.isEmpty()) {				
+				for(LeasePayment obj : lp) {					
+					Optional<Sale> sale = saleRepository.findById(obj.getId());
+					if(sale.get().getAgentid().equals(userid)) {
+						count = count + 1;
+					}					
+				}
+			}else {
+				return count;
+			}
+			return count;
+		}
 	}
 }

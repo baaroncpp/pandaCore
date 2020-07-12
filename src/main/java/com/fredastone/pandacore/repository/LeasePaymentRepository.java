@@ -1,5 +1,6 @@
 package com.fredastone.pandacore.repository;
 
+import java.util.Date;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,9 @@ public interface LeasePaymentRepository extends CrudRepository<LeasePayment, Str
 	
 	@Query("Select l from LeasePayment l where leaseid = :leaseid")
 	List<LeasePayment> findAllByleaseid(@Param("leaseid") String leaseid);
+	
+	@Query("Select l from LeasePayment l where createdon = :createdon")
+	List<LeasePayment> findAllBycreatedon(@Param("createdon")Date createdon);
 	
 	Page<LeasePayment> findAll(Pageable pageable);
 

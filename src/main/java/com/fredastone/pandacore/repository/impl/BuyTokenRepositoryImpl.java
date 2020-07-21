@@ -132,13 +132,14 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			throw new PaymentDetailsNotFoundException("Failed to find entry for total payments, check that sale is approved for device serial "+paymentRequest.getDeviceserial());
 		}
 		
+		Optional<Lease> leaseSale = leaseRepository.findById(financialInfo.get().getLeaseid());
+		if(!leaseSale.isPresent()) {
+			throw new RuntimeException("Failed to find Lease sale, check that sale is approved for device serial "+paymentRequest.getDeviceserial());
+		}
+		
 		//
-		if(ttlpayments.getTotalamountpaid() == 0) {
+		if(ttlpayments.getTotalamountowed() == leaseSale.get().getTotalleasevalue()) {			
 			
-			Optional<Lease> leaseSale = leaseRepository.findById(financialInfo.get().getLeaseid());
-			if(!leaseSale.isPresent()) {
-				throw new RuntimeException("Failed to find Lease sale, check that sale is approved for device serial "+paymentRequest.getDeviceserial());
-			}
 			
 			if(leaseSale.get().getInitialdeposit() > paymentRequest.getAmount()) {
 				final Notification notificaton = Notification.builder().type(NotificationType.SMS).address(paymentRequest.getMsisdn())
@@ -154,11 +155,11 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			
 			final float residueAmount = paymentRequest.getAmount()%leaseSale.get().getInitialdeposit();
 			
-			final float ammountPaid = ttlpayments.getTotalamountpaid() + paymentRequest.getAmount();
+			final float ammountPaid = paymentRequest.getAmount();
 			
 			//final int totalDays = (int)((totalAmount - residueAmount)/financialInfo.get().getDailypayment());
 			
-			final float newOwedAmount = leaseSale.get().getTotalleasevalue() - paymentRequest.getAmount();
+			final float newOwedAmount = leaseSale.get().getTotalleasevalue() - (paymentRequest.getAmount() - residueAmount);
 			
 			if(updateTotalPayments(financialInfo.get().getLeaseid(), paymentRequest.getAmount(), ammountPaid - residueAmount,
 					newOwedAmount, residueAmount,ttlpayments.getTimes()+1) < 1) {
@@ -247,7 +248,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			
 			final int totalDays = (int)((totalAmount - residueAmount)/financialInfo.get().getDailypayment());
 			
-			final float newOwedAmount = ttlpayments.getTotalamountowed() - totalAmount - residueAmount;
+			final float newOwedAmount = ttlpayments.getTotalamountowed() - (totalAmount - residueAmount);
 			
 			//Check if we have to get payment token or unlock the device
 			final LeasePayment lp = getCompletedLeasePayment(paymentRequest,financialInfo.get());
@@ -280,8 +281,7 @@ public class BuyTokenRepositoryImpl implements BuyTokenRepository {
 			return recordToken(TokenTypes.PAY, paymentToken,totalDays, times,lp.getId() );
 		
 			
-		}
-		
+		}		
 		
 	}
 

@@ -45,6 +45,7 @@ public class ReportsController {
     @RequestMapping(path="paymentstatistics",method = RequestMethod.GET)
     public ResponseEntity<?> getPaymentStatistics(HttpServletRequest request){
     	String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
+    	
     	return ResponseEntity.ok(saleReport.getPaymentStatisticModel(id));
     }
 

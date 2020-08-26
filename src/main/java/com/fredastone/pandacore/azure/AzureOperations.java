@@ -67,6 +67,9 @@ public class AzureOperations implements IAzureOperations{
 	@Value("${idcopyphotofolder}")
 	private String idcopyUploadFolder;
 	
+	@Value("${reportfilesfolder}")
+	private String reportUploadFolder;
+	
 	private static final String IMAGE_SUFFIX = ".png";
 	private static final String PDF_SUFFIX = ".pdf";
 
@@ -296,6 +299,18 @@ public class AzureOperations implements IAzureOperations{
 	@Override
 	public String getEquipmentPicture(String equipmentId) throws InvalidKeyException, MalformedURLException {
 		return createAzureAccessToken(equipmentPhotoFolder, getImagePath("equip",equipmentId), Boolean.TRUE);
+	}
+
+	@Override
+	public String uploadReportFile(String reportId) throws InvalidKeyException, MalformedURLException {
+		// TODO Auto-generated method stub
+		return createAzureAccessToken(reportUploadFolder, getPdfPath("report",reportId), Boolean.FALSE);
+	}
+
+	@Override
+	public String getReportFile(String reportId) throws InvalidKeyException, MalformedURLException {
+		// TODO Auto-generated method stub
+		return createAzureAccessToken(reportUploadFolder, getPdfPath("report",reportId), Boolean.TRUE);
 	}
 
 }

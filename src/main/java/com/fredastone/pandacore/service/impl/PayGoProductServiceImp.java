@@ -129,7 +129,7 @@ public class PayGoProductServiceImp implements PayGoProductService {
 		Optional<LeaseOffer> leaseOffer = leaseOfferRepository.findById(leaseOfferid);
 		LeaseOffer lo = leaseOffer.get();
 		
-		List<PayGoProduct> payGos = payGoProductRepository.findAllByLeaseOffer(lo);
+		List<PayGoProduct> payGos = payGoProductRepository.findAllByleaseOffer(lo);
 		
 		for(PayGoProduct object : payGos) {
 			if(object.getPayGoProductStatus() == status) {

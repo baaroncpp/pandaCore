@@ -1,5 +1,6 @@
 package com.fredastone.pandacore.repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -40,5 +41,6 @@ public interface SaleRepository extends PagingAndSortingRepository<Sale, String>
 	@Query("Select s from Sale s where s.agentid = :agentid and s.saletype = :saletype")
 	List<Sale> findAllByAgentidAndSaletype(@Param("agentid") String agentid, @Param("saletype")String saletype);
 	
+	long countByCreatedonBeforeAndCreatedonAfter(Date beforeDate, Date afterDate);
 }
 

@@ -23,5 +23,7 @@ public interface LeasePaymentRepository extends CrudRepository<LeasePayment, Str
 	Page<LeasePayment> findAll(Pageable pageable);
 	
 	long countByCreatedonBeforeAndCreatedonAfter(Date beforeDate, Date afterDate);
+	
+	List<LeasePayment> findAllByCreatedonBeforeAndCreatedonAfter(Date beforeDate, Date afterDate);
 
 }

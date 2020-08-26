@@ -1,5 +1,6 @@
 package com.fredastone.pandacore.repository;
 
+import java.util.Date;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,5 +18,7 @@ public interface AgentMetaRepository extends CrudRepository<AgentMeta, String> ,
 	Optional<AgentMeta> findByUserid(String id);
 	
 	Optional<User> findByUser(User user);
+	
+	long countByCreatedonBeforeAndCreatedonAfter(Date beforeDate, Date afterDate);
 	
 }

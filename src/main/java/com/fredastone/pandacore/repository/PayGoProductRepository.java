@@ -15,11 +15,15 @@ import com.fredastone.pandacore.entity.PayGoProduct;
 @Repository
 public interface PayGoProductRepository extends CrudRepository<PayGoProduct, String>{
 	
-	@Query("Select count(u) from PayGoProduct u where u.payGoProductStatus = :payGoProductStatus and u.leaseOffer = :leaseoffer")
-	Long countByPayGoProductStatusAndLeaseOffer(@Param("payGoProductStatus")PayGoProductStatus payGoProductStatus, @Param("leaseoffer")LeaseOffer leaseoffer);
+	//@Query("Select count(u) from PayGoProduct u where u.payGoProductStatus = :payGoProductStatus and u.leaseOffer = :leaseoffer")
+	//long countByPayGoProductStatusAndLeaseOffer1(@Param("payGoProductStatus")PayGoProductStatus payGoProductStatus, @Param("leaseoffer")String leaseoffer);
 	
-	List<PayGoProduct> findAllByLeaseOffer(LeaseOffer leaseOffer);
+	List<PayGoProduct> findAllByleaseOffer(LeaseOffer leaseOffer);
 	
-	Optional<PayGoProduct> findBytokenSerialNumber(String tokenSerialNumber);
+	List<PayGoProduct> findAllByPayGoProductStatus(PayGoProductStatus payGoProductStatus);
+	
+	Optional<PayGoProduct> findBytokenSerialNumber(String tokenSerialNumber); 
+	
+	//long countByPayGoProductStatusAndLeaseOffer(PayGoProductStatus status, LeaseOffer leaseOffer);
 	
 }

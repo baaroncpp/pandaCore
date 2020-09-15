@@ -1,5 +1,7 @@
 package com.fredastone.pandacore.controller;
 
+import java.util.Date;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,16 @@ public class ReportsController {
     	String id = jwtTokenUtil.getUserId(request.getHeader(tokenHeader).substring(7));
     	
     	return ResponseEntity.ok(saleReport.getPaymentStatisticModel(id));
+    }
+    
+    @RequestMapping(path="tokenrevenue",method = RequestMethod.GET)
+    public ResponseEntity<?> getTokenRevenue() {
+        return ResponseEntity.ok(saleReport.tokenRevenues(new Date(), "token_revenue"));
+    }
+    
+    @RequestMapping(path="salesfinancemetrics",method = RequestMethod.GET)
+    public ResponseEntity<?> getSalesFinanceMetrics() {
+        return ResponseEntity.ok(saleReport.salesFinanceMetrics(new Date()));
     }
 
 }

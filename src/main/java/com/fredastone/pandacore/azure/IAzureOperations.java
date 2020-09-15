@@ -31,6 +31,9 @@ public interface IAzureOperations {
 	 String uploadEquipmentPicture(String equipmentId)  throws InvalidKeyException, MalformedURLException;
 	 String getEquipmentPicture(String equipmentId)throws InvalidKeyException, MalformedURLException;
 	 
-	 public FileResponse uploadToAzure(MultipartFile file,String urlString) throws URISyntaxException,  IOException, StorageException;
+	 String uploadReportFile(String reportId)throws InvalidKeyException, MalformedURLException;
+	 String getReportFile(String reportId)throws InvalidKeyException, MalformedURLException;
+	 
+	 FileResponse uploadToAzure(MultipartFile file,String urlString) throws URISyntaxException,  IOException, StorageException;
 	 
 }

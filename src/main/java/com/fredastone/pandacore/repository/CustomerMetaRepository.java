@@ -1,5 +1,6 @@
 package com.fredastone.pandacore.repository;
 
+import java.util.Date;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,5 +12,7 @@ public interface CustomerMetaRepository extends PagingAndSortingRepository<Custo
 	Page<CustomerMeta> findAll(Pageable pageable);
 	
 	Optional<CustomerMeta> findByidnumber(String idNumber);
+	
+	long countByCreatedonBeforeAndCreatedonAfter(Date beforeDate, Date afterDate);
 	
 }

@@ -1,5 +1,6 @@
 package com.fredastone.pandacore.service.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -137,7 +138,7 @@ public class TokenServiceImpl implements TokenService{
 				.content(String.format(smsResendMessage, customer.get().getFirstname()+" "+customer.get().getLastname(),
 						 sale.get().getScannedserial(),
 						 lp.get().getAmount(), 
-						 token.get().getToken(),						 
+						 new SimpleDateFormat("yyyy-MM-dd").format(token.get().getToken()),						 
 						 lp.get().getCreatedon())).build();
 		
 		rabbitTemplate.convertAndSend(notificationExchange,smsRoutingKey,notificaton.toString());

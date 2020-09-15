@@ -79,7 +79,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/v1/installation/**").hasAnyRole("ROLE_SENIOR_MANAGER","ROLE_MANAGER","ROLE_ENGINEER")
 				
 				//.antMatchers("/v1/user/get/androiduser").permitAll()
-
+				//.antMatchers("swagger-ui.html").permitAll()
 			    .antMatchers("/token/**").permitAll().antMatchers("swagger*").permitAll().anyRequest().authenticated();
 
 		httpSecurity.addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class).headers()
